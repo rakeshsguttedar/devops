@@ -1,0 +1,140 @@
+Linux - Part 2:
+~~~~~~~~~~~~~~
+
+Login to the EC2 instance
+
+linux folders:
+--------------
+Go the root folder:
+ cd /
+
+bin  - binary files will be inside this folder - executable files for the system
+etc  - etectra folder - configuration files of the tools - system wide configuration files of applications and services
+home - Contains home directories of regular users created on this system. The command: cd /home/ubuntu will change dir to
+       to the home folder of user ubuntu
+lib  - library - contains essential shared libraries and kernel modules needed for booting and repairing the system
+usr  - short for unique system reources - contains user specific programs and data - user installing an application will use this
+       folder for installing the files of that application
+var  - logs and cache
+root - root user or super user home directory
+tmp  - temporary files and folders - will delete these files when the system gets rebooted
+mnt  - contains mount point for mounting external storage devices  
+dev  - devices files
+media - contains mount point
+srv - service - data files for services like http service static files etc..
+opt - optional - used for installing third party softwares which are not managed by the package manager
+sbin - contains essntial system binaries for managing the system - specifically for the root user of the system - sysadmin
+
+Commands:
+---------
+ls, pwd, Ctrl + L clear screen , ls -l 
+to see hidden files: ls -la
+creating files: touch commnad
+moving/renaming file: mv file1 to file2 or mv file1 to folder2
+cp oldfile newfile
+whatis cmd is to find about the command cmd
+whereis cmd is to find the location of the command cmd
+
+user management in linux
+========================
+3 types of users:
+
+1. Sudo root user
+2. normal user
+3. service account user
+
+root user - has full privilages and has full access access
+normal user having limited access to the linux system
+service account - Jenkins create a user named jenkins and also creates a group named jenkins
+
+the command 
+
+ sudo su 
+
+to switch to the root user
+
+There are 2 commands to create users:
+1. useradd - not user friendly command to create a user  but it used inside scripts to create a user
+2. adduser - user friendly command to add a user - mostly used for creating users through command line
+
+
+using sudo - super user do - elevated privilage for user running this command
+ sudo adduser rakesh
+
+To switch to a user name rakesh
+ su - rakesh
+
+To add user to a group using the below command.
+
+ sudo usermod -g rakesh rakesh
+ #output: usermod: no changes
+
+Option -g (small g) will oveeride the permission of the user with the permission of the group
+In the above command, the user rakesh is already part of group rakesh. hence no changes output.
+Instead of rakesh group, if we add user to another group, say for example a group named mygrp,
+then the permissions of user rakesh is overriden with the permissions of the group mygrp.
+
+# to create group in linux
+ sudo addgroup devops 
+ sudo addgroup infra 
+
+Two groups will be created using above commands
+
+To add user rakesh to the group devops and infra: 
+
+ sudo usermod -G devops,infra  rakesh
+
+Option -G (capital G) will add user rakesh to the group devops and infra and also 
+add permissions of these groups to the user rakesh
+
+Commands to check user and group creation:
+ cat /etc/passwd
+ cat /etc/group
+
+commands to delete user and to delete groups
+ sudo deleteuser rakesh
+ sudo deletegroup devops
+ sudo deletegroup infra
+
+vi/Vim Editor
+=============
+
+Editing a file in the vi / vim editor
+-------------------------------------
+
+Command mode:
+------------
+(by pressing escape inside a vi editor, the vi editor will enter Command mode)
+The cursor will move based on the below commands.
+
+ double type g (gg)  -  to the beginning of the file
+ shift +  G  - to the end of the current file
+ 0 - move the cursor to the beginning of the current line
+ $ - move the the cursor to the end of the current line
+ w - moves to the beginning of the next word
+ b - moves back to the beginning of the current word
+ /searchwordorpattern: will search for the word in text, 
+     typing  n will search for the word in the forward direction 
+     typing  N will search for the word in the backward direction 
+ :%s/old/new/gc - search and replace the word 'old' with the word 'new'
+                  globally(g),  ask for confirmation (c)
+
+Entering Editing mode:
+----------------------
+(by pressing i when vi editor is in the command mode, the vi editor will enter editing mode)
+To enter Editing mode in a vi editor at a specific place:
+ i - edit at the current cursor
+ a - edit at the next letter from the current cursor
+ A - enters editing mode at the end of the current line
+ I - enters editing mode at the start of the current line
+ o - opens a new line below the current line
+ O - opens a new line above the current line
+
+ r - replace the character under the cursor
+ x - delete the character under the cusror
+ d2 - delete next 2 lines including the current line 
+ dd - delete the current line
+ u -  undo the last command/action - works in Command mode
+ Ctrl +  r - redo the last command/action
+ shift + 3 : search for the word under the current cursor
+
