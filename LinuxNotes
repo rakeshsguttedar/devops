@@ -96,8 +96,8 @@ commands to delete user and to delete groups
  sudo deletegroup devops
  sudo deletegroup infra
 
-vi/Vim Editor
-=============
+vi / Vim Editor
+===============
 
 Editing a file in the vi / vim editor
 -------------------------------------
@@ -121,7 +121,7 @@ The cursor will move based on the below commands.
 
 Entering Editing mode:
 ----------------------
-(by pressing i when vi editor is in the command mode, the vi editor will enter editing mode)
+(When vi editor is in Command mode, by typing i, the vi editor will enter editing mode)
 To enter Editing mode in a vi editor at a specific place:
  i - edit at the current cursor
  a - edit at the next letter from the current cursor
@@ -137,4 +137,165 @@ To enter Editing mode in a vi editor at a specific place:
  u -  undo the last command/action - works in Command mode
  Ctrl +  r - redo the last command/action
  shift + 3 : search for the word under the current cursor
+
+
+
+Linux Part 3
+~~~~~~~~~~~~
+
+Permissions for files and folders
+=================================
+
+cd devopsshack
+mkdir dir1
+cd dir1
+touch 1.txt 2.txt 3.txt
+ls -l
+
+drwxrwxr-x ubuntu ubuntu
+
+d -directory
+rwx - read write execute permission for user ubuntu
+rwx - read write execute permission for group ubuntu
+r-x - read and execute pemission for other users
+  
+r - read permission is denoted by      4
+w - write permission is denoted by     2
+x - execute permission is denoted by   1         1
+
+r-4
+w-2
+x-1
+
+7 - all permissions 
+6 - read and write permissions only 
+5-  read and execute only
+4 - read permission only
+
+The command: 
+ sudo chmod 600 1.txt
+
+assign read and write pernission to file 1.txt for the user and no permissions for group and other users
+
+ sudo chmod 777 2.txt
+
+Assigning permission to the folder and for all the files inside the folder:
+
+ cd .. # go to the parent dir dir1
+ sudo chmod 777 -R dir1
+
+The above command will change the permission of the folder and recursively (with option -R) 
+change the permissions of all the files and folders inside the folder dir1
+
+ sudo chmod 755 -R dir1
+
+The above command will change the permission of the folder and recursively (with option -R) 
+change the permissions of all the files and folders inside the folder dir1
+ 
+
+Symbolic method of assigning permission to the files and folders
+----------------------------------------------------------------
+
+u - user
+g - group
+o - others
+
+g-x
+o=rw- 
+u=r-x
+o=--x   # execute permission only for other users
+o=---   # remove all permissions for other users
+
+ chmod g+x -R dir1
+# adding execute permission to the group associated with folder dir1 and all the files and folders inside dir1 
+
+ chmod o+x -R dir1
+# adding execute permission to others for folder dir1 and all the files and folders inside dir1 
+
+ chmod u=r-x -R dir1
+# adding read and execute permission to the user of the folder dir1 and for all the files and folders inside dir1 
+
+Changing Ownership and group
+---------------------------
+
+sudo chown root:root -R dir1
+
+
+
+Linux - PArt 4
+~~~~~~~~~~~~~~
+
+Package managers
+
+repositories
+
+tree command
+
+apt - advanced packaging tool
+
+sudo apt install tree
+
+apt-get command des not show progress
+apt command has progress bar
+
+sudo apt install openjdk-11-jre-headless -y
+
+-y option will not give prompt for confirmation
+
+java --version
+
+To remove a package
+
+sudo apt remove tree
+
+
+install jenkins
+---------------
+
+if package is not available in the package manager 
+repository then we can download the package
+
+wget command to download and add the jenkins package to the repository of package manager
+
+sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt-get update
+sudo apt-get install jenkins
+
+
+Curl command can also be used.
+curl has more features. 
+curl can be used to access the application if we dont have a browser to check the application.
+
+
+curl -O linktothearchive
+
+
+curl is slower compared to wget
+
+
+ifconfig 
+ifconfig eth0
+ip -a
+ip addr show
+
+ping command : ping ICMP echo
+
+nslookup google.com
+traceroute google.com
+netstat -tuln
+ss
+route
+hostname
+
+host ip-address
+
+dig google.com
+
+curl google.com
+ssh -i keyfile username@ipaddress
+
 
