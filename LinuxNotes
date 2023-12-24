@@ -33,7 +33,7 @@ creating files: touch commnad
 moving/renaming file: mv file1 to file2 or mv file1 to folder2
 cp oldfile newfile
 whatis cmd is to find about the command cmd
-whereis cmd is to find the location of the command cmd
+which cmd is to find the location of the command cmd
 
 user management in linux
 ========================
@@ -61,7 +61,7 @@ There are 2 commands to create users:
 using sudo - super user do - elevated privilage for user running this command
  sudo adduser rakesh
 
-To switch to a user name rakesh
+To switch to a user name john
  su - rakesh
 
 To add user to a group using the below command.
