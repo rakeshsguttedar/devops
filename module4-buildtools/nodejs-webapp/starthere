@@ -1,6 +1,6 @@
-This is a short notes for creating and running a nodejs application.
-This is part of the Build tools (Module 4) devopsshack course.
+Creating and running a nodejs application.
 
+This demo is explained in the Build tools (Module 4) section of devopsshack course.
 This demo is going to cover the following topics.
 
 1. Install nodejs, npm, express web application framework
@@ -109,8 +109,8 @@ The server will start running and will be listening on port
 
 The better way to run the application is by using npm command.
 For this, edit the package.json file and update the script
-section. Remove line that starts with "test" and replace it
-with  "start": "node app.js"
+section. Replace the line containing "test" with  
+"start": "node app.js"
 
 We can now start our application using npm by running:
  
@@ -119,6 +119,8 @@ We can now start our application using npm by running:
 Access this application in your web browser using
 
  http://ip-address:3000
+ http://ip-address:3000/about
+ http://ip-address:3000/contact
 
 3. Improving the nodejs app to provide for a complete application.
  
