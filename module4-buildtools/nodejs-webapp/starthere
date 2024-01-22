@@ -1,0 +1,190 @@
+This is a short notes made for creating and running a nodejs application.
+This is part of the Build tools (Module 4) devopsshack course.
+
+This demo is going to cover the following topics.
+
+1. Install nodejs, npm, express web application framework
+2. Build a hello world app in nodejs
+3. Improving the nodejs app.js to provide for a complete application.
+4. Running the nodejs application in a docker container
+
+Prerequiste: An Ubuntu linux machine or VM or launch an EC2 instance (t2.micro) in AWS
+
+1. How to install nodejs, npm and express web application framework
+
+To start with, we need to update your linux package repository using
+
+ sudo apt update
+
+Once updated, install nodejs and npm (nodejs package manager) using the command
+
+ sudo apt install nodejs npm -y 
+
+This will install nodejs and npm packages.
+The -y option will bypass the confirmation prompt.
+
+After installing nodejs and npm, we will create our project folder.
+
+ cd ~
+ mkdir nodejs-webapp
+ cd nodejs-webapp
+
+Before starting, we need to initialize the node package manager with 
+the basic details of our application. 
+For this, we need to create a package.json file using: 
+
+  npm init
+
+The package.json is a project configuration file to manage the node js based
+application.
+
+Once you run npm init, it will prompt you for the basic details of 
+the application such as app name, description, version, author, license. 
+After enetering these details, open package.json file to confirm and 
+to update any of these details. 
+
+Please note that there is a script section in this package.json 
+file which will be used later to start or test the nodejs application.
+
+Next we will install nodejs web application framework called express.
+
+ npm install express
+
+When you install express framework using npm, you can note 
+that the express package is added to the dependencies section in the 
+package.json file. The dependencies section lists the required dependecy
+packages that are needed for this application.
+
+2. How to build a hello world app in nodejs
+
+Now we will start with the creation of a basic nodejs app in app.js file.
+
+//app.js
+const express = require('express');
+const app = express();
+const PORT = 3000;
+
+// define routes
+app.get('/', (req,res) => {
+  res.send("Hello This is the homepage!");
+});
+
+app.get('/about', (req,res) => {
+    res.send("This is the about page.");
+  });
+
+app.get('/contact', (req,res) => {
+    res.send("Contact me @ contact@example.com");
+  });
+
+//start the server
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+
+Copy above to the app.js file. Note the different section 
+such as app routes and the how the app server is listening 
+on port 3000.
+
+Now you can run the nodejs application using the command
+
+ node app.js
+
+The server will start running and will be listening on port
+3000
+
+You need to exit the package.json file and update the script
+section. Remove line that starts with "test" and replace it
+with  "start": "node app.js"
+
+We can now start our application using npm:
+ 
+  npm start
+
+Access this application in your web browser using
+
+ http://ip-address:3000
+
+3. Improving the nodejs app to provide for a complete application.
+ 
+Till now we have created a basic application file.
+We can now update this app.js file with the below script
+
+//app.js with index.html and about.html running on port 8081
+const express = require('express');
+const app = express();
+const path = require('path');
+
+app.get('/', (req,res) => {
+  res.sendFile(path.join(__dirname+'/index.html'));
+});
+
+app.get('/about', (req,res) => {
+  res.sendFile(path.join(__dirname+'/about.html'));
+});
+
+app.listen(8081, () => {
+    console.log('Listening on port 8081');
+});
+
+This app.js file help us run a full-fledged
+appication using index.html and about.html and express
+framework.
+
+We can now start our application using npm like
+
+ npm start
+
+Access this application in your web browser using
+
+ http://ip-address:8081
+ http://ip-address:8081/index.html
+ http://ip-address:8081/about.html
+
+4. Running the nodejs application in a docker container
+
+Install docker using the following commands
+
+ sudo apt install docker.io
+ sudo systemctl status docker # to confirm docker daemon is active and running
+
+ # run this in your ubuntu linux. Replace <user> with your linux user account name 
+ # For EC2 instance replace <user> with ubuntu
+ sudo usermod -aG docker <user>
+
+Logout and login back to your console or run command:
+
+ newgrp docker
+
+Create a Dockerfile with the following contents:
+
+FROM node:alpine
+COPY ./ ./
+RUN npm install
+EXPOSE 8081
+CMD ["npm", "start"]
+
+Build the docker images using
+
+ docker build -t nodejs-webapp:latest .
+
+This will create a nodejs docker image. Run command:
+ docker images
+to check whether the docker image has been created.
+
+To run this docker image image in a docker container, use the following command:
+  
+ docker run -d --name nodejs-app -p 8088:8081 nodejs-webapp:latest
+
+To confirm the docker container is running, execute the command
+
+ docker ps
+
+If the dpcker container is running, access this application in your web browser using
+
+ http://ip-address:8088
+ http://ip-address:8088/index.html
+ http://ip-address:8088/about.html
+
+This demonstrates how we can create a simple nodejs based application and run it in 
+a docker container. 
