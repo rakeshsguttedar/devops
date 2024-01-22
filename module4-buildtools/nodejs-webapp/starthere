@@ -1,4 +1,4 @@
-This is a short notes made for creating and running a nodejs application.
+This is a short notes for creating and running a nodejs application.
 This is part of the Build tools (Module 4) devopsshack course.
 
 This demo is going to cover the following topics.
@@ -16,21 +16,22 @@ To start with, we need to update your linux package repository using
 
  sudo apt update
 
-Once updated, install nodejs and npm (nodejs package manager) using the command
+Once updated, install nodejs and npm (nodejs package manager) using the command:
 
- sudo apt install nodejs npm -y 
+ sudo apt install nodejs npm -y
 
 This will install nodejs and npm packages.
 The -y option will bypass the confirmation prompt.
 
-After installing nodejs and npm, we will create our project folder.
+After installing nodejs and npm, we will create our project folder: nodejs-wbapp.
 
  cd ~
  mkdir nodejs-webapp
  cd nodejs-webapp
 
-Before starting, we need to initialize the node package manager with 
-the basic details of our application. 
+Before starting to build the nodejs app, we need to initialize the
+node package manager with the basic details of our application.
+
 For this, we need to create a package.json file using: 
 
   npm init
@@ -40,8 +41,8 @@ application.
 
 Once you run npm init, it will prompt you for the basic details of 
 the application such as app name, description, version, author, license. 
-After enetering these details, open package.json file to confirm and 
-to update any of these details. 
+After entering these details, open package.json file to confirm the above details
+are properly configured.
 
 Please note that there is a script section in this package.json 
 file which will be used later to start or test the nodejs application.
@@ -93,7 +94,7 @@ Now you can run the nodejs application using the command
 The server will start running and will be listening on port
 3000
 
-You need to exit the package.json file and update the script
+You need to edit the package.json file and update the script
 section. Remove line that starts with "test" and replace it
 with  "start": "node app.js"
 
@@ -148,15 +149,27 @@ Install docker using the following commands
  sudo apt install docker.io
  sudo systemctl status docker # to confirm docker daemon is active and running
 
+After instaling docker, if you try to run a docker container,
+try running:  docker run hello-world 
+
+You will encounter permission denied error as docker daemon is running as a root
+and your logged in user account does not have the permission to run a docker commands.
+Therefore, run usermod command to append your accountid to the docker group thereby rising
+your account privilages to run the docker commands.
+
  # run this in your ubuntu linux. Replace <user> with your linux user account name 
  # For EC2 instance replace <user> with ubuntu
  sudo usermod -aG docker <user>
 
-Logout and login back to your console or run command:
+Logout from your account using exit command and log backs in so that your group 
+membership is re-evaluated. You can also run the command 
 
  newgrp docker
 
-Create a Dockerfile with the following contents:
+to activate the changes to groups.
+
+Next we will proceed with creating a Dockerfile.
+Copy the below commands to Dockerfile.
 
 FROM node:alpine
 COPY ./ ./
@@ -169,7 +182,9 @@ Build the docker images using
  docker build -t nodejs-webapp:latest .
 
 This will create a nodejs docker image. Run command:
+
  docker images
+
 to check whether the docker image has been created.
 
 To run this docker image image in a docker container, use the following command:
@@ -180,7 +195,7 @@ To confirm the docker container is running, execute the command
 
  docker ps
 
-If the dpcker container is running, access this application in your web browser using
+If the docker container is running, access the nodejs application in your web browser using
 
  http://ip-address:8088
  http://ip-address:8088/index.html
