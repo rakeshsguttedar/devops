@@ -44,6 +44,19 @@ the application such as app name, description, version, author, license.
 After entering these details, open package.json file to confirm the above details
 are properly configured.
 
+package.json
+{
+  "name": "nodejs-webapp",
+  "version": "1.0.0",
+  "description": "A new nodejs hello world app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Rakesh",
+  "license": "ISC"
+}
+
 Please note that there is a script section in this package.json 
 file which will be used later to start or test the nodejs application.
 
@@ -94,11 +107,12 @@ Now you can run the nodejs application using the command
 The server will start running and will be listening on port
 3000
 
-You need to edit the package.json file and update the script
+The better way to run the application is by using npm command.
+For this, edit the package.json file and update the script
 section. Remove line that starts with "test" and replace it
 with  "start": "node app.js"
 
-We can now start our application using npm:
+We can now start our application using npm by running:
  
   npm start
 
