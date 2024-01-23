@@ -34,7 +34,7 @@ fruits_array+=("orange" "mango")
 list_fruits
 echo "Removing pineapple from fruits array using unset"
 unset fruits_array[3] # removes pineapple 
-list_fruits # calling list_fruits
+list_fruits # print list of all fruits 
 echo "Replaces strawberry with blueberry at location 5"
 fruits_array[5]="blueberry"
 list_fruits # calling list_fruits

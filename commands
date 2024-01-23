@@ -1,0 +1,42 @@
+Below are most commonly used commands in linux shell
+
+grep, sed and awk
+
+grep command: to search for a text 
+To search for a text "error" in /var/log/syslog file
+grep "error" /var/log/syslog
+
+To show line numbers containing the searched text
+grep -n "error" /var/log/syslog
+
+To search multiple terms using -e option
+grep -e "404" -e "failed" /var/log/syslog
+
+To exlude all lines having a partiuclar text "404"
+grep -v "404" /var/log/syslog
+
+To search for a text in multiple files within a directory
+grep "error" /var/log/*
+
+
+sed command: to search edit and delete texts from files or streams
+It is a stream editor and is the most strongest command.
+
+To search and replace all occurances of apple with orange in a stream from abc.txt
+sed 's/apple/orange/g' abc.txt
+
+To search and print all lines having error text in them
+sed -n '/error/p' abc.txt
+
+To delete lines that match a word
+sed '/banana/d' abc.txt
+
+To search and replace a particular text on a specific line (line no.6)
+sed /6s/error/fixed/g' abc.txt
+
+awk command:
+
+To concatenate two columns 
+awk '{print $1 $2}' abc.txt
+
+ 
