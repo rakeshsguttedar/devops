@@ -1,0 +1,27 @@
+Dotnet applicaiton has dependencies configured in .csproj files for each project.
+appsettings.json and appsettings.Development.json files will have configuraion related
+settings for each project. source codes are stored inside .cs files.
+
+A dotnet based application can have multiple projects located inside ./src folder.
+For example, the eStoreLite project @ https://github.com/davidfowl/eStoreLite.git
+has three projects: Frontend, CatalogService and StartTimer.
+
+In root folder, there will be a .sln file which will contain application wide
+configuration for projects inside the application.
+nuget.config will contain the repository  for storing artifcats inside
+jfrog or nexus like artifact repositories.
+
+Installing a dotnet based application
+
+Install dotnet:
+ sudo snap install dotnet-sdk --classic
+
+Then to download the dependencies and required tools for the projects
+run:
+  dotnet restore eStoreLite.sln file
+
+After the dependencies are downloaded, you can build the project using:
+ dotnet build
+
+To publish the project artifacts locally we can use 
+ dotnet publish

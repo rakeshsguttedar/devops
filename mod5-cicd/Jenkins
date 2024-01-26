@@ -1,0 +1,544 @@
+
+I. Jenkins Basic Configuration to run CICD pipeline jobs.
+
+Jenkins is a cicd tool written in Java to automate the process of building
+the application and deploying the built artifacts on to the production server. 
+Building the application is a continuous process and hence it is called 
+continuation integration, the CI part of the CICD.
+
+After the application artifacts are built using the CI process, they need 
+to be delivered or deployed on to the production server. This process is 
+called continuous deployment or CD part of CICD.
+
+Why Jenkins tool is used for CICD?
+
+Advantages of Jenkins tool:
+1. Jenkins is an open source tool with a very large userbase 
+2. Many tools and plugin can be configured with Jenkins compared to any 
+other CICD tool
+
+To install Jenkins, there are some basic prerequites:
+
+Linux machine or Virtual Machine
+
+You can create an Ubuntu Virtual Machine (VM) in Oracle VirtualBox in your laptop provided 
+it  has atleast 8 GiB of Memory and a multi code CPU.
+
+ OR
+ 
+Create an AWS EC2 instance with Ubuntu image having instance type as t2.medium in AWS console.
+Add 15 GB of Storage as Jenkins needs hard disk space to download source code, build and run 
+all stages of Jenkins pipeline. 
+
+(You need an AWS account for creating EC2 intance. Create one if do not have an AWS account)
+
+Launch instance and copy the public IP address(ec2instanceipaddress).
+
+ssh to the EC2 or VM using Mobaxterm:
+
+Before we start with installing Jenkins, we need to update the Linux packages repository:
+
+ sudo apt update
+
+Installing Jenkins:
+
+Java runtime is the pre-requisite to install Jenkins. To install java,
+go to official Jenkins page and go to linux and select ubuntu distribution.
+Recommended min specs of Ubuntu image is 4 GB of RAM and 15 GB storage.
+Hence we select t2.medium for instance type.
+
+Install maven as we need maven for building java based project.
+Maven will install java as a dependency. 
+
+ sudo apt install maven -y
+
+Installing Jenkins from official website
+
+https://www.jenkins.io/doc/book/installing/linux/
+
+Install long term support (LTS) version of Jenkins
+
+we need to add jenkins in the repository of apt
+
+ sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+   https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+ echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+   https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+   /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+We can now install jenkins
+
+ sudo apt-get update
+ sudo apt-get install jenkins -y
+
+To start jenkins:
+
+ sudo systemctl enable jenkins
+ sudo systemctl start jenkins
+ sudo systemctl status jenkins
+
+By default jenkins is installed on port 8080
+
+we need to open port range 8000 to 9000 in AWS Security Group
+used by EC2 instance.
+
+
+Configuring Jenkins:
+
+Access Jenkins @ 
+ http://ec2instanceipaddress:8080
+
+Login with initial admin password at
+ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+Start with installing plugins by selecting "Install suggested plugins"
+
+as jenkins know better the required plugins
+
+Create First Admin user
+
+after creating the user, save and continue
+
+Using Jenkins:
+
+We can start working with Jenkins by creating jobs. The three types of Jobs which are mainly used in
+organisations to run jenkins jobs are:
+
+1. Pipeline jobs
+2. Freestyle Project jobs
+3. Multibranch Pipeline jobs
+
+Manage Jenkins -> System Configuration-> System 
+To configure Server in Jenkins like sonar qube server, etc..
+by setting URL of the server, add emails for notification
+
+Manage Jenkins -> System Configurationi -> Plugins
+
+To install a plugin, we need to go to Available Plugin
+Install Eclipse Temurin Installer and sonarqube plugins 
+Eclipse Temurin plugin: to use multiple versions of tools
+some third party plugins can be manually installed in jenkins
+Tools.
+Example: kubernetes hpi plugin 
+
+Manage Jenkins -> System Configuration -> Tools 
+We can configure the plugins that we have installed in tools section.
+Go to tools
+1. jdk
+ name: jdk17 or jdk11 
+ Install Automatically -> from optimium
+ to install more than 1 version of jdk
+2. sonar scanner
+3. maven
+
+Manage Jenkins -> System Configurationi -> Nodes
+
+To configure multiple jenkins slave we need to give IP address and credentials of the VM
+to use VM as jenkins slaves
+
+Security:
+To access private repositories such as in github  
+we can add url, username and secrets like password
+
+Authorization section to give fine grained access to jenkins users to run jenkins jobs
+Users section to add users of Jenkins
+
+The above mentioned configurations are mostly used ones.
+
+Coming to running jenkins jobs to setup CICD, as mentioned earlier, we mainly use: 
+
+1. Freestyle Project jobs
+2. Pipeline jobs
+3. Multibranch Pipeline jobs
+
+1. Freestyle Project jobs
+
+Easiest to use is Freestyle Project. used mainly for small tasks, do make sure you 
+check(tick) "Discard old build" as old builds consume lot of disk space and store a 
+max of 3 builds. It is part of best practices in jenkins.
+
+jdk -> select jdk11
+
+Source Code management -> github -> copy https url from Code section of our repo
+no need to provide the credentials for public repositories
+for private repositories, we need to provide username and token
+add gitbug repo and in branch specifier, add main or master branch based 
+on your project branch
+
+Build steps:
+
+We need to add a build tool like maven here.
+To install maven, go to 
+Manage Jenkins -> System Configurationi -> Tools-> Maven installations
+Add Maven->version is 3.6.1
+
+To Note: We can add more than one version of maven here.
+
+Now go back to the Freestyle project we created earlier.
+Build Steps:
+
+Add Invoke Top Level maven targets
+Goals: Compile or clean package
+
+2. Pipeline Project Job
+
+It is the most used project type for creating a Jenkins job. It uses groovy scripting
+and provides more advanced facilities to manage the CICD pipeline.
+
+Here is the pipeline script to be in the Job to build a java application
+
+  pipeline {
+    agent any
+
+    tools {
+      jdk 'jdk11'
+      maven 'maven3'
+    }
+
+    stages {
+
+      stage('Git Checkout from Github SCM') {
+        steps {
+          git 'https://github.com/rakeshsguttedar/BoardgameListingWebApp.git'
+        }
+      }
+
+      stage('Compile') {
+        steps {
+          sh "mvn compile"
+        }
+      }
+
+      stage('Package') {
+        steps {
+          sh "mvn clean package"
+        }
+      }
+
+      stage('Install') {
+        steps {
+          sh "mvn install"
+        }
+      }
+
+    }
+  }
+
+We can copy this script into a Jenkinsfile and save this file in a github repository
+of the application. We can configure Jenkins to use this Jenkinsfile from the git to run 
+jenkins job. Make sure the filename is Jenkinsfile* where everything before * should
+be same (even jenkinsFile or jenkinfile wont work as it is case sensitive)
+* can be anything.
+
+
+3. Multibranch pipeline
+It is used to setup a jenkins job for building multiple braches of the application 
+git repository.
+
+
+
+II. Jenkins Master Slave Configuration to run Jenkins cicd pipeline jobs on Slave
+
+Differnce between Node and Agents in Jenkins
+Important Link: https://www.jenkins.io/doc/book/managing/nodes/
+
+We can run Jenkins jobs in Jenkins slave instead of running them on the master
+node or also called as  Built-InNode. We need to make sure that we have 2 VMs or
+2 EC2 instances availabe for running Jenkins master and slave configuration. Master
+Node will be used only to schedule the Jobs and slave node will run those scheduled jobs.
+Note: The slave node will run a maximum of 2 jobs in Parallel which is set using
+Number of Executers: 2 during Node creation
+We need to have Jenkins installed only on Master Node EC2 instance and is not required 
+on the other EC2 instance. Only java is needed to be installed on Slave Node to run Jenkins jobs.
+
+Steps to connect Jenkins master with slave:
+
+Here we are going to a create Key pair in slave ubuntu EC2.
+This key will be used by the Jenkins master to connect to slave.
+
+1. ssh to Slave EC2 instance.
+2. run: sudo apt update
+3. run: sudo spt install openjdk-17-jdk-headless -to install Java
+3. run: sudo su - to login as root
+4. run: mkdir /home/ubuntu/slave - used by Jenkins as working directory for running jobs
+5. run: ssh-keygen - and just press enter for all prompts -  
+6. The above command will create keypairs: id_rsa (private key) and id_rsa.pub (public key) 
+7. copy of the content of the id_rsa.pub public key to the end of authorized_keys file.
+8. Copy the content of id_rsa to Jenkins Credentials store for username root.
+
+Manage Jenkins -> Credentials
+-> global - select click on global
+
+-> + Add Credentials
+-> Kind: SSH Username with private key
+-> Scope: Global (Jenkins, nodes..)
+-> Username: root
+-> Password: copy the content of id_rsa private key generated earlier (step # 8). 
+   Make sure no extra spaces are copied.
+-> Create
+
+Steps for configuring Jenkins slave agent to run Jenkins jobs on Slave
+instead of using Jenkins Master or Built-InNode:
+
+Go to Jenkins-> Manage Jenkins -> Nodes ->
+-> New Node -> Node name: slave-1
+-> Permanent Agent: Selected
+-> Create
+-> Description: purpose of this Node
+-> Number of Executers: 2
+-> Remote root directory: /home/ubuntu/slave
+-> Labels: vm-1 [ later used for adding agent block in Jenkins pipeline script as agent { label 'vm-1'} ]
+-> Usage: Only build jobs with label expressions matching node
+-> Launch method: Launch agents via ssh
+-> Host: public IP of EC2 instance
+-> Credentials: Select credentials of earlier Added credentials in Manage Jenkins -> Credential
+-> Host key verification strategy: Non verifying Verification Strategy
+-> Availability: Keep this agent online as much as possible
+-> Save
+
+Note: We can configure the Jenkins master or Built-InNode NOT to run any job on it by setting 
+-> Number of Executers: 0 in System Configuration of Jenkins.
+
+
+
+
+
+III. Docker Container as Jenkins agent or Jenkins slave
+
+It basically means that the jenkins pipeline build commands 
+are executed inside the docker container. To cofigure the docker 
+container, we need to add 2 docker plugins in Jenkins. 
+
+Follow below steps:
+
+Manage Jenkins -> Plugins -> Available Plugins -> search for Docker
+Two plugins are found:
+1. Docker or Docker plugin
+2. Docker Pipeline
+
+Select both plugins and install them.
+
+Now we need to create a jenkins job to run Jenkins build commands 
+inside a docker container.
+
+For this, Dashboard -> create a Job
+Select Jenkins job of type Pipeline.
+-> Name: pipeline1 
+-> OK
+-> Pipeline -> Definition: Pipeline script
+-> Script: You can generate using Pipeline syntax and Generate Pipeline Script:
+Select Pipeline Syntax -> Pipeline Syntax page opens in another window.
+
+Steps -> Sample Step: go down in drop down menu and select withDockerContainer
+-> Image: maven:3.9.6-eclipse-temurin-17 
+-> Generate Pipeline Script
+
+Copy the generated script to the script block of the stage as shown below
+
+  pipeline {
+    agent any 
+    stages {
+        stage('Docker agent build') {
+            steps {
+                script {
+                    withDockerContainer('maven:3.9.6-eclipse-temurin-17') {
+                      sh "git --version"
+                      sh "java --version"
+                      sh  "mvn --version"
+                    }
+                }
+            }
+        }
+    }
+  }
+
+-> Apply and Save
+
+Go to pipeline1 job in Jenkins Dashboard and click on Build now to test.
+
+
+
+IV. Configuring Github Webhook to trigger a Jenkins pipeline build
+
+There are 2 plugins available in Manage Jenkins -> Plugins -> Available Plugins
+1. Genereic Webhook Trigger
+2. Multibranch Scan Webhook Trigger
+
+Select both plugins and install them.
+
+1. Genereic Webhook Trigger
+
+We use Generic Webhook Trigge plugin to configure Jenkins to trigger for changes 
+in a particular branch of the github application repository. It is used for Pipeline
+Projects type jobs. The configuration steps are:
+
+Create a Job -> Select Pipeline Type Project -> Name: webhook
+-> Build Triggers:  Select Generic Webhook Trigger
+-> Post Content Parameter: Variable: Name of Variable: refs
+-> Expression: $.refs and select JSONPath
+Go down to 
+-> Token: Generate a github token for your git hub account and paste it here.
+-> Optional Filter: Expression: refs/heads/develop (where develop is the branch name)
+-> Text: $ref
+-> Apply - to save
+
+Create a Jenkins post URL for adding in github webhook configuration:
+
+ http://jenkinsurl/generic-webhook-trigger/invoke?token=pasteyourgithubtokenhere
+
+Generate Pipeline Script for github checkout of develop branch using Pipeline Syntax.
+Paste into your pipeline script for this job.
+
+'webhook' pipeline script:
+
+ pipeline {
+   agent any
+
+   stages {
+     
+     stage('Git checkout') {
+       steps {
+         git branch: 'develop', url: 'https://github.com/rakeshsguttedar/BoardgameListingWebApp.git'
+       }
+     }
+     
+     stage('Build') {
+       steps {
+         sh "mvn clean package"
+       }
+     }
+   }
+ }
+
+-> Apply and Save the Pipeline job: webhook
+
+Test run to build this pipeline job 'webhook' and confirm the job will build successfully
+
+Github Webhook Configuration:
+
+Go to 
+-> Github main page of the repository hosting this application. 
+-> Select Settings -> Click on Webhooks in the left column of the setting page.
+   paste the jenkins post url formed earlier.
+-> Payload URL: http://44.222.173.211:8080/generic-webhook-trigger/invoke?token=pasteyourgithubtokenhere
+-> Content type: application/json
+-> Which events would you like to trigger this webhook?: Select only: Just the push event.
+-> Update Webhook
+
+Check whether the webhook trigger is successful by going to -> Recent Deliveries
+
+You can now update a file in your git application repository and check whether the webhook 
+has triggered a build in Jenkins.
+
+2. Multibranch Scan Webhook Trigger
+
+This plugin is used mainly for Multibranch Pipeline Job of Jenkins
+  
+Multibranch Scan Webhook Trigger plugin can be configured to trigger a build
+on a particular branch of the application github repository. Only branch that
+has got changed will be built and other branches will not be built.
+
+Go to Jenkins Dashboard -> Create a job 
+-> Select Multibranch Pipeline 
+-> Name: multibranch-webhook
+-> Branch Sources -> Add Source -> Git 
+-> Git Project Repository: https://github.com/rakeshsguttedar/BoardgameListingWebApp.git
+-> Behaviours: Discover Branches( leave it as it is)
+-> Property Strategy: All properties get the same properties (leave it as it is)
+-> Build Configuraion -> Mode: by Jenkinsfile -> Script Path: Jenkinsfile or Jenkinsfile123
+-> Scan by Webhook: Select -> Trigger Token: pasteyourgithubtokenhere
+-> Orphaned Item Strategy: Discard old items: Select -> Max # of old items to keep: 2
+-> Apply and Save
+
+Github Webhook Configuration: it is same as Generic Webhook Trigger
+except for one minor change in the post URL.
+In the Jenkins post URL generic-webhook-trigger is replaced by multibranch-webhook-trigger
+
+Go to
+-> Github main page of the repository hosting this application.
+-> Select Settings -> Click on Webhooks in the left column of the setting page.
+   paste the jenkins post url formed earlier.
+-> Payload URL: http://44.222.173.211:8080/multibranch-webhook-trigger/invoke?token=pasteyourgithubtokenhere
+-> Content type: application/json
+-> Which events would you like to trigger this webhook?: Select only: Just the push event.
+-> Update Webhook
+
+Check whether the webhook trigger is successful by going to -> Recent Deliveries
+
+Make changes to any one of the branches of the application github repository 
+and check whether Jenkins job build is triggered for that branch in the multibranch-webhook job.
+
+
+
+V. Setup Email Notification in Jenkins
+
+Two prerequites to configure jenkins email notification.
+1. Install Email Extension Template plugin in Jenkins.
+2. Add port 465 for gmail SMTPS server in your EC2 instance Security Group Inbound rules.
+
+Installing : Email Extension Template plgin
+Dashboard -> Manage Jenkins -> Plugins
+-> Available Plugin  -> Type or paste Email Extension Template
+-> Select checkbox for this plugin
+-> Install
+
+Next we need to configure smtp in Jenkins System configuration
+
+But before configuring Jenkins for email notification, we need to enable
+2 Step Cerification for your gmail account and generate the app password inside
+2 Step Verification page. Copy this app password for its use in Jenkins.
+
+Dashboard -> Manage Jenkins -> System 
+-> Go to the bottom last section: E-mail Notification
+-> smtp server: smtp.gmail.com
+-> Default user e-mail suffix: @gmail.com
+-> Advanced -> select 
+-> Use SMTP Authentication: select check
+-> User Name: yourgmailusername@gmail.com password: paste 2 Step Verification app password
+-> USe SSL -> select
+-> smtp port: 465 
+-> Reply-To Address: yourgmailusername@gmail.com
+-> Test configuration by sending test e-mail -> select
+-> Test e-mail recipient: yourgmailusername@gmail.com
+-> Test Configuration
+
+You must have a received a test email in your gmail inbox if all the above steps have been 
+configured properly.
+
+After this, go to "Extended E-mail Notification" in the same page
+Extended E-mail Notification
+-> SMTP server: smtp.gmail.com
+-> SMTP Port: 465
+-> Advanced -> Add ->select Jenkins 
+   - to add email address and app password in your jenkins credentials store
+-> select the above added Credentials in drop down box
+-> USe SSL -> select
+-> Apply and Save
+
+Configuring the Jenkinsfile pipeline script:
+Change the email ID in the below script and add this to the end of your Jenkins file after stages {}
+block but before pipeline {} block.
+
+  post {  
+    always {  
+      echo 'This will always run'  
+    }  
+    success {  
+      mail bcc: '', body: "<b>Example</b><br>Project: ${env.JOB_NAME} <br>Build Number: ${env.BUILD_NUMBER} <br> URL de build: ${env.BUILD_URL}", cc: '', charset: 'UTF-8', from: '', mimeType: 'text/html', replyTo: '', subject: "SUCCESS CI: Project name -> ${env.JOB_NAME}", to: "xyz@gmail.com";  
+    }  
+    failure {  
+      mail bcc: '', body: "<b>Example</b><br>Project: ${env.JOB_NAME} <br>Build Number: ${env.BUILD_NUMBER} <br> URL de build: ${env.BUILD_URL}", cc: '', charset: 'UTF-8', from: '', mimeType: 'text/html', replyTo: '', subject: "ERROR CI: Project name -> ${env.JOB_NAME}", to: "xyz@gmail.com";  
+    }  
+    unstable {  
+      echo 'This will run only if the run was marked as unstable'  
+    }  
+    changed {  
+      echo 'This will run only if the state of the Pipeline has changed'  
+      echo 'For example, if the Pipeline was previously failing but is now successful'  
+    }  
+  }
+
+Start a Build for the Jenkins job that has this post block configured.
+After the build is success or failure, test whether an email has been 
+delivered to your gmail inbox.
+
