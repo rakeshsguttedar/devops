@@ -1,0 +1,170 @@
+
+Using Jenkins to deploy Java based  application in Tomcat Server
+
+Apache Tomcat, often referred to simply as Tomcat, is an open-source web application server 
+and servlet container developed by the Apache Software Foundation. It's used to deploy 
+Java-based web applications, especially those built using Java Servlets and JavaServer 
+Pages (JSP). Tomcat's primary purpose is to provide a platform for running Java web 
+applications and handling HTTP requests.
+
+Tomcat is mainly used for a demo purpose.
+
+Installing and Configuring Tomcat Server:
+
+ssh to your linux machine 
+
+sudo su
+cd /opt
+sudo wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.65/bin/apache-tomcat-9.0.65.tar.gz
+sudo tar -xvf apache-tomcat-9.0.65.tar.gz
+Navigate to Tomcat's configuration directory:
+
+cd /opt/apache-tomcat-9.0.65/conf
+Edit the tomcat-users.xml file and add the following line at the end (2nd-last line):
+
+<user username="admin" password="admin1234" roles="admin-gui, manager-gui, manager-script"/>
+Create symbolic links for Tomcat startup and shutdown scripts:
+
+sudo ln -s /opt/apache-tomcat-9.0.65/bin/startup.sh /usr/bin/startTomcat
+sudo ln -s /opt/apache-tomcat-9.0.65/bin/shutdown.sh /usr/bin/stopTomcat
+Edit the context.xml files for the manager and host-manager web applications to comment out a section:
+
+sudo vi /opt/apache-tomcat-9.0.65/webapps/manager/META-INF/context.xml
+Comment out the following section:
+
+<!-- Valve className="org.apache.catalina.valves.RemoteAddrValve"
+allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1" />
+Similarly, edit the context.xml file for the host-manager:
+
+sudo vi /opt/apache-tomcat-9.0.65/webapps/host-manager/META-INF/context.xml
+Comment out the same section as above:
+
+<!-- Valve className="org.apache.catalina.valves.RemoteAddrValve"
+allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1" -->
+To stop and start Tomcat, use the following commands:
+
+sudo stopTomcat
+sudo startTomcat
+
+
+Installing and Configuring Jenkins:
+
+First we need to install Jenkins. Jenkins can be installed using 2 methods:
+1. Complete Installation using ubuntu apt package manage
+2. Stand alone installation running as war file. 
+
+For 2, follow steps @ https://www.jenkins.io/doc/book/installing/war-file/
+Download Jenkins war file:
+ wget https://get.jenkins.io/war-stable/2.426.3/jenkins.war
+once downloaded, run in another terminal (make sure you dont press Control-C)
+ java -jar jenkins.war --httpPort=8081
+Here Jenkinsis runnning as standalone listening on port 8081
+you can access Jenkins:
+
+ http://ipaddress:8081
+
+Login with initialAdminPassword displayed in the standalone terminal 
+configure Jenkins : add user with password
+Jenkins will take you to Dashboard
+Dashboard -> Manage Jenkins -> Plugins -> Available Plugins
+-> Add Deploy to Container plugin
+-> After installation, restart jenkins through http://jenkinsurl:8081/restart
+
+Create a Pipeline job with Name: deploy-to-tomcat
+
+Copy the below script: 
+
+  pipeline {
+    agent any
+
+    stages {
+
+        stage('Git Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your_repo.git'
+            }
+        }
+
+        stage('Compile') {
+            steps {
+                sh "mvn compile"
+            }
+        }
+
+        stage('Tests') {
+            steps {
+                sh "mvn test"
+            }
+        }
+
+        stage('Package') {
+            steps {
+                sh "mvn clean package"
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                deploy adapters: [
+                    tomcat9(
+                        credentialsId: 'tomcat-credential',
+                        path: '',
+                        url: 'http://13.233.144.57:8080/'
+                    )
+                ],
+                contextPath: 'Planview',
+                onFailure: false,
+                war: 'target/*.war'
+            }
+        }
+    }
+  }
+
+We can generate the script for Git Checkout Stage and Deploy Stage
+using Pipeline Syntax generator. The above script is for reference
+while working on this, try to generate on your own using
+Hello world pipeline script and Pipeline Syntax Generator.
+
+Start your Jenkins build till Package Stage to confirm
+whether the pipeline is setup properly.
+
+Later work on adding Deply stage to the piepline job using snippet generator.
+
+Follow steps below:
+Go to deploy-to-tomcat Job -> Configure ->
+In the Pipeline Scipt, edit the script and go to the last stage.
+Copy the Package stage and add it as Deploy stage.
+Generate Script for this stage using Deploy to Container plugin.
+Click on Pipeline Syntax 
+-> Steps -> sample steps ->
+-> Select deploy: deploy war/ear to a container
+-> deploy -> WAR/EAR files: target/*.war
+-> Context path: Planview
+-> Contiainers -> Add Tomcat 9.x Remote
+-> Credentials -> Generate Tomcat admin user
+   credentials in Jenkins Credential store
+   username: admin password: admin1234
+-> select the above created Credentials
+-> Tomcat URL: http://ipaddress:8080
+-> Deploy on failure -> unselect
+-> Generate Pipeline Script
+
+copy this to the last deploy stage of the pipeline sscript:
+
+  stage('Deploy') {
+    steps {
+      deploy adapters: [tomcat9(credentialsId: 'tomcat-credentials', path: '', url: 'http://192.168.0.100:8080/')], contextPath: 'Planview', onFailure: false, war: 'target/*.war'
+    }
+  }
+
+-> Apply and Save
+
+-> Build Now
+Access the deployed application using url:
+
+http://ipaddress:8080/Planview
+If you are able to see the w3schools.com app, the 
+you have successfully deployed an application on to a tomcat
+server.
+
+ 
