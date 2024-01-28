@@ -1,0 +1,127 @@
+What are the problems of traditional approach to application development?
+
+Problem 1:
+
+Suppose there is a java based application that will be developed and 
+delivered to the customer. It needs the following to work:
+1. A Linux Machine - OS on which it will run
+2. jdk11 - Java to develop and for runtime
+3. 8080 - port on which this app will be running -standard or defined by the developer
+4. java -jar name_of_app.jar - runtime environement for the app to run
+
+There would not be any problem if developing this application and deploying 
+it to a customer environment would be a one time effort. That means, we develop
+the application and allow no changes to it at later point of time. But in real
+world scenario such applications rarely exist. In reality, we have to constantly
+update the application, perform QA and deploy it in the customer environement.
+
+To allow changes to an application and to make the updated version of the application
+to be tested in the customer environment, we have to enable sharing of the application.
+Sharing often requires customer to setup and maintain the same environment as it was used 
+in the development of the application. Setting up of such environment is often a time
+consuming process and it may involve many complex steps to be performed.
+
+Probelm 2:
+
+Many applications developed earlier were deployed to run on a standalone physical server. 
+In physical servers, lot of system resouces would often be running idle as applications
+needed very less processing time and memory. So inorder to completely utilize the physical
+server resources, Virtual Machines were adapted. Virtual machines abstract the underlying
+hardware of the OS using Hypervisors and thereby allowing us to run multiple OSs on a
+single physical server. But Virtual machines, though more secure than the modern Containers,
+have more overhead in terms of managing them. Often we need to upgrade them and patch any security
+vulnerability. Also the applications running on Virtual Machines would use less system resources
+of VMs and hence there was a need felt for much lighweight version of the Virtual machines
+that would be very easy to setup, maintain and share. 
+
+Problem 3:
+
+Monolithic applications:
+Applicaitons developed in earlier days were monolothic. Monolithic applications are
+huge application executable or binary that often have complex architectures and are
+very difficult to manage. So inorder to reduce the complexities of developing the 
+applications, microservice arhcitecture is being adopted across organisations. 
+With microservices, the aplication is split it into a number of smaller applications
+or components with each component performing a specific task or functioonality. For
+example, the ecommerce application has a sepoerate service to handle payments, user
+account creation, database management, product portfolio management, etc.
+
+
+Solution:
+
+To overcome these problems of application development and sharing, we build the
+the application along with its runtime environment and create a package called image.
+This image can be shared and run in the customer environment. This image is a docker
+image and it is lightweight in nature compared to the Virtual Machine as it will not 
+have a complete Operating System. Also we can run multiple versions of the application
+on the same Operating System by building and running multiple images of the same application. 
+
+Coming back to the above mentioned java based application, we package the application
+along with its runtime(jdk11), its dependencies, system dependencies and part of the Linux OS
+into an image called docker image. This image can be easily shared so that it can 
+deployed and run in the customer environment with much ease.
+
+The docker container share the resources of the underlyging OS especially the system libraries
+that are needed to run the application.
+
+
+What is docker?
+Docker is a containerisation platform that is used to create container images
+of applications and these images that can be run as containers, pushed to and 
+pulled from registry to allow sharing and deploying of these containerised
+applications.
+
+
+Docker installation:
+
+  sudo apt update
+  sudo apt install docker.io -y
+  sudo systemctl start docker
+
+  sudo usermod -aG docker <linuxuseraccount>
+  newgrp docker
+  sudo systemctl stop docker
+  sudo systemctl start docker
+
+docker run hello-world # to test docker is installed and configured
+
+Docker Terminologies:
+
+Docker Daemon, dockerfile, docker build, docker images, docker container, docker run,
+docker registry, docker push, docker pull, docker Desktop
+
+docker lifecycle:
+1. docker build using Dockerfile - a set of instructions to docker daemon to build a docker image
+2. docker run: run the docker image by creating a container from the image
+3. docker login - login to the docker registry to push the docker image to the registry
+4. docker push - Upload the image of the docker image to the docker registry
+5. docker pull - download the image from the docker registry to be used to run in a container.
+
+docker commands:
+
+Dockerfile:
+
+FROM openjdk:8u151-jdk-alpine3.7
+EXPOSE 8080
+ENV APP_HOME /usr/src/app
+COPY target/*.jar $APP_HOME/app.jar
+WORKDIR $APP_HOME
+CMD ["java", "-jar", "app.jar"]
+
+To build the image we run
+  docker build -t java_app:latest .
+
+To run this image in a docker container,
+  docker run --name java_app -p 8080:8080 -d java_app:latest
+
+create uour docker hub account at http://hub.docker.com
+To login to the docker registry. For first time login,
+it will prompt you for the password.
+  docker login -u yourdockerhubaccountusername
+
+To push the image to public docker registry
+  docker tag java_app:latest yourdockerhubaccountusername/java_app:latest
+  docker push yourdockerhubaccountusername/java_app:latest
+
+To pull the image from the public docker hub registry
+docker pull yourdockerhubaccountusername/java_app:latest
