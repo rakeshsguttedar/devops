@@ -1,7 +1,7 @@
 
 Jenkins Parameters Directive:
 
-Can Jenkins be configured to ask for which branch to build
+Can Jenkins be configured to read some build parameters
 during the start of the application build process?
 
 Yes, this is possible with Jenkins parameters directive.
@@ -9,21 +9,12 @@ Yes, this is possible with Jenkins parameters directive.
 Official Jenkins Link to refer: 
 https://www.jenkins.io/doc/book/pipeline/syntax/
 
-Scenario: 
+Scenario:
 We need to configure or specify the branch name to build
 during runtime of jenkins. How would you do that?
 
-If a github repo has 3 or 4 branches, can we configure Jenins
-to  for the branch to build during runtime?
-
-The github repository we are going is a private repository. 
-Hence, in Jenkins we need to use the github credentials by 
-generating the github classic token and storing them in the
-Jenkins Global credentials store.
-
-Go to Github and generate the Github Classic token for your 
-private repository. Store the token as it cannot be retrieved later.
-
+If a github repo has 3 or 4 branches, can we configure Jenkins
+to read the branch name to build during runtime?
 
 Definition of parameters:
 The parameters directive provides a list of parameters that a user
@@ -62,7 +53,7 @@ example usage of parameters directive in Jenkins declarative pipeline script:
       stage('Git checkout") {
         steps {
           // Do remember that the "${params.Github_Branch}" has to within double quotes, not single quotes.
-          // git branch: "${params.Github_Branch}", credentialsId: 'github', url: 'https://github.com/yourusername/reponame.git'
+          // git branch: "${params.Github_Branch}", credentialsId: 'github', url: 'https://github.com/yourgitusername/reponame.git'
           git branch: "${params.Cbranch}", credentialsId: 'github', url: 'https://github.com/yourusername/reponame.git'
         }
       }
@@ -75,8 +66,8 @@ example usage of parameters directive in Jenkins declarative pipeline script:
     }
   }
 
-  A similar kind of parameters directive can also be used to specify the
-  environment (dev,qa,ppd,prod) to deploy the artifacts after the build step is completed.
+A similar kind of parameters directive can also be used to specify the
+environment (dev,qa,ppd,prod) to deploy the artifacts after the build step is completed.
 
 
 Jenkins Shared Library
@@ -86,9 +77,10 @@ https://www.jenkins.io/doc/book/pipeline/shared-libraries/
 
 Sometimes, across many projects, one might find similar pattern of pipeline
 codes. These pipeline codes often lead to redundancies. To reduce the
-redundancies, we can use the shared libraries and thereby extend its capability,
-improve consistencies across multiple projects and we can also track it or Version
-Control using SCM.
+redundancies, we can use the shared libraries and thereby extend Jenkins
+capability to improve consistencies across multiple projects. The shared
+libraries can be tracked or version controlled using SCM therby enabling
+it to be shared across multiple projects.
 
 For example, Sonarqube analysis of source code is common across multiple projects.
 The code that does the sonarqube analysis can be stored into a shared library
@@ -208,8 +200,3 @@ pipeline {
 }
 
 Build this pipeline job to see the share library in action!
-
-
-
-
-
