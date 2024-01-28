@@ -27,13 +27,15 @@ Create symbolic links for Tomcat startup and shutdown scripts:
 
 sudo ln -s /opt/apache-tomcat-9.0.65/bin/startup.sh /usr/bin/startTomcat
 sudo ln -s /opt/apache-tomcat-9.0.65/bin/shutdown.sh /usr/bin/stopTomcat
+
 Edit the context.xml files for the manager and host-manager web applications to comment out a section:
 
 sudo vi /opt/apache-tomcat-9.0.65/webapps/manager/META-INF/context.xml
 Comment out the following section:
 
 <!-- Valve className="org.apache.catalina.valves.RemoteAddrValve"
-allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1" />
+allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1" /> -->
+
 Similarly, edit the context.xml file for the host-manager:
 
 sudo vi /opt/apache-tomcat-9.0.65/webapps/host-manager/META-INF/context.xml

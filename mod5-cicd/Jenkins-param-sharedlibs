@@ -1,0 +1,215 @@
+
+Jenkins Parameters Directive:
+
+Can Jenkins be configured to ask for which branch to build
+during the start of the application build process?
+
+Yes, this is possible with Jenkins parameters directive.
+
+Official Jenkins Link to refer: 
+https://www.jenkins.io/doc/book/pipeline/syntax/
+
+Scenario: 
+We need to configure or specify the branch name to build
+during runtime of jenkins. How would you do that?
+
+If a github repo has 3 or 4 branches, can we configure Jenins
+to  for the branch to build during runtime?
+
+The github repository we are going is a private repository. 
+Hence, in Jenkins we need to use the github credentials by 
+generating the github classic token and storing them in the
+Jenkins Global credentials store.
+
+Go to Github and generate the Github Classic token for your 
+private repository. Store the token as it cannot be retrieved later.
+
+
+Definition of parameters:
+The parameters directive provides a list of parameters that a user
+should provide when triggering the Pipeline. The values for these 
+user-specified parameters are made available to Pipeline steps via
+the params object.
+
+Each parameter has a Name and Value, depending on the parameter type.
+This information is exported as environment variables when the build
+starts, allowing subsequent parts of the build configuration to access
+those values. 
+For example, use the ${PARAMETER_NAME} syntax with POSIX shells like 
+bash and ksh, the ${Env:PARAMETER_NAME} syntax with PowerShell, or 
+the %PARAMETER_NAME% syntax with Windows cmd.exe.
+
+parameters types: string, text, booleanParam,choice,password
+
+string
+for example: string type parameter
+
+  parameters { string(name: 'DEPLOY_ENV', defaultValue: 'staging', description: '') }.
+
+example usage of parameters directive in Jenkins declarative pipeline script:
+
+  pipeline {
+    agent any
+    
+    parameters {
+      // String type parameter added for specifying the github branch
+      // string ( name: 'Github_Branch', defaultValue: 'main', description: 'giuhub branch to build')
+      choice ( name: 'Cbranch', choices: ['main','develop','feature'], description: 'branch choice'
+    }
+
+    stages {
+    
+      stage('Git checkout") {
+        steps {
+          // Do remember that the "${params.Github_Branch}" has to within double quotes, not single quotes.
+          // git branch: "${params.Github_Branch}", credentialsId: 'github', url: 'https://github.com/yourusername/reponame.git'
+          git branch: "${params.Cbranch}", credentialsId: 'github', url: 'https://github.com/yourusername/reponame.git'
+        }
+      }
+
+      stage('Package') {
+          step {
+              sh "mvn clean package"
+          }
+      }
+    }
+  }
+
+  A similar kind of parameters directive can also be used to specify the
+  environment (dev,qa,ppd,prod) to deploy the artifacts after the build step is completed.
+
+
+Jenkins Shared Library
+
+official Jenkins page link for shared librarues:
+https://www.jenkins.io/doc/book/pipeline/shared-libraries/
+
+Sometimes, across many projects, one might find similar pattern of pipeline
+codes. These pipeline codes often lead to redundancies. To reduce the
+redundancies, we can use the shared libraries and thereby extend its capability,
+improve consistencies across multiple projects and we can also track it or Version
+Control using SCM.
+
+For example, Sonarqube analysis of source code is common across multiple projects.
+The code that does the sonarqube analysis can be stored into a shared library
+and it can be reused across multiple projects.
+
+In short, we write the repeated code in a function inside a groovy script and call this
+function. 
+
+What is a Shared Library?
+
+A shared library in Jenkins is a collection of reusable pipeline code written in Groovy.
+It allows you to define functions, variables, and classes that can be used across multiple 
+Jenkins pipeline jobs.
+
+A shared library should be created only
+1.  when we want to use commonly occuring code across multiple Jenkins jobs. 
+    Otherwise, the overhead of creating the shared library cannot be justified.
+2. If the code is required to be shared.
+
+If the common code is simple, then Jenkins shared library is not needed.
+
+How to confiure shared libraries?
+Three steps:
+1. Create a github repository of your shared library
+2. Configure the github repo of shared library in the Jenkins System.
+3. USe the shared library in the pipeline.
+
+Step 1: Create a github repository of your shared library
+
+The File or repo structure of the shared library:
+root directory or repo name:jenkin-shared-lib
+1. resources
+2. src/org/example/*.groovy
+3. vars/*.groovy
+
+All our organised source of functions should be in src/org/example/
+All our global functions and variables are defined inside vars.
+resources section is less used. It is mainly used in advanced setup.
+
+Examples of vars/*.groovy files:
+// vars/mymvnpkg.groovy
+def call() {
+    sh 'mvn clean package'
+}
+
+// vars/mymvnpkg.groovy
+def call() {
+    sh 'mvn clean package'
+}
+
+//vars/myFunction.groovy
+def call(name) {
+    echo "Hello ${name} from myFunction!"
+}
+
+Step 2: Configure the github repo of shared library in the Jenkins System.
+
+Go to Jenksin -> Dashboard -> Manage Jenkins -> System
+-> Global Pipeline Libraries Section
+-> Name: mysharedlib
+-> Default Version: main
+-> Retrieval method: Modern SCM
+-> Source Code Management: Git
+-> Project Repository: https://github.com/rakeshsguttedar/jenkins_sharedlib.git
+-> Apply and Save
+
+Step 3:
+Create a Pipeline kind Jenkins job with Name: shared-lib-pipeline
+Use the below Declarative Jenkins Pipeline script:
+
+Please note that @Library('mysharedlib') needs to be added in the begiinning 
+of the pipeline script
+
+@Library('mysharedlib')_
+
+pipeline {
+    agent any
+    
+    tools {
+        jdk 'jdk17'
+        maven 'maven3'
+    }
+    
+    stages {
+        stage('Greetings') {
+            steps {
+                script {
+                  // Here is how you call the shared library global function from ./vars/myFunction.groovy
+                    myFunction('Santa')
+                }
+            }
+        }
+        
+        stage('Git checkout') {
+            steps {
+                git branch: 'main', credentialsId: 'github', url: 'https://github.com/yourrepo/application.git'
+            }
+        }
+
+        stage('package') {
+            steps {
+                script {
+                  // Here is how you call the shared library global function from ./vars/mymvnpkg.groovy
+                    mymvnpkg()
+                }
+            }
+        }
+        stage('install') {
+            steps {
+                script {
+                  // Here is how you call the shared library global function from ./vars/mymvninstall.groovy
+                    mymvninstall()
+                }
+            }
+        }
+    }
+}
+
+Build this pipeline job to see the share library in action!
+
+
+
+
+
