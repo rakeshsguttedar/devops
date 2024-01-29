@@ -1,0 +1,59 @@
+Github Actions
+
+VMs or EC2 costs us some money. You can avoid using these VMs and use 
+Github Actions to run our CICD pipeline. The advantage is that we need not
+install a seperate tool for setting up the CICD pipeline. We can use the
+Gihub Provided Actions workflow and setup the pipeline to build our sourcecode.
+
+To build applications using Github Action
+
+Go to Project repo in github
+
+click on Actions Menu.
+It will enable Actions for this project if anot already enabled.
+Workflows page is created. Where we can add workflows, list already added 
+workflows and manage runners.
+
+Click on "New workflow" button
+Gihub will open images page for configuring our build. 
+The page will suggest some prebuilt images by Github based on our project
+repository. We can select an image "Java with Maven" for our project and 
+click on Configure.
+
+Inside our project repository, a folder named
+BoardgameListingWebApp/.github/workflows/maven.yml is automatically created.
+
+The maven.yml file is a workflow file same as Jenkinsfile pipeline file.
+We can edit this maven.yml file and configure it.
+Once editing of maven.yml is done, you can Commit the Changes to start the Build
+process.
+
+name: Build Maven Application
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        cache: maven
+    - name: Compile with Maven
+      run: mvn compile
+    - name: Test with Maven
+      run: mvn test
+    - name: Build with Maven
+      run: mvn install 
+    - uses: actions/upload-artifact@v3
+      with:
+        name: my-artifact
+        path: target
