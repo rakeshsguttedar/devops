@@ -7,18 +7,22 @@ Gihub Provided Actions workflow and setup the pipeline to build our sourcecode.
 
 To build applications using Github Action
 
-Go to Project repo in github
+-> Go to Project repo in github
 
-click on Actions Menu.
+-> click on Actions Menu.
 It will enable Actions for this project if anot already enabled.
 Workflows page is created. Where we can add workflows, list already added 
 workflows and manage runners.
 
-Click on "New workflow" button
-Gihub will open images page for configuring our build. 
-The page will suggest some prebuilt images by Github based on our project
+Prebuilt OS docker images Images:
+
+-> Click on "New workflow" button
+Gihub will open a page containing prebuilt OS images and we can select one
+of these images to run our pipeline.
+
+This page will also suggest some prebuilt images of Github based on our project
 repository. We can select an image "Java with Maven" for our project and 
-click on Configure.
+-> click on Configure.
 
 Inside our project repository, a folder named
 BoardgameListingWebApp/.github/workflows/maven.yml is automatically created.
@@ -57,3 +61,4 @@ jobs:
       with:
         name: my-artifact
         path: target
+
