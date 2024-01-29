@@ -1,0 +1,82 @@
+Sonarqube
+
+CICD pipeline involves the following steps:
+
+1. Git checkout of source code
+2. Code is compiled and Code is unit tested 
+
+After the above 2 steps, the source code needs to under go quality
+check to rule out any security vulnerabilities inside the source code.
+
+The source code quality check involves two steps:
+  1. Code quality checks
+  2. Code Coverage
+
+ Code quality checks involves 
+ 1. identifications of bugs - wrong functionality in code
+ 2. identification of security vulnerabilities in code
+    loop holes in the source code that make it easy to attack 
+ 3. Code smell
+    some indication or symptoms that there could be vulnarabilities or bugs
+    at particular place in the source code.
+ 
+ These issues is less, than code quality is good or if these issues are more,
+ than the code is of low quality.
+
+Code Coverage:
+Code Coverage is the measure of quantity of source code that is
+covered in functional testing of the application. 
+It is measured in terms of percentage.
+
+Example: 
+Suppose if an application which is having 100 lines of source code
+and if there are 10 test cases that test all functionalities of
+the code and if those test cases cover or go through all hundred
+lines of the source, then we say that the code coverage is 100%.
+If only 80 lines of source code is covered, then code coverga is
+80%.
+
+How do we get these results.?
+We have third party tool, jacaco, which generates
+a report after code scanning. That report will be shared to
+sonarqube server and only sonarqube can read that report. 
+Sonarqube will interpret that report and it displays it for us in a human readable form.
+
+80% is considered usually considered a good code coverage.
+
+
+
+Sonarqube troubleshooting
+
+we used to upgrade all tools quaterly 
+my project was setup in Kubernetes
+Sonarqube was not working fine after upgrade
+sonarqube pod was having a java plugin which was having two versions
+we removed the older version of the plugin and restarted the pod.
+
+What if the plugin is not available in the market place?
+
+Going to backend of sonarqube to install third party sonarqube plugins other than marketplace
+plugins?
+
+  docker exec -it containerID /bin/bash
+  (in kubernetes we should go into kubernetes pod)
+  cd /extension/plugin
+  wget https://github.com/mc1arke/sonarqube-community-branch-plugin/releases/download/1.18.0/sonarqube-community-branch-plugin-1.18.0.jar
+
+restart the docker container
+  docker restart continaerID
+  docker ps 
+
+Interview Questions?
+
+When should we run sonarqube analysis?
+We should tell that after the test cases have run we 
+ran sonarqube analysis.
+
+Why should be able to run Sonarqube analysis on feature branch
+or another branch other than master/main?
+
+To detect issues with the code much earlier in the development
+lifecycle.
+

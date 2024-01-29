@@ -542,3 +542,25 @@ Start a Build for the Jenkins job that has this post block configured.
 After the build is success or failure, test whether an email has been 
 delivered to your gmail inbox.
 
+
+Troubleshooting Jenkins issues
+
+1. Jenkins logs - always check for issues which are at the end of the log file.
+
+2. 500 internal server error
+
+3. Error 137 Memory issue of Jenkins
+Jenkins was very slow or hanging. I had to set the initial memory and max memory
+to overcome this problem
+Initial memory and max memory setting to
+
+mvn package -DargLine="-Xmx512m -Xms256m"
+
+java -Xms256m -Xmx2048m
+The Xms flag has no default value, and Xmx typically has a default value of 256 MB. 
+A common use for these flags is when you encounter a java.lang.OutOfMemoryError.
+
+4. Plugin issues - plugin dependency with other plugins
+
+
+
