@@ -7,10 +7,10 @@ CICD pipeline involves the following steps:
 1. Git checkout of source code
 2. Code is compiled and Code is tested
 
-After the code is ccheckout from Git and performed all tests on it,
+After the Source code is checkout from Git and all tests are performed on it,
 the source code needs to under go quality check to rule out any issues it it.
-We need perform the static code analysis ofthe source code to identify any
-security issues in the code. For this analysis, we use Sonarqube.
+We need perform the static code analysis to identify any security issues.
+For this analysis, we use Sonarqube.
 
 What is Sonarqube?
 
@@ -28,14 +28,14 @@ In code quality check, an application might have different kinds
 of issues with respect to the source code.
 
 Types of issues with the source code:
+
 1. Bugs - Code not Working as expected
-2. Vulnerabilities - specific part of code which is weak and is 
-   prone to attacks. 
+2. Vulnerabilities - specific part of code which is weak and is prone to attacks. 
 3. Code Smell - point in source code which might cause some issue in future.
    A maintainability issue that makes your code confusing and difficult to maintain.
-4. Code duplicaiton - patterns of code which are identical or repeated
-   mmight be fixed by creating functions for the repeated pattern
-5. Technical debt -The estmated time taken by developer to fix these
+4. Code duplication - parts of code which are identical or repeated
+   mmight be fixed by creating functions for the repeated code.
+5. Technical debt -The estimated time taken by developer to fix these
    issues is known as Technical Debt. It is called as Debt because the
    time taken to fix these issues can be spent on some other task.
 
@@ -78,20 +78,20 @@ Its is a third-party plugin supported by sonarqube community.
 For projects having very large number of lines of code, we have to use Developer version
 of Sonarqube.
 
-
-
 Installing Sonarqube:
 
-Verion: sonarqube 9.9 lts version.
-
 docker method is the simplest/easiest method to install and run sonarqube.
+
+Verion: sonarqube 9.9 lts version.
+https://hub.docker.com/_/sonarqube
+
 
   docker run -d -p 9000:9000 sonarqube:lts-community
 
 Access it: http://ipaddress:9000
 
--> username/password: admin/admin 
--> change the password
+-> Login -> username/password: admin/admin 
+-> Change password -> add new password
 
 -> Adminstration -> Marketplace
 to install plugins in sonarqube
@@ -100,7 +100,8 @@ Check sonarqube verion: System
 Search in google, plugin matrix to identify supported
 table plugin version and Sonarqube version
 
-->Administration -> Projects -> Background Tasks the success or failure of the sonarqube tasks
+->Administration -> Projects -> Background Tasks 
+the success or failure of the sonarqube tasks
 
 Administration -> Projects ->Security
 Generate token and use it to authenticate sonarqube from another tool.
@@ -123,61 +124,66 @@ specific rules and use that copy of profile for our project.
 From where these Quality Profiles are installed.
 It is through Plugins of Programming languages installed by Sonarqube by default.
 
-Quality Gates - Conditions or criteria that can be edited and set the quality gate.
+Quality Gates - Conditions or criteria that can be edited and set the quality criteria.
 
 Code Coverage configurations
-
-jacoco - a third party sonarqube tool for code coverage of java based projects
+jacoco - JAvaCOdeCOverage - a third party code coverage tool for java based projects
 istanbul - for code coverage of nodejs projects.
 
 We need to add three sections in pom.xml for using jacoco for code coverage:
-Properties
-Plugin
-Dependencies
+1. Properties
+<properties>
+    <!-- JaCoCo Properties -->
+    <jacoco.version>0.8.7</jacoco.version>
+    <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+    <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+    <sonar.jacoco.reportPath>${project.basedir}/../target/jacoco.exec</sonar.jacoco.reportPath>
+    <sonar.language>java</sonar.language>
+</properties>
 
+2. Plugin
+<plugin>
+    <groupId>org.jacoco</groupId>
+    <artifactId>jacoco-maven-plugin</artifactId>
+    <version>${jacoco.version}</version>
+    <executions>
+        <execution>
+            <id>jacoco-initialize</id>
+            <goals>
+                <goal>prepare-agent</goal>
+            </goals>
+        </execution>
+        <execution>
+            <id>jacoco-site</id>
+            <phase>package</phase>
+            <goals>
+                <goal>report</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
 
-WRT sonarqube, make sure you ensure Interviewer ask more questions in sonarqube as
-sonarqube is much simpler.
+3. Dependencies
+<dependency>
+    <groupId>org.jacoco</groupId> 
+    <artifactId>jacoco-maven-plugin</artifactId>
+    <version>0.8.7</version>
+</dependency>
 
+Configuring Jenkins and Sonarqube to run Sonarqube-Analysis in Jenkins:
 
+Jenkins:
+1. Installing plugins Eclipse Temurin and Sonarqube Scanner
+   Dashbaord -> Manage Jenkins -> Plugins
+2. Configuring jdk,maven and sonar-scanner plugins in Tools
+   Dashbaord -> Manage Jenkins -> Tools
+3. Adding Sonarqube login token in Jenkins Credentials store
+  Dashbaord -> Manage Jenkins -> Credentials
+3. Adding Sonarqube server URL in Jenkins System
 
-Sonarqube troubleshooting
+Adding Sonarqube stages in Jenkins pipeline script:
 
-We used to upgrade all tools quaeterly.
-My project was setup in Kubernetes
-Sonarqube was not working fine after upgrade
-sonarqube pod was having a java plugin which was having two versions
-we removed the older version of the plugin and restarted the pod.
-
-What if the plugin is not available in the market place?
-
-Going to backend of sonarqube to install third party sonarqube plugins other than marketplace
-plugins?
-
-  docker exec - it containerID /bin/bash
-  (in kubernetes we should go into kubernetes pod)
-  cd /extension/plugin
-  wget https://github.com/mc1arke/sonarqube-community-branch-plugin/releases/download/1.18.0/sonarqube-community-branch-plugin-1.18.0.jar
-
-restart the docker container
-  docker restart continaerID
-  docker ps 
-
-Interview Questions?
-
-When should we run sonarqube analysis?
-We should tell that after the test cases have run we 
-ran sonarqube analysis.
-
-Why should be able to run Sonarqube analysis on feature branch
-or another branch other than master/main?
-
-To detect issues with the code much earlier in the development
-lifecycle.
-
-Sonarqube wrt to Jenkins pipeline script:
-
-  stage('Sonar Analysis') {
+  stage('Sonarqube-Analysis') {
     steps {
       withSonarQubeEnv('sonar') {
         sh ''' 
@@ -194,3 +200,44 @@ Sonarqube wrt to Jenkins pipeline script:
     }
   }
 
+
+Sonarqube troubleshooting
+
+We used to upgrade all tools quarterly.
+The project was setup in Kubernetes. Sonarqube was giving 
+crashLoopBackoff error after upgrade. sonarqube pod was having
+a java plugin which was having two versions we removed the older
+version of the plugin and restarted the pod.
+
+What if the plugin is not available in the market place?
+
+Going to backend of sonarqube to install third party sonarqube plugins other than marketplace
+plugins?
+
+  docker exec - it containerID /bin/bash
+  (in kubernetes we should go into kubernetes pod)
+  cd /extension/plugin
+  wget https://github.com/mc1arke/sonarqube-community-branch-plugin/releases/download/1.18.0/sonarqube-community-branch-plugin-1.18.0.jar
+  exit
+
+restart the docker container
+  docker restart continaerID
+  docker ps
+
+  Wait for the sonarqube to be up.
+After restart, login to sonarqube server.
+Accept the Risk as the plugin is a third-party plugin.
+
+WRT sonarqube, make sure you ensure Interviewer ask more questions in sonarqube as
+sonarqube is much simpler.
+Interview Questions?
+
+When should we run sonarqube analysis?
+We should tell that after the test cases have run we 
+ran sonarqube analysis.
+
+Why should be able to run Sonarqube analysis on feature branch
+or another branch other than master/main?
+
+To detect issues with the code much earlier in the development
+lifecycle.
