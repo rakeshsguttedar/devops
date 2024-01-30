@@ -1,32 +1,55 @@
 Sonarqube
 
+Background:
+
 CICD pipeline involves the following steps:
 
 1. Git checkout of source code
-2. Code is compiled and Code is unit tested 
+2. Code is compiled and Code is tested
 
-After the above 2 steps, the source code needs to under go quality
-check to rule out any security vulnerabilities inside the source code.
+After the code is ccheckout from Git and performed all tests on it,
+the source code needs to under go quality check to rule out any issues it it.
+We need perform the static code analysis ofthe source code to identify any
+security issues in the code. For this analysis, we use Sonarqube.
 
-The source code quality check involves two steps:
-  1. Code quality checks
-  2. Code Coverage
+What is Sonarqube?
 
- Code quality checks involves 
- 1. identifications of bugs - wrong functionality in code
- 2. identification of security vulnerabilities in code
-    loop holes in the source code that make it easy to attack 
- 3. Code smell
-    some indication or symptoms that there could be vulnarabilities or bugs
-    at particular place in the source code.
- 
- These issues is less, than code quality is good or if these issues are more,
- than the code is of low quality.
+Sonarqube is SAST tool. SAST stands for Static Application
+Security Testing. That is, it is a static code analysis tool
+that is used to anaylse the source code after all the tests
+are run on it but before we build the application and generate
+artifacts. 
+
+The static code analysis of source code involves two steps:
+  1. Code Quality check
+  2. Code Coverage check
+
+In code quality check, an application might have different kinds
+of issues with respect to the source code.
+
+Types of issues with the source code:
+1. Bugs - Code not Working as expected
+2. Vulnerabilities - specific part of code which is weak and is 
+   prone to attacks. 
+3. Code Smell - point in source code which might cause some issue in future.
+   A maintainability issue that makes your code confusing and difficult to maintain.
+4. Code duplicaiton - patterns of code which are identical or repeated
+   mmight be fixed by creating functions for the repeated pattern
+5. Technical debt -The estmated time taken by developer to fix these
+   issues is known as Technical Debt. It is called as Debt because the
+   time taken to fix these issues can be spent on some other task.
+
+Best Part of Sonarqube: 
+Sonarqube can identify the issues and shows us where exactly in the source
+code the issues are present.
+
+How do you say that the source code is of good quality? 
+Lesser the number of issues in source code, better is the quality of source code.
 
 Code Coverage:
-Code Coverage is the measure of quantity of source code that is
+Code Coverage is the percentage of source code that is
 covered in functional testing of the application. 
-It is measured in terms of percentage.
+If 80% of source code is tested, then code coverage is 80%
 
 Example: 
 Suppose if an application which is having 100 lines of source code
@@ -44,12 +67,84 @@ Sonarqube will interpret that report and it displays it for us in a human readab
 
 80% is considered usually considered a good code coverage.
 
+Sonarqube 2 versions:
+Developer Version - Paid version - supports analysis of 1M lines of code and more
+                    and multiple branches of source code.
+Community Version - Free - limited with respect to amount of lines source code scanned
+                    and analyse only master/main branch of the source code. 
+
+Community Branch Plugin of sonarqube allows analysis on all branches of source code.
+Its is a third-party plugin supported by sonarqube community.
+For projects having very large number of lines of code, we have to use Developer version
+of Sonarqube.
+
+
+
+Installing Sonarqube:
+
+Verion: sonarqube 9.9 lts version.
+
+docker method is the simplest/easiest method to install and run sonarqube.
+
+  docker run -d -p 9000:9000 sonarqube:lts-community
+
+Access it: http://ipaddress:9000
+
+-> username/password: admin/admin 
+-> change the password
+
+-> Adminstration -> Marketplace
+to install plugins in sonarqube
+
+Check sonarqube verion: System
+Search in google, plugin matrix to identify supported
+table plugin version and Sonarqube version
+
+->Administration -> Projects -> Background Tasks the success or failure of the sonarqube tasks
+
+Administration -> Projects ->Security
+Generate token and use it to authenticate sonarqube from another tool.
+
+How does the sonarqube understands the source code language?
+Adminsitrattion -> Configuration - >
+Language -> File Suffixes
+
+How exactly Sonarqube performs the analysis?
+
+Quality Profiles - specific to programming language
+
+Profiles are language specific rules based on which sonarqube can 
+perform quality checks, perform analysis and identify issues in code.
+
+We cannot edit or change the default Profile provided by sonarqube. 
+But we can create a copy of the profile and activate or inactivate
+specific rules and use that copy of profile for our project.
+
+From where these Quality Profiles are installed.
+It is through Plugins of Programming languages installed by Sonarqube by default.
+
+Quality Gates - Conditions or criteria that can be edited and set the quality gate.
+
+Code Coverage configurations
+
+jacoco - a third party sonarqube tool for code coverage of java based projects
+istanbul - for code coverage of nodejs projects.
+
+We need to add three sections in pom.xml for using jacoco for code coverage:
+Properties
+Plugin
+Dependencies
+
+
+WRT sonarqube, make sure you ensure Interviewer ask more questions in sonarqube as
+sonarqube is much simpler.
+
 
 
 Sonarqube troubleshooting
 
-we used to upgrade all tools quaterly 
-my project was setup in Kubernetes
+We used to upgrade all tools quaeterly.
+My project was setup in Kubernetes
 Sonarqube was not working fine after upgrade
 sonarqube pod was having a java plugin which was having two versions
 we removed the older version of the plugin and restarted the pod.
@@ -59,7 +154,7 @@ What if the plugin is not available in the market place?
 Going to backend of sonarqube to install third party sonarqube plugins other than marketplace
 plugins?
 
-  docker exec -it containerID /bin/bash
+  docker exec - it containerID /bin/bash
   (in kubernetes we should go into kubernetes pod)
   cd /extension/plugin
   wget https://github.com/mc1arke/sonarqube-community-branch-plugin/releases/download/1.18.0/sonarqube-community-branch-plugin-1.18.0.jar
@@ -79,4 +174,23 @@ or another branch other than master/main?
 
 To detect issues with the code much earlier in the development
 lifecycle.
+
+Sonarqube wrt to Jenkins pipeline script:
+
+  stage('Sonar Analysis') {
+    steps {
+      withSonarQubeEnv('sonar') {
+        sh ''' 
+          $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Devops-CICD \
+          -Dsonar.java.binaries=. \
+          -Dsonar.projectKey=Devops-CICD 
+        '''
+      }
+    }
+  }
+  stage('Quality Gate Check') {
+    steps {
+      waitForQualityGate abortPipeline: false
+    }
+  }
 
