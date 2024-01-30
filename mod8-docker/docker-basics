@@ -21,11 +21,11 @@ Scenario 2:
 Many applications developed earlier were deployed to run on a standalone physical servers. 
 In physical servers, most of the system resouces would often be idle as applications
 needed very less processing time and memory. So in order to completely utilize the physical
-server resources, Virtual Machines were invented . Virtual machines abstract the underlying
-hardware of the OS using Hypervisors and there by allowing us to run multiple OSs on a
-single physical server. Even with the VMs, the applications would use less system resources
-of VMs and hence there was a need felt for much lighweight version of the Virtual machines
-that would be very easy to setup, maintain and share. 
+server resources, Virtual Machines were invented . Virtual machines virtualises the 
+hardware in the OS and there by allowing us to run multiple OSs on a single physical server.
+Even with the VMs, the applications would use less system resources of VMs and hence there
+was a need felt for much lighweight version of the Virtual machines that would be very easy to
+setup, maintain and share. 
 
 Sceanrio 3:
 
@@ -36,14 +36,12 @@ very difficult to manage. So inorder to reduce the complexities of developing th
 applications, microservice arhcitecture is being adopted across organisations. 
 With microservices, the aplication is split it into a number of smaller applications
 or components with each component performing a specific task or functioonality. For
-example, the ecommerce application has a sepoerate service to handle payments, user
-account creation, database management, product portfolio management, etc.
+example, the ecommerce application has a seperate service to handle payments, user
+account management, database management, product portfolio management, etc.
 
-
-
-To overcome these problems of application development and sharing, we build the
-the application along with its runtime environment and small parts of the operating
-system to create a package so that it is easy to share and use. 
+To overcome these problems of application development and sharing of these application,
+we build the the application along with its runtime environment and small parts of the
+operating system to create a package so that it is easy to share and use. 
 This packaged application is called a docker image. This image can be easily created,
 shared and run in the customer environment. It is lightweight in nature compared to the
 Virtual Machine as it will not have a complete Operating System. Also we can run multiple
