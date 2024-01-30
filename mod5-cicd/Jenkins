@@ -545,7 +545,8 @@ delivered to your gmail inbox.
 
 Troubleshooting Jenkins issues
 
-1. Jenkins logs - always check for issues which are at the end of the log file.
+1. If the Jenkins job has failed, what would you do?
+   Check Jenkins logs - always check for issues from the end of the jenkins log file.
 
 2. 500 internal server error
 
