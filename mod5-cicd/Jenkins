@@ -542,13 +542,12 @@ Start a Build for the Jenkins job that has this post block configured.
 After the build is success or failure, test whether an email has been 
 delivered to your gmail inbox.
 
-
 Troubleshooting Jenkins issues
 
 1. If the Jenkins job has failed, what would you do?
    Check Jenkins logs - always check for issues from the end of the jenkins log file.
 
-2. 500 internal server error
+2. 500 internal server error in the log file
 
 3. Error 137 Memory issue of Jenkins
 Jenkins was very slow or hanging. I had to set the initial memory and max memory
@@ -562,6 +561,7 @@ The Xms flag has no default value, and Xmx typically has a default value of 256 
 A common use for these flags is when you encounter a java.lang.OutOfMemoryError.
 
 4. Plugin issues - plugin dependency with other plugins
-
+   Installing and uninstalling of plugins is having issues 
+   because of plugin dependencies.
 
 
