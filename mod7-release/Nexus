@@ -1,0 +1,225 @@
+NEXUS 3
+
+Release Management: What is release management?
+Maintaining different versions of the application that can 
+be used to deploy the application as per requirements and also
+to allow rollback to previous version in case of issues.
+
+Artifact Repository Manager:
+a store which manages the different versions of the application
+artifacts for releasing to customer 
+
+An Example of building an artifact.
+A Java based application - build the source code and package
+the applicaton using 'mvn package' - a single file jar
+or war file is generated. This file is a standalone application
+and is called an Artifact.
+
+Example Artifacts: JAR/WAR, TAR, ZIP, NUGGET
+
+What is an Artifact?
+Artifact is the source code, dependencies packaged into a single file
+that is portable and executable.
+
+Illustration:
+
+Let us say that we have an application with version 1.0.0
+After some new features are added to this application like
+feature 1 and feature2, we release a newer version of the 
+application, version 1.0.1
+
+Now, how an Artifact Repository manager help us.?
+
+With the help of Artifact repository manager, we can maintain
+both the versions of the application as described below:
+
+1. We can release the specific version of the application
+   from the artifacts repository.
+2. If we want to deploy a version without the features, 
+   we can release v1.0.0. Otherwise we can release v1.0.1
+   and must be able to rollback to v1.0.0 in case of failure.
+
+Also multiple versions of artifacts cannot be managed properly
+in the local workspace.
+
+Hence we need a repository to track different versions of the
+application. Thats why we need Artifact Repository management tools
+such as Nexus or JFrog. JFrog is an old, less used tool having less
+features compared to Nexus.
+
+Practicals:
+
+Start a Virtual Machine and ssh to it.
+AWS -> EC2 Dashboard -> Launch Instance
+Select t2.high for running all tools like Jenkins, Sonarqube, trivy
+
+After ssh, in the terminal:
+
+    sudo apt update
+
+Installing Nexus:
+
+Download Nexus to directory
+  cd /opt/.
+Nexus download URL
+wget https://download.sonatype.com/nexus/3/nexus-3.64.0-04-unix.tar.gz && ls
+
+tar -xvf nexus-3.64.0-04-unix.tar.gz
+rm -rf nexus-3.64.0-04-unix.tar.gz
+
+Create a user and group with the name nexus:
+adduser nexus
+
+change Owner for directories
+
+chown -R nexus:nexus nexus-3.64.0-04
+chown -R nexus:nexus sonatype-work
+
+Edit nexus-3.64.0-04/bin/nexus.rc, 
+uncomment first line to add nexus within ''
+vi nexus-3.64.0-04/bin/nexus.rc 
+
+Install java if not already installed 
+(run java --version to get the command to install java) 
+
+Start Nexus: 
+/opt/nexus-3.64.0-04/bin/nexus start
+
+After a minute, go to http://ipadress:8081
+
+To get complete acces to NEXUS, we need to login as admin user.
+Ger initial password from:
+
+cat /opt/sonatype-work/nexus3/admin.password
+
+Login with admin/theinitialpasswordobtained
+Set the new admin password:
+Nexus UI is ready
+
+
+Working on Nexus3 UI
+Browse -> Repositories
+Settings -> Repository Settings
+
+Browse -> Repositories
+3 types of repositories:
+Proxy, Group and Hosted
+
+Proxy Type
+public repositories
+Examples: maven-central and nuget.org-proxy
+These repositories are not actual repo but they proxy the public repo.
+maven-central is the same repository that maven uses to download the
+dependencies in pom.xml file.
+
+Hosted Type
+Private repositories inside an organisation store company artifacts
+maven-releases - stores customer deployed artifacts
+maven-snapshots - stores development environment artifacts
+
+Group Type
+Generic repo to store different groups of artifacts
+like both nuget based and maven based artifacts
+
+Repository -> Cleanup Policies
+set for automatic cleanup of artifacts that are more than 90 days old
+
+Support -> Logs - nexus logs
+
+You can create your own repository:
+Create repository ->
+name: demo-artifact-repo
+Layout Policy: Permissive
+Deployment Policy: Allow redploy
+-> Create Repository
+A new repository of type Hosted is created
+
+Integrating Nexus with Jenkins:
+
+Install Jenkins or use Jenkins standalone and perform initial setpup:
+
+wget  https://get.jenkins.io/war-stable/2.426.3/jenkins.war
+java -jar jenkins.war --httpPort=8083
+
+Jenkins -> Plugins -> Available Plugins
+Install plugins: Eclipse Temurin, sonarqube scanner
+configure Tools: jdk17, maven3
+
+Nexus configurations in Jenkins:
+
+Install 3 Plugins for Nexus configurations:
+Jenkins -> Plugins -> Available Plugins
+Config File Provider
+Maven Integration
+Pipeline Maven Integration
+
+Set Nexus URL and Credentials in Jenkins
+1. Nexus URL in pom.xml file
+2. Credentials in Config File Management 
+(through Config File Provider Plugin)
+
+1. Add Nexus repo URL in pom.xml file inside <Project></Project> tag 
+Nexus UI -> Browse -> Repositories -> maven-snapshots -> Copy URL
+Nexus UI -> Browse -> Repositories -> maven-releases -> Copy URL
+Paste in the <url>http://IP:8081//repository/maven-releases/</url>
+Paste in the <url>http://IP:8081//repository/maven-snapshots/</url>
+change <id></id>
+
+<project>
+    <!-- ... other project information ... -->
+    
+    <distributionManagement>
+        <repository>
+            <id>maven-releases</id>
+            <url>NEXUS-URL/repository/maven-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>maven-snapshots</id>
+            <url>NEXUS-URL/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <!-- ... other project configuration ... -->
+</project>
+
+2. Setting Credentials in Config File Management
+(through Config File Provider Plugin)
+Dashboard -> Manage Jenkins -> Managed Files
+-> Add a new Config
+
+Select : Global Maven Settings - for all projects
+-> Next 
+Setting.xml file:
+uncomment <!-- <server></server> -->
+and create 2 <server></server> blocks for releases and snapshots:
+    set <id>naven.releases</id>
+        <username>admin</username>
+        <password>nexus</password>
+    set <id>naven.snapshots</id>
+        <username>admin</username>
+        <password>nexus</password>
+-> Submit
+
+Settings in Jenkins -> Pipeline Job -> Pipeline Script
+
+Go to Pipeline Syntax Generator: 
+Select: withMaven: Provide Maven Environment
+And 
+-> Global Maven Settings Config 
+   MyGlobalSettings
+
+Generate script, copy and paste the
+settings in stage('Deploy to Nexus')
+
+stage('Deploy To Nexus') {
+    steps {
+        withMaven(globalMavenSettingsConfig: 'e4488703-248a-44a7-f080-a9aq14fa0a5e') {
+            sh "mvn deploy"
+        }
+    }
+}
+
+Start the Build
+
+Change the Version <version>0.0.1</version> in pom.xml
+and check in the Nexus UI for the artifacts uploaded to the Nexus repository.

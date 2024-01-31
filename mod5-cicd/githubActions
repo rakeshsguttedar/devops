@@ -1,9 +1,10 @@
 Github Actions
 
-VMs or EC2 costs us some money. You can avoid using these VMs and use 
-Github Actions to run our CICD pipeline. The advantage is that we need not
-install a seperate tool for setting up the CICD pipeline. We can use the
-Gihub Provided Actions workflow and setup the pipeline to build our sourcecode.
+Using cloud VMs or AWS EC2 instances will costs us some money. You can avoid
+using these VMs and use Github Actions to run our CICD pipeline. The advantage
+is that we need not install a seperate tool for setting up the CICD pipeline. 
+We can use the Gihub Provided Actions workflow and setup the pipeline to build
+our sourcecode.
 
 To build applications using Github Action
 
