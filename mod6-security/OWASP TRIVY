@@ -1,0 +1,178 @@
+OWASP
+
+What exactly is OWASP?
+
+What problem does it solve?
+
+OWASP (Open Web Application Security Project):
+OWASP is a not for profit project that maintains a database
+of vulnerabilities with respect to dependencies of the projects.
+using NVD and CVE.
+
+NVD - National Vulnerabilities Database and 
+CVE - Common Vulnerability and Exposures
+
+dependency-check
+
+Arguments to dependency-check tool
+https://jeremylong.github.io/DependencyCheck/dependency-check-cli/arguments.html
+
+Ex: python flask 1.0.2 to 1.0.4 are vulnerable so use 1.0.5
+
+It will scan the project configuration files like
+package.json, pom.xml to scan for dependencies or libraries
+that are being used in the project.
+
+It reports specific versions of libraries that are vulnerable
+and recommend to use a different version of the dependencies
+or libraries.
+
+Jar analyser - 
+
+Install plugin for OWASP dep check in Jenkins
+Configure this tool in Jenkins -> Manage Jenkins -> Tools
+Add a stage in Jenkins jobs for OWASP dep check.
+
+Setting up OWASP Dependency Check in Jenkins 
+using AWS EC2 
+
+EC2 login
+ sudo apt update
+
+Install JDK17 in EC2 using
+  sudo apt install openjdk-17-jre-headless -y
+Install Jenkins 
+
+Pipeline script for configuring OWASP dependency check
+
+        stage('Code-Compile') {
+            steps {
+                sh "mvn clean compile"
+            }
+        }
+
+        stage('Unit-Test') {
+            steps {
+                sh "mvn clean test"
+            }
+        }
+
+        stage('OWASP Dependency Check') {
+            steps {
+                dependencyCheck additionalArguments: ' --scan . ', odcInstallation: 'DC'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+
+        stage('Code-Build') {
+            steps {
+                sh "mvn clean package"
+            }
+        }
+
+        stage('Sonar Analysis') {
+            steps {
+                withSonarQubeEnv('sonar') {
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Devops-CICD \
+                   -Dsonar.java.binaries=. \
+                   -Dsonar.projectKey=Devops-CICD '''
+                }
+            }
+        }
+
+
+
+TRIVY
+
+What is Trivy?
+
+Trivy is an open source advanced security scanning tool to scan security issues in
+1. Container Images:            trivy image
+2. Filesystem:                  trivy fs
+3. Git Repository (remote):     trivy repo
+4. Virtual Machine Image:       trivy vm 
+5. Kubernetes cluster and pods: trivy k8s
+6. AWS:                         trivy aws --region us-east-1
+
+What will trivy look for in security scans?
+Trivy can scan for 
+1. dependencies and libraries - OS packages and software dependencies in use (SBOM) - 
+2. Known vulnerabilities (CVEs)
+3. IaC issues and misconfigurations
+4. Sensitive information and secrets
+5. Software licenses
+
+Trivy is mainly used for scanning docker images especially for 
+vulnerabilitiesies in docker base image (FROM baseimage:latest
+in dockerfile), 
+outdated software packages(using updated docker image),
+CVEs(public database listing known issues CVE-2022-12567 ), 
+misconfigurations(K8s cluster not using best practices in the manifests),
+security risks or sensitive data (secrets,tokens), 
+package manager vulnerabilities (dependency vuln)
+
+Installation: 
+
+Add repository setting to /etc/apt/sources.list.d.
+
+sudo apt-get install wget apt-transport-https gnupg lsb-release
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+sudo apt-get update
+sudo apt-get install trivy -y
+
+Install docker tool to scanning docker images using trivy
+
+sudo apt install docker.io
+sudo usermod -aG docker ubuntu
+newgrp docker
+
+docker pull sonarqube:lts-community
+
+
+Usage:
+
+  trivy image alpine:latest
+  trivy image --format json ubuntu:latest
+
+Scanning Local file system:
+trivy fs /path/to/directory
+
+# Scan a directory without severity filter
+  trivy fs /home/ubuntu/Shopping-Cart/
+# Scan a directory with severity filter
+  trivy fs --severity CRITICAL,HIGH /home/ubuntu/Shopping-Cart/
+# Scan a directory and save results in JSON format
+  trivy fs --format json -o report.json /home/ubuntu/Shopping-Cart/
+
+Scanning of container or docker images - 
+trivy image <image-name>
+
+# Scan a Docker image
+trivy image adijaiswal/shopping-cart:latest
+# Scan a Docker image and save results in JSON format
+trivy image -f json -o docker-report.json adijaiswal/shopping-cart
+# Scan a Docker image with severity filter
+trivy image --severity HIGH sonarqube:lts-community
+
+# scan a github repo
+trivy repo https://github.com/jaiswaladi246/Ekart.git
+
+In jenkins jobs CICD pipeline script:
+
+pipeline {
+    agent any
+
+    stages {
+        stage('Git Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/jaiswaladi246/Ekart.git'
+            }
+        }
+        stage('Trivy FS Scan') {
+            steps {
+                sh "trivy fs --format table -o trivy-report.html --scanners vuln,misconfig --severity HIGH,CRITICAL  ."
+            }
+        }
+    }
+}
