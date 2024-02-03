@@ -116,7 +116,6 @@ docker rm <containerid> # another way of removing although less literal
 
 We can also used <container-name> in the place of <containerid>
 
-
 DEMONSTRATION OF CUSTOMER BRIDGE NETWORK
 
 How we can use mongo-network to establish a communication between two
@@ -136,7 +135,7 @@ docker run -d -p 27017:27017 \
 --name mongodb \
 -e MONGO_INITDB_ROOT_USERNAME=admin \
 -e MONGO_INITDB_ROOT_PASSWORD=123 \
-   mongo
+   mongo:4.4
 
 What is the source of this command and the environment 
 variables: MONGO_INITDB_ROOT_USERNAME, MONGO_INITDB_ROOT_PASSWORD ?

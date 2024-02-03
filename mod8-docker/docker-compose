@@ -1,0 +1,82 @@
+Docker Compose is a tool for defining and running multi-container
+Docker applications. It allows you to define your application's services,
+etworks, and volumes in a single docker-compose.yml file, making it easier
+to manage complex Docker setups. 
+
+Here's a guide on how to use Docker Compose with examples:
+Install docker compose using 
+sudo apt install docker-compose
+
+For example mongo-express front end container and mongodb backedn
+database container can be defined using docker-compose.
+
+Docker compose allow us to define an entire application stack
+involving docker services, volumes, network etc in a single yaml file.
+
+mongodb and mongo-express configuration without docker-compose:
+
+# Start MongoDB container
+
+docker run -d -p 27017:27017 --network mongo-network --name mongodb \
+-e MONGO_INITDB_ROOT_USERNAME=admin \
+-e MONGO_INITDB_ROOT_PASSWORD=123 \
+mongo
+
+# Start Mongo-Express Container
+
+docker run -d -p 8081:8081 \
+  --network mongo-network \
+  --name mongo-express \
+  -e ME_CONFIG_MONGODB_SERVER=mongodb \
+  -e ME_CONFIG_MONGODB_ADMINUSERNAME=admin \
+  -e ME_CONFIG_MONGODB_ADMINPASSWORD=123 \
+  -e ME_CONFIG_BASICAUTH_USERNAME=admin \
+  -e ME_CONFIG_BASICAUTH_PASSWORD=123 \
+  mongo-express
+
+The mongodb and mongo-express can be defined using docker-compose
+yaml file, 
+i.e. docker-compose.yml:
+
+version: '3'
+
+services:
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    networks:
+      - mongo-network
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=123
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    networks:
+      - mongo-network
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=123
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=123
+
+networks:
+  mongo-network:
+    driver: bridge
+
+This Docker Compose file defines two services, mongodb and mongo-express,
+just like your original Docker commands. It also specifies the necessary
+environment variables, ports, and network configurations. To use it, create
+a docker-compose.yml file in your project directory and run 
+docker-compose up -d to start the services.
+
+Note: Make sure you parse or validate this yaml file in yaml-lint: 
+https://www.yamllint.com/ before applying it using docker-compose.
+Validation can also be done with: `docker-compose config` command
+
