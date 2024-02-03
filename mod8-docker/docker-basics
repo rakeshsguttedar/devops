@@ -102,7 +102,7 @@ To build the image we run
 To run this image in a docker container,
   docker run --name java_app -p 8080:8080 -d java_app:latest
 
-create uour docker hub account at http://hub.docker.com
+create your docker hub account at http://hub.docker.com
 To login to the docker registry. For first time login,
 it will prompt you for the password.
   docker login -u yourdockerhubaccountusername

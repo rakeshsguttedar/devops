@@ -1,0 +1,207 @@
+Container networking refers to the ability for containers to connect to
+and communicate with each other. A container only sees a network interface
+with an IP address, a gateway, a routing table, DNS services, and other 
+networking details.
+
+Lets assume there are 2 docker containers: c1 and c2
+c1 and c2 need to communicate with each other. For this, 
+c1 and c2 has to be in the same network
+where c1 and c2 are on same host machine or on diff hosts.
+
+Netowkr Driver
+Within docker network we have a component known as docker driver that helps
+in establishing communication between containers.
+
+Network driver types in docker:
+most commonly used network types are
+1. Bridge network  default docker network
+2. Host network    container shares the network stack of host
+3. None    isolated container used mainly for security, debugging, testing 
+
+4. Overlay - docker network mainly used in docker swarm.
+Overlay networks are best when you need containers running on different
+Docker hosts to communicate, or when multiple applications work together
+using Swarm services.
+
+5. Macvlan - uses MAC address for network communication
+Macvlan networks are best when you are migrating from a VM setup or need your
+containers to look like physical hosts on your network, each with a unique MAC
+address.
+
+Bridge Network 
+
+Default network of docker, mainly used for inter docker communication
+and for securing a container. If you don't specify a driver, this is the
+type of network you are creating. Bridge networks are commonly used when
+your application runs in a container that needs to communicate with other
+containers on the same host.
+
+Note: The network inside a container is different from the host network.
+Hence to access an application inside a container, we need to use
+port of the application and map that port to the host machine port.
+
+Host network
+
+Instead of using a seperate network for container, the existing host
+network stack is shared with the docker container.
+When you use this driver, the container's network isn't isolated from the host.
+
+NONE network
+
+Docker container is not connected to any network.
+Needed for isolated testing or when the container only needs loopback
+connectivity. Limited use cases, primarily for debugging or security purposes.
+
+Hands-on
+
+docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+641ac9cac767   bridge    bridge    local
+e2bd990251bd   host      host      local
+d9ae5b7185b9   none      null      local
+
+docker network create mongo-network
+74066cbefbd9cab3709229078745355bf4de2f539e7a3e32ce7ae0f11c938e81
+
+docker network ls
+NETWORK ID     NAME            DRIVER    SCOPE
+8ce5ed4653e5   bridge          bridge    local
+6b408569d233   host            host      local
+83d8d01b9ece   mongo-network   bridge    local
+d9ae5b7185b9   none            null      local
+
+Create a sonarqube container:
+docker run -d --name sonar -p 9000:9000 sonarqube:lts-community
+
+docker ps
+docker ps command will confirm the creation of sonar container.
+
+To troubleshoot container issues we can check logs of container
+docker logs <container-id> 
+
+Connect this sonar conatiner to the mongo-network
+docker network connect mongo-network sonar
+
+We can delete the network using docker network rm command
+docker network rm mongo-network
+
+Error response from daemon: error while removing network: network mongo-network id 83d8d01b9ece46aef087234d5f9d3d446b793afceafbc2e1f5fcdd4c75b062c9 has active endpoints
+
+To check whether the network is being used by any other container and to
+check the network connection details such as ip addresses by using 
+docker inspect command on mongo-network and check in the container
+section of the command output.
+
+docker network inspect mongo-network
+
+IF you run the above command, you can see that mongo-network is connected
+to sonar container. Therefore before deleting (removing - rm) a network,
+make sure that the network is disconnected from sonar container using command:
+
+docker network disconnect mongo-network sonar
+
+Delete the network using:
+docker network rm mongo-network
+# To check mong-network is removed by using docker network ls command.
+
+To remove a container, we should stop it before removing.
+
+Stopping the container using:
+docker stop <containerid>
+
+Removing the container 
+docker container rm <containerid>
+or
+docker rm <containerid> # another way of removing although less literal
+
+We can also used <container-name> in the place of <containerid>
+
+
+DEMONSTRATION OF CUSTOMER BRIDGE NETWORK
+
+How we can use mongo-network to establish a communication between two
+containers?
+We have two docker containers:
+1. Mongo DB    2. Mongo Express
+   Backend         Frontend
+
+Mongo express is be a frontend UI to mongodb backend database.
+
+1. Creata a docker network with name: mongo-network
+docker network create mongo-network
+
+2. create a backend mongodb container with the mongo-network.
+docker run -d -p 27017:27017 \
+--network mongo-network \
+--name mongodb \
+-e MONGO_INITDB_ROOT_USERNAME=admin \
+-e MONGO_INITDB_ROOT_PASSWORD=123 \
+   mongo
+
+What is the source of this command and the environment 
+variables: MONGO_INITDB_ROOT_USERNAME, MONGO_INITDB_ROOT_PASSWORD ?
+
+We got these from docker hub for mongodb: 
+https://hub.docker.com/_/mongo
+and
+https://hub.docker.com/_/mongo_express
+
+    For Mongo Express frontend to connect to mongodb backend, 
+    three things are needed:
+    1. same network: mongodb and mongo express should be in the same network.
+    2. mongdodb name - mongodb
+    3. mongodb username and password
+
+3. Create a frontend mongo express container
+docker run -d -p 8081:8081 \
+--network mongo-network \
+--name mongo-express \
+-e ME_CONFIG_MONGODB_SERVER=mongodb \
+-e ME_CONFIG_MONGODB_ADMINUSERNAME=admin \
+-e ME_CONFIG_MONGODB_ADMINPASSWORD=123 \
+-e ME_CONFIG_BASICAUTH_USERNAME=admin \
+-e ME_CONFIG_BASICAUTH_PASSWORD=123 \
+   mongo-express
+
+keep checking the docker logs of mongo-express to confirm that
+the mongo-express has extablished the connection to mongodb
+database container.
+docker logs <mongo-express-containerid>
+
+After a minutes, you can log into mongo-express using:
+https://ipadress:8081  admin / 123 
+
+This demonstrated how docker network :mongo-network
+is used to connect two containers.
+
+In this demonstration we learnt how we can add environment
+variables for docker containers user -e option.
+
+EXTRA:
+
+Overlay Network:
+
+Purpose: Overlay networks are primarily used for multi-host communication in Docker 
+swarm mode. They facilitate communication between containers running on different 
+Docker hosts within a swarm.
+How it Works: Overlay networks create a private internal network that spans across
+multiple nodes in a Docker swarm. Containers on different hosts can communicate with
+each other as if they were on the same host.
+Advantages: Simplifies communication between containers in a distributed environment. 
+It abstracts the underlying network details, providing a consistent network view to 
+containers regardless of their physical location.
+Example:
+docker network create --driver overlay my_overlay_network
+
+Overlay Network strategy removes the need to do OS-level routing.
+
+Macvlan Network:
+
+Purpose: Macvlan allows Docker containers to have their own MAC address and appear as
+physical devices directly on the network, rather than sharing the host's network stack.
+How it Works: Macvlan assigns a unique MAC address to each container and allows it to
+have its own identity on the network, just like a physical machine. This enables containers
+to communicate directly with other devices on the same network.
+Advantages: Offers better isolation between containers, as each container can have its
+own MAC and IP address. It is suitable for scenarios where containers need to be treated
+as individual entities on the network.
