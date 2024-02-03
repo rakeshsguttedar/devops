@@ -1,17 +1,20 @@
+Docker compose:
 Docker Compose is a tool for defining and running multi-container
-Docker applications. It allows you to define your application's services,
-etworks, and volumes in a single docker-compose.yml file, making it easier
-to manage complex Docker setups. 
-
-Here's a guide on how to use Docker Compose with examples:
-Install docker compose using 
-sudo apt install docker-compose
-
-For example mongo-express front end container and mongodb backedn
-database container can be defined using docker-compose.
+Docker applications. It allows you to define your application's 
+services, networks, and volumes in a single docker-compose.yml file,
 
 Docker compose allow us to define an entire application stack
-involving docker services, volumes, network etc in a single yaml file.
+involving docker services, volumes, network etc in a single yaml file,
+making it easier to manage complex Docker setups. 
+
+Example setup of docker-compose:
+
+For example, mongo-express front end container and mongodb backend
+database container can be defined and setup using docker-compose.
+
+# Installing docker compose 
+sudo apt install docker-compose -y
+
 
 mongodb and mongo-express configuration without docker-compose:
 
@@ -34,9 +37,8 @@ docker run -d -p 8081:8081 \
   -e ME_CONFIG_BASICAUTH_PASSWORD=123 \
   mongo-express
 
-The mongodb and mongo-express can be defined using docker-compose
-yaml file, 
-i.e. docker-compose.yml:
+The mongodb and mongo-express can be defined using docker-compose :
+i.e. through docker-compose.yml:
 
 version: '3'
 
@@ -65,6 +67,8 @@ services:
       - ME_CONFIG_MONGODB_ADMINPASSWORD=123
       - ME_CONFIG_BASICAUTH_USERNAME=admin
       - ME_CONFIG_BASICAUTH_PASSWORD=123
+    depends_on:
+      - mongodb
 
 networks:
   mongo-network:
@@ -72,11 +76,40 @@ networks:
 
 This Docker Compose file defines two services, mongodb and mongo-express,
 just like your original Docker commands. It also specifies the necessary
-environment variables, ports, and network configurations. To use it, create
-a docker-compose.yml file in your project directory and run 
+environment variables, ports, and network configurations.Note the dependency
+of mongodb specified using depends_on in mongo-express service.
+
+To use it, create a docker-compose.yml file in your project directory and run 
 docker-compose up -d to start the services.
 
-Note: Make sure you parse or validate this yaml file in yaml-lint: 
-https://www.yamllint.com/ before applying it using docker-compose.
-Validation can also be done with: `docker-compose config` command
+Note: Make sure you parse yaml file to validate it @
+https://www.yamllint.com/ before using it in docker-compose.
+# Validation can also be done with: `docker-compose config` command
+docker-compose config
 
+# To start all the services in docker compose:
+docker-compose up -d
+# here -d is for background running of the service
+
+# To stop all the services in docker compose:
+docker-compose down
+
+
+# Responsive Personal Website project
+#git clone https://github.com/DanielMichalski/responsive-personal-website.git
+docker-compose.yml:
+
+version: '3.8'
+
+services:
+  apache-with-php:
+    build: ./docker-images/apache-with-php
+    volumes:
+      - ./www:/var/www/html/
+    ports:
+      - "80:80"
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - "1025:1025"
+      - "8025:8025"
