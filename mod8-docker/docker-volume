@@ -1,0 +1,13 @@
+Docker Volumes
+
+docker containers are ephemeral in nature. That means, the data created and 
+stored inside the docker containers is deleted when container is stopped,
+restarted or removed.
+
+There are three ways we can retain and store the container data across 
+container lifecycle:
+
+1. Bind Mount or Host-Mounted Volumes 
+2. Anonymous Volumes or tmpfs 
+3. Volumes or Named Volumes
+
