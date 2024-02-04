@@ -1,0 +1,83 @@
+ECR - AWS Elastic Container Registry
+
+ECR is the private repository service of Amazon AWS
+used for storing the container images, similar to dockerhub.
+
+# Install docker in your Linux EC2 instance
+
+sudo apt update
+sudo apt install docker.io
+sudo usermod -aG docker ubuntu
+newgrp docker
+
+To confirm docker installation:
+docker pull hello-world
+
+# Creating a Private Repository
+1. Go to AWS Console -> Search ECR -> Click on Elastic Container Registry
+2. -> Visibility: Private
+3. -> Repository Name: demorepo 
+    The complete URL of this repository:
+    <awsaccid>.dkr.ecr.us-east-1.amazonaws.com/demorepo
+4. -> Create Repository
+
+# To Access the repository
+Go to repo -> Click on the repository [demorep] -> VIEW PUSH COMMANDS
+You can see all commands to push the docker images to this repository
+
+# Install AWS CLI to upload docker images to the private container repository
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+sudo apt install unzip -y
+unzip awscliv2.zip
+sudo ./aws/install
+aws --version
+aws configure
+
+# Create an IAM user [not a grood practice to use AWS root user] 
+# and provide access to the AWS Management console
+-> Go to AWS IAM Dashboard
+-> Users -> Create New User -> Name: demo-repo-user
+-> Select "Provide user access to AWS Management console
+-> User Type: I want to Create an IAM user
+-> Custom Password: Type password here
+
+In order to provide the user the permission to push and pull docker images
+to and from private docker repository(ECR), we need to Attach policies
+to this demo-repo-user. 
+Policy Name: AmazonEC2ContainerRegistryFullAccess
+
+-> next
+-> Create User
+Go to user and check Permission polcies to confirm
+
+# Generate ACCESS KEYS for demo-repo-user to enable access to the
+# private repository through AWS CLI
+1. Copy Access Key and Secret Access Key thorough Security Credentials store for using it with AWS CLI
+2. Run aws configure and paste the Access Key and Secret Access Key in the 
+prompts along with region: us-east-1 and output format: json.
+
+# Login to the private ECR through the first command in VIEW PUSH COMMANDS
+
+# tag the hello-world docker image to enable it to be pushed to the private ECR: demo-repo
+# replace <awsaccid> with your AWS account id.
+# change tag to v1
+docker tag hello-world:latest <awsaccid>.dkr.ecr.us-east-1.amazonaws.com/demo-repo:v1
+# Run docker images to check the new image with the tag is created in local docker images list
+
+# Push the image to the private registry
+# docker push <url>/<repository>:<tag>  where <url> is <awsaccid>.dkr.ecr.us-east-1.amazonaws.com
+# <repository> is demo-repo and <tag> is v1
+docker push <awsaccid>.dkr.ecr.us-east-1.amazonaws.com/demo-repo:v1
+
+We can check in AWS ECR demo-repo and confirm that the image has been 
+successfully uploaded to the repository.
+
+# Upload sonarqube image to ECR repository demo-repo and check
+
+# You can login to different EC2 instance or ubuntu linux machine
+# run aws configure 
+# pull the docker image pushed through previous commands to check
+docker pull <awsaccid>.dkr.ecr.us-east-1.amazonaws.com/demo-repo:v1
+
+
