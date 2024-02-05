@@ -113,3 +113,11 @@ To push the image to public docker registry
 
 To pull the image from the public docker hub registry
 docker pull yourdockerhubaccountusername/java_app:latest
+
+Dockerfile of nodejs application in a docker container:
+
+FROM node:alpine
+COPY ./ ./
+RUN npm install
+EXPOSE 8081
+CMD ["npm", "start"]

@@ -1,0 +1,77 @@
+Docker multi-stage build
+
+Building and creating a docker image for running an application 
+inside the docker container involves creation of base image and
+installing all the required tools, libraries and dependencies for
+building that application in the base image.
+This whole setup is done in a single stage docker build Dockerfile.
+But this creates two problems:
+
+1. The size of the final container image is going to be vey big.
+2. The number of layers increases with each step in the dockerfile. 
+
+Here is the sample dockerfile-ubuntu which is used to create a 
+hello-world application.
+
+https://github.com/jaiswaladi2468/Multistage-Dockerfile
+
+dockerfile-ubuntu:
+
+FROM ubuntu
+RUN apt update -y &&\
+    apt install default-jdk -y &&\
+    java -version
+RUN apt install maven -y &&\
+    mvn -version
+RUN apt install -y wget 
+RUN wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.8/bin/apache-tomcat-9.0.8.tar.gz
+RUN mkdir /opt/tomcat &&\
+    mv apache-tomcat-9.0.8.tar.gz /opt/tomcat &&\
+    tar -xvzf /opt/tomcat/apache-tomcat-9.0.8.tar.gz
+RUN groupadd tomcat &&\
+    useradd -s /bin/false -g tomcat -d /opt/tomcat tomcat
+RUN cd /opt/tomcat/apache-tomcat-9.0.8 &&\
+    chmod 777 conf bin &&\
+    chown -R tomcat webapps/ work/ temp/ logs/ bin/
+ENTRYPOINT ["sh","/opt/tomcat/apache-tomcat-9.0.8/bin/startup.sh"]
+
+We are now going to demonstrate how this single dockerfile can be split into
+2 stages:
+
+# Stage-1 Build
+FROM maven as maven
+RUN mkdir /usr/src/mymaven
+WORKDIR /usr/src/mymaven
+COPY . .
+RUN mvn install -DskipTests
+
+# Stage-2 Deploy
+FROM tomcat
+WORKDIR webapps 
+COPY --from=maven /usr/src/mymaven/target/java-tomcat-maven-example.war .
+RUN rm -rf ROOT && mv java-tomcat-maven-example.war ROOT.war
+
+Working of the docker stages:
+
+stage-1:
+
+In the stage-1 we take a rich base image having jdk and maven already installed,
+and then build our application in this image. We name the base image as maven for 
+next or later stage usage. In RUN mkdir step we will create a working directory
+inside the maven image and in the COPY step, we will copy all the project files from
+the root directory to the WORKDIR inside the image. Finally in step: 
+"RUN mvn install -DskipTests", we build our application.
+
+stage-2:
+
+In the stage-2 we take a rich base image having tomcat already installed and then
+copy the application artifact from base image created in stage-1 (using step 
+COPY --from=maven) to the stage-2 image and run the application inside the stage-2
+container image.
+
+Therefore our final image in which we will be running our application is the stage-2
+tomcat image. 
+
+By doing this we significantly reduce the size of the resulting docker image
+and smaller is the docker image, easier it is to manage the docker lifecycle.
+The dockerfile is very userfriednly. Also small docker images has less security issues.
