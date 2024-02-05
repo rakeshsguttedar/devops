@@ -1,13 +1,93 @@
 Docker Volumes
 
-docker containers are ephemeral in nature. That means, the data created and 
+Docker containers are ephemeral in nature. That means, the data created and 
 stored inside the docker containers is deleted when container is stopped,
-restarted or removed.
+restarted or removed. 
 
-There are three ways we can retain and store the container data across 
-container lifecycle:
+There are three ways we can retain and store the container data.
 
 1. Bind Mount or Host-Mounted Volumes 
-2. Anonymous Volumes or tmpfs 
+2. Anonymous Volumes or tmpfs
 3. Volumes or Named Volumes
 
+In Bind Mount or Host-Mounted volumes, the location of the directory where data needs
+to persist is directly mapped to the location of the file inside the docker container.
+We need to manage this by ourselves.
+
+docker run -v /var/data:/data myapp
+
+In Anonymous Volume, the data that is generated inside the container is temporarily 
+stored in the host memory by creating a in-memory virtual file system in host.But the
+data will not persist across container restarts. It is mainly used to store the sensitive
+data that never need to be preserved across container lifecycle. Some processing of data
+can also be done using this type of docker volume. It is faster as it is managed in host
+memory
+
+docker run -v /home/data myapp
+
+In Named Volumes, the creation and management of docker volume is done by docker itself.
+We simply need to point the location of the data inside the docker ot this named volume
+created by docker. It is the most commonly used type of docker volume.
+
+docker volume create myVolume
+docker run -v myVolume:/data myapp
+
+
+A simple example implementation of docker named volume in mongodb containers using docker
+compose.
+
+Here is the docker-compose.yml file for bringing up mongo services
+
+version: "3.5"
+services:
+  mongodb:
+    image: mongo:4.4
+    container_name: mongodb
+    volumes:
+      - db_data:/data/db
+    networks:
+      - mongo-network
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=123
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    networks:
+      - mongo-network
+    ports:
+      - 8081:8081
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=123
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=123
+    depends_on:
+      - mongodb
+networks:
+  mongo-network:
+    driver: bridge
+volumes:
+  db_data:
+
+We can start the service:
+docker-compose ip -d
+Wait for some time and keep chekcing the container logs of
+mongo-express using: docker logs mongo-express
+Once the mongo-express is up, we can mongo express UI:
+
+http:<ipaddress:8081> login using admin/123
+
+Once logged in, create a DB and then restart the containers 
+of mongodb and mongo-express.
+Again wait for some time to let the mongo-express is up.
+
+If we access the mongo-express UI,  we can see that the database 
+created during last time is still available even after docker
+container is restarted.
+
+This is how we persist the container data across container
+lifecycle.
