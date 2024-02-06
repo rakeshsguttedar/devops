@@ -1,0 +1,445 @@
+Full Stack CICD Pipeline Setup
+
+In this document, I am going to lay down all the steps:
+I. To set up a complete FullStack CICD pipeline 
+II. Integrate it with the docker.
+
+Prerequisites:
+1. AWS Account for setting up EC2 instances
+2. Mobaxterm to ssh to the VMs.
+
+For the pipeline to run, we are going to use 3 AWS EC2 instances.
+The first EC2 instance (VM-1) will be of type t2.large and storage
+of 15 Gi. It will be used for running Jenkins full-stack CICD pipeline. 
+The second and third EC2 instances will each be of type t2.medium
+with 10 Gi storage. In 2nd EC2 instance (VM-2), we will setup and run
+Sonarqube Server in a docker container. In the third EC2 instance (VM-3)
+we are going to run Nexus Artifacts server in a docker container.
+We need to install docker in all the VMs.
+
+Also we will attach a Security Group to each EC2 instance that 
+will have the following port ranges allowed in its In-bound Rules.
+8000-9000 : Jenkins 8080 Sonarqube 9000 Nexus 8081
+
+Install Mobaxterm as we need it for ssh to the VMs.
+
+I. To set up a complete FullStack CICD pipeline 
+
+VM-1:
+AWS Console - > EC2 Dashboard -> Launch EC2 instance
+type t2.large and storage: 15 Gi
+
+Mobaxterm -> ssh to VM-1: Jenkins
+sudo apt update
+
+Docker:
+Installing docker:
+sudo apt update
+sudo apt install docker.io -y
+sudo usermod -aG docker ubuntu
+newgrp docker
+
+To confirm docker is setup, run:
+docker run hello-world
+
+Jenkins:
+Installing Jenkins
+We are going to use BoardgameListingWebApp project for the CICD
+setup. Since BoardgameListingWebApp is a Java based project, we are 
+going to install Maven build tool. Maven will install jdk as its
+depenendecny because jdk is a needed for maven to run. Jenkins also
+needs jdk to run, but by installing Maven, we need not install jdk
+seperately.
+
+sudo apt install maven -y
+
+Installing Jenkins from official website:
+https://www.jenkins.io/doc/book/installing/linux/
+
+Install long term support (LTS) version of Jenkins
+we need to add jenkins in the repository of Ubuntu Linux.
+
+sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+sudo apt-get update
+sudo apt-get install jenkins -y
+
+To enable jenkins to run on start-up and to start jenkins:
+sudo systemctl enable jenkins
+sudo systemctl start jenkins
+sudo systemctl status jenkins
+
+By default jenkins is running on port 8080
+we need to open port range 8000 to 9000 in AWS Security Group
+used by EC2 instance.
+
+Configuring Jenkins:
+
+Access Jenkins @ 
+http://<ec2instanceipaddress>:8080
+
+Login with initial admin password at
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+Start with installing plugins by selecting "Install suggested plugins"
+as jenkins know better the required plugins
+
+Create First Admin user, save and continue
+
+Plugins:
+Installing the plugins:
+Go to Jenkins Dashboard -> Manage Jenkins -> Plugins-> Available Plugins
+Following plugins need to installed:
+
+Eclipse Temurin Installer
+OWASP Dependency Check
+Sonarqube Scanner
+
+Config File Provider
+Maven Integration
+Pipeline Maven Integration Plugin
+Nexus Artifact Uploader
+
+Docker
+Docker Pipeline
+docker-build-step
+
+Tools:
+Add and configure the following plugins in Jenkins Tools:
+Go to Jenkins Dashboard -> Manage Jenkins -> Tools
+jdk: jdk17
+Maven: maven3 (3.6.1)
+sonarqube Scanner: sonar-scanner (5.0.1.3006)
+Dependency Check: DC (6.5.1)
+Docker: Docker (download from docker.com)
+
+Jenkins Pipeline Job:
+We will now start working on creating a pipeline job
+in Jenkins. Create a pipeline type job with the 
+nane: full-stack-cicd. Add a Hello world script
+in the Pipeline Script:
+
+Copy and paste stages and edit each stage block to add following
+stages for the pipeline.
+stage1: Git Checkout
+stage2: Compile
+stage3: Unit Tests
+stage4: Package
+
+stage1: Git Checkout
+Using Pipeline Syntax Generator, create a git checkout url
+git 'https://github.com/jaiswaladi2468/BoardgameListingWebApp.git'
+and paste it in the steps block of stage('Git Checkout') block
+Also Add tools section in the beginning of the pipeline.
+
+stage2: Compile
+Add sh "mvn compile" in the steps block of stage('Compile')
+
+stage3: Unit Tests
+Add sh "mvn test" in the steps block of stage('Unit Tests')
+
+stage4: Package
+Add sh "mvn package" in the steps block of stage('Package')
+
+Resulting Pipeline Script:
+
+pipeline {
+  agent any
+  tools {
+    jdk 'jdk17'
+    maven 'maven3'
+  }
+  stages {
+    stage('Git Checkout') {
+      steps {
+        git 'https://github.com/jaiswaladi2468/BoardgameListingWebApp.git'
+      }
+    }
+    stage('Compile') {
+      steps {
+        sh "mvn compile"
+      }
+    }
+    stage('Unit Tests') {
+      steps {
+        sh "mvn test"
+      }
+    }
+    stage('Package') {
+      steps {
+        sh "mvn package"
+      }
+    }
+  }
+}
+
+Go to Jenkins and run full-stack-cicd job to confirm 
+that all stages of the pipeline run successfully. 
+Dashboard -> full-stack-cicd -> Build Now
+
+Adding Security Scan stages to the pipeline:
+Security Scan stages are 
+stage5: Owasp Dependency Check
+stage6: Sonarqube Analysis
+stage7: Quality Gate
+
+
+stage5: Owasp Dependency Check
+We need to call 2 methods of OWASP dependency plugin:
+1. dependencyCheck - for scanning dependencies, libraries of the project
+2. dependencyCheckPublisher -  for printing the result of scan
+
+1. dependencyCheck
+Go to Pipeline Script Generator -> 
+select dependencyCheck and Generate Pipeline Script:
+dependencyCheck additionalArguments: '', odcInstallation: 'DC'
+To check required arguments for Owasp Dependecny check go to:
+https://jeremylong.github.io/DependencyCheck/dependency-check-cli/arguments.html
+Check Requirement column and we can see that --scan is the required argument.
+Add --scan ./ to scan all the files in the current directory.
+The resulting script:
+dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'DC'
+
+2. dependencyCheckPublisher
+Go to Pipeline Script Generator -> 
+-> select dependencyCheckPublisher 
+-> Add XML report Pattern: **/dependency-check-report.xml 
+-> Generate Pipeline Script:
+dependencyCheckPublisher pattern: '**/dependency-check-report.xml', odcInstallation: 'DC'
+
+Copy the scripts generated in the above 2 steps to the steps block of 
+stage('Owasp Dependency Check').
+
+Resulting stage5: Owasp Dependency Check 
+stage('Owasp Dependency Check') {
+  steps {
+    dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'DC'
+    dependencyCheckPublisher pattern: '**/dependency-check-report.xml', odcInstallation: 'DC'
+  }
+}
+
+stage6: Sonarqube Analysis
+In the 6th stage, we are going to use sonarqube server to scan the 
+source code of our project for code quality check and code coverage.
+For this, we need to setup the sonarqube server in the VM-2.
+
+VM-2:
+AWS Console - > EC2 Dashboard -> Launch EC2 instance
+type t2.medium and storage: 10 Gi
+Mobaxterm -> ssh to VM-2: sonar
+sudo apt update
+
+Docker:
+Installing docker:
+sudo apt install docker.io -y
+sudo usermod -aG docker ubuntu
+newgrp docker
+
+To confirm docker is setup, run:
+docker run hello-world 
+
+Setting up sonarqube server in VM-2:
+docker run -d -p 9000:9000 --name sonar sonarqube:lts-community
+Access Sonarqube server: 
+http://<ec2instanceipaddress>:9000
+
+Generate Sonarqube server login Secret token:
+In sonarqube go to -> Administration -> Security -> Users
+Add name: token  -> Generate token -> copy the token
+
+VM-1:
+Adding Sonarqube server login Secret token to 
+Jenkins Credentials Store. Got to Jenkins:
+Dashboard -> Manage Jenkins -> Credentials -> System -> Global Credentials 
+-> Kind: Secret text 
+-> Secret: paste the copied token here 
+-> id: sonar-token 
+-> Description: sonar-token 
+-> Create Token
+
+Configuring Sonarqube in Jenkins
+Go to Jenkins -> Dashboard -> Manage Jenkins -> System
+Add Sonarqube ->
+Name: sonar
+Server URL: http://<ec2instanceipaddress>:9000
+Server Authentication Token: Select sonar-token
+Apply
+
+Define the Sonarqube scanner tool in Jenkins Pipeline:
+Add the environment block after tools block in pipeline script:
+
+environment {
+    SONARQUBE_HOME: tool 'sonar-scanner'
+}
+
+Using Generate Pipeline Script, add withSonarQubeEnv('sonar') 
+to the stage('Sonar Analysis') block:
+
+stage('Sonar Analysis') {
+  steps {
+    withSonarQubeEnv('sonar') {
+      sh ''' 
+      $SONARQUBE_HOME/bin/sonar-scanner -Dsonar.projectName=BoardGame \
+      -Dsonar.projectKey=BoardGame -Dsonar.java.binaries=. 
+      '''
+    }
+  }
+}
+
+stage7: Quality Gate
+Quality Gate is the defined conditions or criteria that allows
+us to pass or fail the quality test based on those conditions.
+
+Using Generate Pipeline Script, add waitForQualityGate abortPipeline: false
+to the stage('Quality Gate') block:
+
+stage('Quality Gate') {
+  steps {
+    waitForQualityGate abortPipeline: false
+  }
+}
+
+Go to Jenkins and run full-stack-cicd job to confirm 
+that all stages of the pipeline run successfully. 
+Dashboard -> full-stack-cicd -> Build Now
+
+Deploying Artifacts to Nexus repositories
+
+VM-3:
+AWS Console - > EC2 Dashboard -> Launch EC2 instance
+type t2.medium and storage: 10 Gi
+Mobaxterm -> ssh to VM-2: nexus
+sudo apt update
+
+Docker:
+Installing docker:
+sudo apt install docker.io -y
+sudo usermod -aG docker ubuntu
+newgrp docker
+
+To confirm docker is setup, run:
+docker run hello-world 
+
+Setting up Nexus Artifacts server in VM-3:
+docker run -d -p 8081:8081 --name nexus sonatype/nexus3
+Wait for around 2-3 minutes and then access Sonarqube server : 
+http://<ec2instanceipaddress>:9000
+
+First time authentication to Nexus server:
+Username: admin
+Initial password for nexus admin user can be accessed
+by running a shell inside the nexus container using
+
+docker exec -it <nexus-container-id> /bin/bash
+cat sonatype-work/nexus3/admin.password
+
+Create a new admin password and Enable Anonymous Access.
+
+Configuring Nexus URL inside the project pom.xml file.
+Go to the project pom.xml file and
+search for distributionManagement tag.
+Make sure it is added to pom.xml file as shown below
+
+<project>
+    <!-- ... other project information ... -->
+    <distributionManagement>
+        <repository>
+            <id>maven-releases</id>
+            <url>NEXUS-URL/repository/maven-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>maven-snapshots</id>
+            <url>NEXUS-URL/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+    <!-- ... other project configuration ... -->
+</project>
+
+Make sure to replace NEXUS-URL with the publicIP address 
+of VM-3 EC2 instance.
+
+Generate settings.xml file in Jenkins and add Nexus Server
+credentails in the settings.xml file.
+Dashboard -> Manage Jenkins -> Managed files -> Add a new config
+-> New Configuration Page
+Select Global Maven settings.xml  
+and replace value in id with
+-> id: global-maven-settings
+-> Next
+-> Add:
+<Server>
+    <id>naven.releases</id>
+    <username>admin</username>
+    <password>nexus</password>
+</Server>
+<Server>
+    <id>naven.snapshots</id>
+    <username>admin</username>
+    <password>nexus</password>
+</Server>
+
+-> Submit
+
+Instead of adding these credential in plain text form inside the settings.xml
+file, we can instead add them to Jenkins Credential store
+
+stage8: Deploy Artifacts to Nexus
+Make sure Pipeline Maven Integration plugin is installed.
+Go to Jenkins pipeline job and edit the pipeline script to add the block
+for stage('Deploy Artifacts to Nexus')
+
+Following steps are needed inside Jenkins.
+
+1. Add Script for Maven to Global Maven settings.xml  
+Generate Pipeline Script -> select withMaven
+And select jdk17 as jdk version, maven3 and maven version
+select MyGlobalSettings as Global Maven Settings Config
+and -> Generate Pipeline Script
+withMaven( globalMavenSettingsConfig: 'global-maven-settings', jdk: 'jdk17', maven: 'maven3',
+           mavenSettingsConfig: '', traceability: false)
+ 
+2. Add Nexus Credentials to Jenkins Global Credtials store
+
+3. Generate Script to upload artifacts to Nexus using NexusArtifactUploader plugin:
+-> Nexus Version: Nexus3
+-> Protocol: HTTP
+-> Nexus URL: <publicIPofVM-3:8081>
+-> Credentials: Use Nexus Credentials from Jenkins Global Credtials store added in step 2 
+GroupId, Version and Repository are to be used from pom.xml <project></project> tag 
+(not from <parent> </parent> tag) 
+-> GroupId: <groupId>com.javaproject</groupId> 
+-> Version: <version>0.0.1</version> 
+-> Repository: <name>database_service_project</name>
+-> type: jar (extension of the artifact file)
+-> classifier: <Left blank>
+-> File:  /var/lib/jenkins/workspace/full-stack-cicd/target/database_service_project-0.0.1.jar
+-> Generate Pipeline Script
+
+Copy this script code to stage('Deploy Artifacts to Nexus') block :
+
+stage('Deploy Artifacts to Nexus') {
+    steps {
+        withMaven( globalMavenSettingsConfig: 'global-maven-settings', jdk: 'jdk17', maven: 'maven3',mavenSettingsConfig: '', traceability: false)
+        nexusArtifactUploader artifacts: [[artifactId: 'database_service_project', classifier: '', file: '/var/lib/jenkins/workspace/Full-stack-cicd/target/database_service_project-0.0.1.jar', type: 'jar']], credentialsId: 'nx', groupId: 'com.javaproject', nexusUrl: '43.204.25.115:8081/', nexusVersion: 'nexus3', protocol: 'http', repository: 'maven-releases', version: '0.0.1'
+    }
+}
+
+The above stage of uploading artifacts to nexus can be done without the NexusArtifactUploader plugin.
+
+stage('Deploy Artifacts') {
+    steps {
+        withMaven( globalMavenSettingsConfig: 'global-maven-settings', jdk: 'jdk17', maven: 'maven3',mavenSettingsConfig: '', traceability: false) {
+            sh "mvn deploy"
+        }
+    }
+}
+
+Go to Jenkins and run full-stack-cicd job to confirm 
+that all stages of the pipeline run successfully.
+Dashboard -> full-stack-cicd -> Build Now
+
+II. Integrate it with the docker.
