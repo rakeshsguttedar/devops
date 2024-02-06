@@ -4,17 +4,17 @@ I. Jenkins Basic Configuration to run CICD pipeline jobs.
 Jenkins is a cicd tool written in Java to automate the process of building
 the application and deploying the built artifacts on to the production server. 
 Building the application is a continuous process and hence it is called 
-continuation integration, the CI part of the CICD.
+Continuous Integration, the CI part of the CICD.
 
 After the application artifacts are built using the CI process, they need 
 to be delivered or deployed on to the production server. This process is 
-called continuous deployment or CD part of CICD.
+called Continuous Deployment or CD part of CICD.
 
 Why Jenkins tool is used for CICD?
 
 Advantages of Jenkins tool:
 1. Jenkins is an open source tool with a very large userbase 
-2. Many tools and plugin can be configured with Jenkins compared to any 
+2. Many tools and plugins can be configured with Jenkins compared to any 
 other CICD tool
 
 To install Jenkins, there are some basic prerequites:
@@ -22,20 +22,16 @@ To install Jenkins, there are some basic prerequites:
 Linux machine or Virtual Machine
 
 You can create an Ubuntu Virtual Machine (VM) in Oracle VirtualBox in your laptop provided 
-it  has atleast 8 GiB of Memory and a multi code CPU.
+VM has atleast 8 GiB of Memory and the laptop has a multi core CPU.
 
  OR
  
-Create an AWS EC2 instance with Ubuntu image having instance type as t2.medium in AWS console.
-Add 15 GB of Storage as Jenkins needs hard disk space to download source code, build and run 
-all stages of Jenkins pipeline. 
-
+Create an AWS EC2 instance with Ubuntu image having instance type as t2.medium or t2.large
+in AWS console. Add 20 Gi of Storage as Jenkins needs hard disk space to download source 
+code, build and run all stages of Jenkins pipeline. 
 (You need an AWS account for creating EC2 intance. Create one if do not have an AWS account)
-
 Launch instance and copy the public IP address(ec2instanceipaddress).
-
 ssh to the EC2 or VM using Mobaxterm:
-
 Before we start with installing Jenkins, we need to update the Linux packages repository:
 
  sudo apt update
@@ -45,7 +41,7 @@ Installing Jenkins:
 Java runtime is the pre-requisite to install Jenkins. To install java,
 go to official Jenkins page and go to linux and select ubuntu distribution.
 Recommended min specs of Ubuntu image is 4 GB of RAM and 15 GB storage.
-Hence we select t2.medium for instance type.
+Hence we select t2.medium or t2.large instance type.
 
 Install maven as we need maven for building java based project.
 Maven will install java as a dependency. 
@@ -81,7 +77,6 @@ By default jenkins is installed on port 8080
 
 we need to open port range 8000 to 9000 in AWS Security Group
 used by EC2 instance.
-
 
 Configuring Jenkins:
 
