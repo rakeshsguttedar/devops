@@ -239,7 +239,48 @@ stage('Deploy To Nexus') {
     }
 }
 
+Here is the complete pipeline script to deploy the artifacts to the Nexus repository
+
+pipeline {
+    agent any
+    
+    tools {
+        jdk 'jdk17'
+        maven 'maven3'
+    }
+    
+    stages {
+        stage('Git Checkout') {
+            steps {
+                git 'https://github.com/rakeshsguttedar/BoardgameListingWebApp.git'
+            }
+        }
+        stage('Compile') {
+            steps {
+                sh "mvn compile"
+            }
+        }
+        stage('Unit Tests') {
+            steps {
+                sh "mvn test"
+            }
+        }
+        stage('Package') {
+            steps {
+                sh "mvn package"
+            }
+        }
+        stage('Deploy to Nexus') {
+            steps {
+                withMaven(globalMavenSettingsConfig: '86f3ea82-57af-4714-81eb-9a052791a835') {
+                    sh "mvn deploy"
+                }
+            }
+        }
+    }
+}
+
 Start the Build
 
-Change the Version <version>0.0.1</version> in pom.xml
+Change the Version <version>0.0.3</version> in pom.xml
 and check in the Nexus UI for the artifacts uploaded to the Nexus repository.
