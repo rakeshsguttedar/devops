@@ -466,4 +466,51 @@ Dashboard -> full-stack-cicd -> Build Now
 
 II. Integrate it with the docker.
 
-stage9: Docker build
+To Integrate docker into the pipeline, we need to 
+1. Install docker in VM
+2. Install docker plugins: Docker, Docker Pipeline, docker-build-steps in Jenkins
+3. Add docker hub credentails to Jenkins Credentials Store.
+
+stage9 to stage12:
+We have 4 stages for containerising the application.
+Docker Build - Build docker image
+trivy image scan - scan for security issues
+Docker Push - push application docker image to docker hub registry
+Docker Deploy - to deploy docker image to a container
+
+stage('Docker Build Image') {
+  steps {
+    script {
+      withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
+        sh "docker build -t boardwebapp:latest ."
+        sh "docker tag boardwebapp:latest rockondock/boardwebapp:latest"
+      }
+    }
+  }
+ }
+      
+ stage('trivy Image scan') {
+   steps {
+     sh " trivy image rockondock/boardwebapp:latest "
+   }
+ }
+ 
+stage('Docker Push Image') {
+  steps {
+    script {
+      withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
+        sh "docker push rockondock/boardwebapp:latest"
+      }
+    }
+  }
+}
+
+stage('Deploy application to container') {
+  steps {
+    script {
+      withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
+        sh "docker run -d -p 8085:8080 rockondock/boardwebapp:latest"
+      }
+    }
+  }
+}
