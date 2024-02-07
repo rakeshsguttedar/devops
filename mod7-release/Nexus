@@ -96,8 +96,24 @@ Login with admin/theinitialpasswordobtained
 Set the new admin password:
 Nexus UI is ready
 
+Nexus can also be installed using docker.
+Follow below steps for docker installation:
 
-Working on Nexus3 UI
+docker run -d -p 8081:8081 --name nexus sonatype/nexus3
+Wait for around 2-3 minutes and then access Sonarqube server : 
+http://<ec2instanceipaddress>:9000
+
+First time authentication to Nexus server:
+Username: admin
+Initial password for nexus admin user can be accessed
+by running a shell inside the nexus container using
+
+docker exec -it <nexus-container-id> /bin/bash
+cat sonatype-work/nexus3/admin.password
+
+Create a new admin password and Enable Anonymous Access.
+
+Working on Nexus3 UI:
 Browse -> Repositories
 Settings -> Repository Settings
 
@@ -130,7 +146,7 @@ You can create your own repository:
 Create repository ->
 name: demo-artifact-repo
 Layout Policy: Permissive
-Deployment Policy: Allow redploy
+Deployment Policy: Allow redeploy
 -> Create Repository
 A new repository of type Hosted is created
 
@@ -188,16 +204,20 @@ Dashboard -> Manage Jenkins -> Managed Files
 -> Add a new Config
 
 Select : Global Maven Settings - for all projects
--> Next 
-Setting.xml file:
+-> Next
+Edit Setting.xml file:
 uncomment <!-- <server></server> -->
 and create 2 <server></server> blocks for releases and snapshots:
-    set <id>naven.releases</id>
+    set <id>maven-releases</id>
         <username>admin</username>
         <password>nexus</password>
-    set <id>naven.snapshots</id>
+    set <id>maven-snapshots</id>
         <username>admin</username>
         <password>nexus</password>
+
+Note: Instead of adding these credential in plain text form in settings.xml,
+we can add them to Jenkins Credential store and use them in the Global Maven Settings. 
+
 -> Submit
 
 Settings in Jenkins -> Pipeline Job -> Pipeline Script

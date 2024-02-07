@@ -86,7 +86,7 @@ Login with initial admin password at
 sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
 Start with installing plugins by selecting "Install suggested plugins"
-as jenkins know better the required plugins
+as jenkins knows better about the required plugins.
 
 Create First Admin user, save and continue
 
@@ -252,16 +252,16 @@ In sonarqube go to -> Administration -> Security -> Users
 Add name: token  -> Generate token -> copy the token
 
 VM-1:
-Adding Sonarqube server login Secret token to 
-Jenkins Credentials Store. Got to Jenkins:
-Dashboard -> Manage Jenkins -> Credentials -> System -> Global Credentials 
+Adding Sonarqube server login Secret token to Jenkins Credentials Store.
+Jenkins UI -> Dashboard -> Manage Jenkins -> Credentials
+-> System -> Global Credentials 
 -> Kind: Secret text 
 -> Secret: paste the copied token here 
 -> id: sonar-token 
 -> Description: sonar-token 
 -> Create Token
 
-Configuring Sonarqube in Jenkins
+Configuring Sonarqube Server in Jenkins 
 Go to Jenkins -> Dashboard -> Manage Jenkins -> System
 Add Sonarqube ->
 Name: sonar
@@ -273,7 +273,7 @@ Define the Sonarqube scanner tool in Jenkins Pipeline:
 Add the environment block after tools block in pipeline script:
 
 environment {
-    SONARQUBE_HOME: tool 'sonar-scanner'
+    SONARSCANNER_HOME= tool 'sonar-scanner'
 }
 
 Using Generate Pipeline Script, add withSonarQubeEnv('sonar') 
@@ -283,7 +283,7 @@ stage('Sonar Analysis') {
   steps {
     withSonarQubeEnv('sonar') {
       sh ''' 
-      $SONARQUBE_HOME/bin/sonar-scanner -Dsonar.projectName=BoardGame \
+      $SONARSCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=BoardGame \
       -Dsonar.projectKey=BoardGame -Dsonar.java.binaries=. 
       '''
     }
@@ -294,18 +294,43 @@ stage7: Quality Gate
 Quality Gate is the defined conditions or criteria that allows
 us to pass or fail the quality test based on those conditions.
 
-Using Generate Pipeline Script, add waitForQualityGate abortPipeline: false
-to the stage('Quality Gate') block:
+1. Adding Sonarqube Webhook for notifying Jenkins
+We can configure sonarqube to notify Jenkins when the quality Analysis is completed.
+For this, we need to add a webhook in sonarqube. Using this webhook, sonarqube will
+send a HTTP POST request including a JSON payload to Jenkins notifying it that Quality
+Analysis is done.
 
-stage('Quality Gate') {
-  steps {
-    waitForQualityGate abortPipeline: false
+In sonarqube UI, go to Administration -> Configuration -> Webhooks
+-> Create 
+-> Name: Jenkins
+-> URL: Jenkins URL http://<ipaddress:8080>/sonarqube-webhook/ 
+-> Secret: optonal
+-> Create
+
+2. Adding Quality Gate stage in Jenkins:
+
+In Jenkins UI, use Generate Pipeline Syntax to select waitForQualityGate and 
+generate the script and add it to the steps block of Quality Gate stage.
+
+This step pauses Pipeline execution and wait for previously submitted SonarQube
+analysis to be completed and returns quality gate status. Setting the parameter
+abortPipeline to true will abort the pipeline if quality gate status is not green.
+
+Below is the Jenkins Quality Gate Check stage to wait for Quality gate to pass:
+
+  stage('Quality Gate Check') {
+    steps {
+      waitForQualityGate abortPipeline: false
+    }
   }
-}
 
-Go to Jenkins and run full-stack-cicd job to confirm 
-that all stages of the pipeline run successfully. 
+We can now run all the stages in Jenkins to confirm the 
+pipeline is properly configured. Go to Jenkins and run
+full-stack-cicd job.
 Dashboard -> full-stack-cicd -> Build Now
+
+
+
 
 Deploying Artifacts to Nexus repositories
 
@@ -340,9 +365,9 @@ cat sonatype-work/nexus3/admin.password
 Create a new admin password and Enable Anonymous Access.
 
 Configuring Nexus URL inside the project pom.xml file.
-Go to the project pom.xml file and
-search for distributionManagement tag.
+Go to the project pom.xml file and search for distributionManagement tag.
 Make sure it is added to pom.xml file as shown below
+Replace NEXUS-URL with the publicIP address of VM-3 EC2 instance
 
 <project>
     <!-- ... other project information ... -->
@@ -359,9 +384,6 @@ Make sure it is added to pom.xml file as shown below
     <!-- ... other project configuration ... -->
 </project>
 
-Make sure to replace NEXUS-URL with the publicIP address 
-of VM-3 EC2 instance.
-
 Generate settings.xml file in Jenkins and add Nexus Server
 credentails in the settings.xml file.
 Dashboard -> Manage Jenkins -> Managed files -> Add a new config
@@ -370,22 +392,21 @@ Select Global Maven settings.xml
 and replace value in id with
 -> id: global-maven-settings
 -> Next
--> Add:
-<Server>
-    <id>naven.releases</id>
+-> Add inside <servers></servers>
+<server>
+    <id>maven-releases</id>
     <username>admin</username>
     <password>nexus</password>
-</Server>
-<Server>
-    <id>naven.snapshots</id>
+</server>
+<server>
+    <id>maven-snapshots</id>
     <username>admin</username>
     <password>nexus</password>
-</Server>
+</server>
+Note: Instead of adding these credential in plain text form in settings.xml,
+we can add them to Jenkins Credential store and use them in the global-maven-settings. 
 
 -> Submit
-
-Instead of adding these credential in plain text form inside the settings.xml
-file, we can instead add them to Jenkins Credential store
 
 stage8: Deploy Artifacts to Nexus
 Make sure Pipeline Maven Integration plugin is installed.
@@ -429,6 +450,7 @@ stage('Deploy Artifacts to Nexus') {
 }
 
 The above stage of uploading artifacts to nexus can be done without the NexusArtifactUploader plugin.
+We can use mvn deploy in the script in place of nexusArtifactUploader as shown below:
 
 stage('Deploy Artifacts') {
     steps {
@@ -443,3 +465,5 @@ that all stages of the pipeline run successfully.
 Dashboard -> full-stack-cicd -> Build Now
 
 II. Integrate it with the docker.
+
+stage9: Docker build

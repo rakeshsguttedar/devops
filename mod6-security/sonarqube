@@ -9,8 +9,8 @@ CICD pipeline involves the following steps:
 
 After the Source code is checkout from Git and all tests are performed on it,
 the source code needs to under go quality check to rule out any issues it it.
-We need perform the static code analysis to identify any security issues.
-For this analysis, we use Sonarqube.
+We need to perform static code analysis to identify any security issues.
+For static code analysis of our projects, we use Sonarqube.
 
 What is Sonarqube?
 
@@ -51,7 +51,7 @@ Code Coverage is the percentage of source code that is
 covered in functional testing of the application. 
 If 80% of source code is tested, then code coverage is 80%
 
-Example: 
+Example:
 Suppose if an application which is having 100 lines of source code
 and if there are 10 test cases that test all functionalities of
 the code and if those test cases cover or go through all hundred
@@ -80,7 +80,7 @@ of Sonarqube.
 
 Installing Sonarqube:
 
-docker method is the simplest/easiest method to install and run sonarqube.
+docker method is the simplest and easiest method to install and run sonarqube.
 
 Verion: sonarqube 9.9 lts version.
 https://hub.docker.com/_/sonarqube
@@ -96,19 +96,19 @@ Access it: http://ipaddress:9000
 -> Adminstration -> Marketplace
 to install plugins in sonarqube
 
-Check sonarqube verion: System
+Check sonarqube verion: 
+Sonarqube UI -> Administration -> System
 Search in google, plugin matrix to identify supported
-table plugin version and Sonarqube version
+plugin version and Sonarqube version
 
-->Administration -> Projects -> Background Tasks 
+Sonarqube UI -> Administration -> Projects -> Background Tasks 
 the success or failure of the sonarqube tasks
 
-Administration -> Projects ->Security
+Administration -> Security -> Users
 Generate token and use it to authenticate sonarqube from another tool.
 
 How does the sonarqube understands the source code language?
-Adminsitrattion -> Configuration - >
-Language -> File Suffixes
+Administration -> Configuration - > Language -> File Suffixes
 
 How exactly Sonarqube performs the analysis?
 
@@ -124,9 +124,10 @@ specific rules and use that copy of profile for our project.
 From where these Quality Profiles are installed.
 It is through Plugins of Programming languages installed by Sonarqube by default.
 
-Quality Gates - Conditions or criteria that can be edited and set the quality criteria.
+Quality Gates: Conditions or criteria that can be used to set the quality criteria
+in order to pass or fail the quality tests.
 
-Code Coverage configurations
+Code Coverage configurations:
 jacoco - JAvaCOdeCOverage - a third party code coverage tool for java based projects
 istanbul - for code coverage of nodejs projects.
 
@@ -172,36 +173,121 @@ We need to add three sections in pom.xml for using jacoco for code coverage:
 
 Configuring Jenkins and Sonarqube to run Sonarqube-Analysis in Jenkins:
 
-Jenkins:
-1. Installing plugins Eclipse Temurin and Sonarqube Scanner
+1. Jenkins: Installing plugins Eclipse Temurin and Sonarqube Scanner
    Dashbaord -> Manage Jenkins -> Plugins
-2. Configuring jdk,maven and sonar-scanner plugins in Tools
+2. Jenkins: Configuring jdk, maven and sonar-scanner plugins in Tools
    Dashbaord -> Manage Jenkins -> Tools
-3. Adding Sonarqube login token in Jenkins Credentials store
-  Dashbaord -> Manage Jenkins -> Credentials
-3. Adding Sonarqube server URL in Jenkins System
+3. Sonarqube: Generate Sonarqube server login Secret token:
+    Adminstration -> Security -> Users -> Name: token  
+    -> Generate token -> save this token for using it in the next step.
+4. Jenkins: Adding Sonarqube login token in Jenkins Credentials store
+   Dashbaord -> Manage Jenkins -> Credentials -> secret text
+   paste the token generated in step 3.
+5. Jenkins: Adding Sonarqube server URL in Jenkins System Configuration
+   Dashboard -> Manage Jenkins -> System
+6. Adding SonarScanner tool as part of Jenkins environment variables
+    environment {
+        SONARQUBE_HOME= tool 'sonar-scanner'
+    }
+7. Adding Sonarqube Analysis stage in Jenkins pipeline script:
 
-Adding Sonarqube stages in Jenkins pipeline script:
+Using Generate Pipeline Script, select withSonarQubeEnv and generate
+the script, edit withSonarQubeEnv and add it to the Analysis stage:  
 
   stage('Sonarqube-Analysis') {
     steps {
       withSonarQubeEnv('sonar') {
-        sh ''' 
-          $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Devops-CICD \
-          -Dsonar.java.binaries=. \
-          -Dsonar.projectKey=Devops-CICD 
-        '''
+        sh '''
+          $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Boardgame \
+          -Dsonar.projectKey=Boardgame -Dsonar.java.binaries=. '''
       }
     }
   }
+
+Configuring Jenkins and Sonarqube for Quality Gate check:
+
+1. Adding Sonarqube Webhook for notifying Jenkins
+We can configure sonarqube to notify Jenkins when the quality Analysis is completed.
+We can add a webhook in sonarqube. Using this webhook, sonarqube will send a HTTP POST 
+request including a JSON payload to Jenkins notifying it that Quality Analysis is done.
+
+In sonarqube UI, go to Administration -> Configuration -> Webhooks
+-> Create 
+-> Name: Jenkins
+-> URL: Jenkins URL http://<ipaddress:8080>/sonarqube-webhook/ 
+-> Secret: optonal
+-> Create
+
+2. Adding Quality Gate stage in Jenkins:
+
+In Jenkins UI, use Generate Pipeline Syntax to select waitForQualityGate and 
+generate the script and add it to the steps block of Quality Gate stage.
+
+This step pauses Pipeline execution and wait for previously submitted SonarQube
+analysis to be completed and returns quality gate status. Setting the parameter
+abortPipeline to true will abort the pipeline if quality gate status is not green.
+
+Below is the Jenkins Quality Gate Check stage to wait for Quality gate to pass:
+
   stage('Quality Gate Check') {
     steps {
       waitForQualityGate abortPipeline: false
     }
   }
 
+Below is the complete pipeline script for this project.
 
-Sonarqube troubleshooting
+pipeline {
+    agent any
+    
+    tools {
+        jdk 'jdk17'
+        maven 'maven3'
+    }
+    
+    environment {
+        SONARSCANNER_HOME= tool 'sonar-scanner'
+    }
+
+    stages {
+        stage('Git Checkout') {
+            steps {
+                git 'https://github.com/jaiswaladi2468/BoardgameListingWebApp.git'
+            }
+        }
+        stage('Compile') {
+            steps {
+                sh "mvn compile"
+            }
+        }
+        stage('Unit Tests') {
+            steps {
+                sh "mvn test"
+            }
+        }
+        stage('Package') {
+            steps {
+                sh "mvn package"
+            }
+        }
+        stage('Sonarqube-Analysis') {
+            steps {
+                withSonarQubeEnv('sonar') {
+                    sh '''
+                    $SONARSCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=BoardGame \
+                    -Dsonar.projectKey=BoardGame -Dsonar.java.binaries=. '''
+                }
+            }
+        }
+        stage('Quality Gate check') {
+            steps {
+                waitForQualityGate abortPipeline: false
+            }
+        }
+    }
+}
+
+Sonarqube troubleshooting:
 
 We used to upgrade all tools quarterly.
 The project was setup in Kubernetes. Sonarqube was giving 
