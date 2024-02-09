@@ -1,0 +1,73 @@
+Kubernetes Deep Dive - B1 - Part 2 
+
+Doubts cleared:
+Which tools are important for devops?
+Tools very important for devops: CICD Tool, docker and k8s.
+
+What are Upstream and Downstream processes in Devops?
+These terms are used with respect to cicd and gitops. Say for 
+example, we have Jenkins job1 and job2 where job2 is dependent on
+job1 to complete, i.e. job 2 will be triggered after job1 is completed.
+Job1 process is upstream process as it produces the artifacts and 
+job2 is the downstream process as it consumes the artifacts to deploy 
+them in production or testing environment.
+
+In summary, upstream processes are those that come before in the pipeline
+and produce artifacts or changes, while downstream processes are those that 
+come after and consume or utilize those artifacts or changes. 
+
+What are GroupId and ArtifactId?
+GroupId: refers to the org or company that owns the whole project.
+ArtifactID: name of the project used in the context of pushing of artifact
+to Nexus using NexusArtifactUploader plugin in Jenkins.
+
+Architecture of k8s cluster:
+
+Master Node - a VM that manages Worker Nodes: WN-1 and WN-2
+Processes running in master node:
+1. API server - Most imp component - a cluster gateway - all requests to k8s 
+   resources first comes to the API server.
+2. Controller Manager: CM is responsible for conveying information regarding 
+   state changes - make changes attempting to move the current state towards
+   the desired state i.e. If a pod has stopped or crashed, a new pod is created.
+3. Scheduler: responsible for scheduling of resources or pods on a worker node
+   based on the CPU or memory resource available on a node.
+4. Etcd - cluster brain - stores info about the k8s cluster in key-value pairs
+   Scheduler and Controller Manager uses etcd information.
+
+Worker Nodes: WN-1 and WN-2 - each is a VM having 128 GB of RAM and 1TB storage.
+Three processes running in a worker node:
+1. Container runtime - containerd - resonsible for running the container inside pod.
+2. kubelet - responsible for creation of pod
+3. kubeproxy - manages the networking aspect
+
+k8s resource request flow:
+User -> API server -> Scheduler -> kubelet -> containerd
+Controller Manager (CM) monitors the state, if pod crashes/stops, informs the 
+scheduler ->kubelet -> containerd
+
+How will the user create an application in kubernetes?
+User creates yam files: deployment.yml and Service.yml
+These yaml manifests are shared with API server in Master node. API server forwards
+it to the Scheduler. Scheduler then forwards it to the kubelet in Worker node. 
+kubelet creates the pods and container runtime (containerd or CRI-O) will run the 
+container inside the pod.
+
+Kubernetes cluster setup on a VM using AWS EC2 instances:
+
+Create 2 EC2 instances of type t2.medium with 15 GB storage. 
+Make one instance as master node and other will be running a worker node.
+Ports to be opened in Inbound-rules of SG attached to the EC2 instances
+1. 6443
+2. 30000-32767 
+
+
+kubectl get nodes
+
+
+
+NAMESPACES
+
+Namespaces ns - logical isolation for k8s objects - 
+like a seperate box - is called projects in openshift.
+
