@@ -1,0 +1,132 @@
+Kubernetes k8s
+
+Kubernetes (K8s) is an open-source container orchestration system 
+or platform or COE (container orchestration engine) for automating 
+deployment, scaling, and management of containerized applications.
+
+Why we need k8s? Why Docker alone cannot manage the application?
+
+Docker is a containerisation platform that provides basic solution
+for managing the application lifecycle through containers on a 
+single host. Also, Dockers containers are ephemeral in nature and 
+they do not provide out of the box support for auto-healing, 
+auto-scaling and other enterprise level support for application 
+management.
+
+To overcome these drawbacks of a container we use kubernetes
+as it provides:
+1. auto-healing - restarts the pod if a pod is down/stopped.
+2. auto-scaling - increases/decreases the number of pods - using ReplicaSet 
+   or Deployment using HPA
+3. enterprise level support - health checks, readiness probe, etc
+
+Because of these these features of k8s, it minimizes the downtime of
+the application, manages the application without manual intervention
+and reduces the manual efforts of the devops engineer.
+
+Basic Components of k8s:
+
+pod -
+Kubernetes provides a basic deployable resource called Pod.
+A pod is the smallest deployable unit in Kubernetes which is actually a
+wrapper around containers. A pod can have one or more containers and you
+can pass different configurations to the container(s) using the pod’s 
+configuration e.g. passing environment variables, mounting volumes, 
+having health checks, etc.
+A pod usually contains a single container but can have more than 1 container.
+service - 
+ - Service discovery[using laberls and selectors],
+ - load balancing during traffic surge
+ - Expose application to the outside using service types:
+ a. clusterIP Mode - default mode, allows access within the k8s cluster
+ b. NodePort Mode - allows access to the app within your organisation
+ c. LoadBalancer Mode - allows access to the application from outside world
+ingress -  manages routing using host or path based routing instead of ip address
+config map - database connection url, etc
+secrets - store sensitive informations: credentails in base64 encoding
+volumes - to maintain the staes of the deployed application
+
+
+Architecture of k8s:
+
+k8s cluster has mainly 2 components:
+Control plane (Master node) and Data plane (Worker node).
+Note: There can more than 1 master node and worker node.
+Kubernetes recommends a single master node primarily for simplicity and
+ease of management, coft-effectiveness and for small-scale non-production
+kubernetes cluster . However, there are scenarios where having multiple master
+nodes can provide advantages in terms of availability, scalability, and fault
+tolerance.
+
+Deploying multiple master nodes offers benefits such as high availability,
+fault tolerance, scalability, and load balancing, making it suitable for production
+environments and larger Kubernetes clusters where reliability and performance are 
+critical requirements.
+
+Master node / Control plane components are:
+-> API server - heart of k8s cluster - cluster gateway - all request are first 
+   received by API server
+
+-> Etcd - brain of k8s - has all info about the k8s cluster in key-value pairs 
+
+-> Scheduler - monitors and based on info in Etcd, it decides the nodes for
+   pods to be scheduled and forwards the request to kubelet for pod creation
+   Scheduler checks which node has enough resource for pod creation and forwards
+   the request to that node.
+
+-> controller manager (CM) - runs in loop, monitors for state changes, 
+   maintains desired state of the k8s cluster - it will inform scheduler
+   if pod is down and mismatch in desired state and actual state of the  
+   k8s cluster.
+
+-> cloud controller manager - The Cloud Controller Manager is responsible for 
+   interacting with the cloud provider's APIs to manage resources like virtual 
+   machines, load balancers, and storage.
+
+   The Cloud Controller Manager (CCM) is specific to
+   cloud providers such as AWS, GCP, or Azure. While Kubernetes provides the 
+   framework and interfaces for implementing the Cloud Controller Manager, 
+   each cloud provider typically implements its own version to interact with its
+   specific infrastructure.
+
+Data plane / Worker node components are:
+-> container runtime process: ex: containerd - it manages containers 
+-> kubelet - creates pods, assigning resources to the pod
+-> kube proxy - decides where to forward the access request for a resource
+    Ex: database access - handles networking aspect of the pods in k8s cluster
+
+Kubernetes provides a basic resource called Pod.
+ 
+A pod is the smallest deployable unit in Kubernetes which is actually a wrapper
+around containers. A pod can have one or more containers and you can pass 
+different configurations to the container(s) using the pod’s configuration 
+e.g. passing environment variables, mounting volumes, having health checks, etc.
+
+A pod is managed with the help of application manifest yaml file.
+
+Examples of having more than 1 container in a pod: 
+-> ephemeral containers
+-> init containers
+-> sidecar containers
+
+ephemeral containers: used for troubleshooting of issues in distroless image 
+based containers
+
+Init container: specialized containers that run before app containers in a Pod.
+Init containers can contain utilities or setup scripts not present in an app image
+Init containers run and complete their tasks before the main application container
+starts. Unlike sidecar containers, init containers are not continuously running 
+alongside the main containers. Init containers run to completion sequentially, and
+the main container does not start until all the init containers have successfully 
+completed. Init containers do not support lifecycle, livenessProbe, readinessProbe,
+or startupProbe whereas sidecar containers support all these probes to control 
+their lifecycle. Init containers share the same resources (CPU, memory, network) with
+the main application containers but do not interact directly with them. They can, 
+however, use shared volumes for data exchange.
+
+sidecar container: enhance or to extend the functionality of the main
+application container by providing additional services, or functionality
+such as logging, monitoring, security, or data synchronization, 
+without directly altering the primary application code.
+
+
