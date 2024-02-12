@@ -1,14 +1,22 @@
-What are the problems associated with the traditional approach of application development?
+Docker
+
+Docker basics: 
+Why docker is needed?
+what problems does docker solve?
+
+The problems associated with the traditional approach of application development.
 
 Sceanrio 1:
 
 Suppose there is a java based application that needs to be developed and 
-delivered to the customer. What is required to develop and run this application?
+delivered to the customer. 
+What are all needed to develop and run this application?
 
 1. A Linux Machine - Operating System on which it will be run.
-2. jdk11 - Java to develop and for runtime
-3. 8080 - port on which this app will be running -standard/defined by the developer
-4. java -jar app-name.jar - runtime environement for the app to run
+2. jdk11 - Java to develop the application and for its runtime environment
+3. 8080 - port on which this app will be running - standard/defined by the developer
+
+To run the application: java -jar app-name.jar - runtime environement for the app to run
 
 Once an application is completely developed, it needs to be released/delivered to the
 customer so that it is tested in their environment. Setting of the customer environment 
@@ -96,11 +104,21 @@ COPY target/*.jar $APP_HOME/app.jar
 WORKDIR $APP_HOME
 CMD ["java", "-jar", "app.jar"]
 
-To build the image we run
+To build the image we will run
   docker build -t java_app:latest .
+where build command: to build the dockerimage
+          -t option: to tag the image. Here latest is the tag
+                .  : set context directory to current directory
 
 To run this image in a docker container,
   docker run --name java_app -p 8080:8080 -d java_app:latest
+
+run: to run the application image in a container.
+-p:     publish the port, firts port is the port that will be used to access
+        this application; second port after : is the port using which the application
+        is running on inside the container.
+-d:     detach mode - run in the background
+--name: name of the application container 
 
 create your docker hub account at http://hub.docker.com
 To login to the docker registry. For first time login,
@@ -114,10 +132,11 @@ To push the image to public docker registry
 To pull the image from the public docker hub registry
 docker pull yourdockerhubaccountusername/java_app:latest
 
-Dockerfile of nodejs application in a docker container:
+Below is the Dockerfile of a nodejs application:
 
 FROM node:alpine
 COPY ./ ./
 RUN npm install
 EXPOSE 8081
 CMD ["npm", "start"]
+
