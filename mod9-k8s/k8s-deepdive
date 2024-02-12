@@ -68,6 +68,8 @@ kubectl get nodes
 
 NAMESPACES
 
-Namespaces ns - logical isolation for k8s objects - 
-like a seperate box - is called projects in openshift.
+Namespaces ns - logical isolation for k8s objects. 
+It is mainly used for isolating different projects within a k8s cluster.
+It is like a seperate box for each project. In openshift, 
+namespace is called as projects.
 
