@@ -1,0 +1,137 @@
+Kubernetes Application Deployment - B1 - Part 2 
+
+k8s deployment of nginx server using yaml file 
+for both deployment and service.
+
+Deployment:
+A Deployment in Kubernetes is a resource that allows you to define, create, and 
+manage a set of identical pods. It provides features such as rolling updates, 
+scaling, and rollback.
+
+Sample YAML for a basic Deployment:
+File Name: nginx-deployment.yml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 1 
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 8080
+
+Explanation of deployment yaml file:
+apiVersion - Which version of the Kubernetes API you're using to create this object
+kind - type of Kubernetes object such as deployment, configMap, secrets, pod,etc.
+kind - What kind of object you want to create
+metadata - Data that helps uniquely identify the object, including a name string, UID, 
+and optional namespace
+
+spec - specification, defines configuration of the pod including the desired state.
+What state you desire for the object
+replicas - 3 pods will be created by replicaSet controller.
+selector - Specifies how the replicaSet selects which Pods to manage.
+The .spec.selector field defines how the created ReplicaSet finds which Pods to manage.
+In this case, you select a label that is defined in the Pod template (app: nginx).
+
+.spec.template contains the pod template that is used to create the replicas.
+These replicas are then managed by the ReplicaSet.
+.spec.template.metadata contains labels which need to match those under the 
+.spec.selector.matchLabels field for the ReplicaSet to identify said pod.
+.spec.template.spec contains information for creating the desired pod. 
+It has the container definition, and configuration options such as the volume 
+needed, security context and more.
+
+The template field contains the following sub-fields:
+
+- The Pods are labeled app: nginx using the .metadata.labels field.
+- The Pod template's specification, or .template.spec field, indicates that the Pods
+  run one container, nginx, which runs the nginx Docker Hub image at version 1.14.2.
+  Create one container and name it nginx using the .spec.template.spec.containers[0].name field.
+
+template - Specifies the Pod template used to create new Pods managed by the Deployment.
+metadata - Contains labels that are applied to all Pods created from this template.
+labels - Specifies labels to be applied to Pods created from this template. In this example, 
+         it applies the label app: example-app to all Pods.
+spec - Specifies the specification for the containers running in the Pods created from this template.
+      specifies container name, image with tag and container port
+
+Service:
+
+A Service in Kubernetes is an abstraction that defines a logical set of pods and a policy by which 
+to access them. It enables network access to a set of pods.
+
+Sample YAML for a basic Service (LoadBalancer type):
+File Name: nginx-service.yml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+
+selector: When you create a Kubernetes Service, you specify a selector that determines
+which Pods the Service will target. This selector is a set of label selectors that identify 
+the Pods backing the Service. Only Pods with labels matching the selector will be included 
+in the Service. In this example, only pods with the labels app: nginx will be selected.
+
+Matching Pods with Selector: The Kubernetes control plane continuously monitors the cluster
+for Pods with labels matching the selector specified in the Service definition. When new Pods
+are created or existing Pods are updated, the control plane evaluates their labels against the
+selector to determine whether they should be included in the Service.
+
+Dynamic Selection: Labels and selectors allow for dynamic selection of Pods based on their 
+metadata rather than static IP addresses. This is particularly useful in dynamic environments 
+where Pods may be scaled up or down dynamically, or where Pods are replaced due to failures
+or updates.
+
+port: port on which the appication will be accessed using this service
+containerPort: the port on which the application is running inside the container
+
+Hands-on:
+
+kubectl apply -f ngix-deployment.yml
+kubectl get deployment
+kubectl get pod
+kubectl get pod -o wide
+kubectl describe pod name-of-the-pod 
+# for more details of the pod
+
+kubectl apply -f ngix-service.yml
+kubectl get svc # svc is short for service
+
+Using namespace for creating deployment and service
+in isolation.
+
+kubectl create namespace mynamespace
+
+kubectl apply -f ngix-deployment.yml -n mynamespace
+kubectl apply -f ngix-service.yml -n mynamespace
+
+Some Interview Questions -
+
+How do pods communicate across namespaces in k8s.?
+Security Questions on Kubernetes.
+Architecture of K8s and Processes running on Master and worker nodes.
+
+Security aspect:
+VPN and whitelist
+Bastion host/jump server
+

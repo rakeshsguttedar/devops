@@ -17,7 +17,7 @@ and produce artifacts or changes, while downstream processes are those that
 come after and consume or utilize those artifacts or changes. 
 
 What are GroupId and ArtifactId?
-GroupId: refers to the org or company that owns the whole project.
+GroupId: refers to the organisation or company that owns the whole project.
 ArtifactID: name of the project used in the context of pushing of artifact
 to Nexus using NexusArtifactUploader plugin in Jenkins.
 
@@ -55,21 +55,157 @@ container inside the pod.
 
 Kubernetes cluster setup on a VM using AWS EC2 instances:
 
-Create 2 EC2 instances of type t2.medium with 15 GB storage. 
-Make one instance as master node and other will be running a worker node.
-Ports to be opened in Inbound-rules of SG attached to the EC2 instances
-1. 6443
-2. 30000-32767 
+AWS Console -> Create 2 EC2 instances of type t2.medium with 15 GB storage. 
+One instance as master node and other will be running a worker node.
+Below are the Ports to be opened in Inbound-rules of Secuirty Group attached
+to these EC2 instances.
 
+1. 6443
+2. 30000-32767
+
+Installing Kubernetes Master Nodes and Worker nodes in EC2 instances:
+
+Step 1: Configuration changes in both Master node and Worker node:
+
+1. Update the package lists for all repositories:
+[configured in /etc/apt/sources.list and in the /etc/apt/sources.list.d/ directory.]
+sudo apt update -y
+
+2. Install docker and restart docker service:
+sudo apt-get install docker.io -y
+sudo service docker restart
+
+3. Add GPG key for downloading Kubernetes package from GCP:
+sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+
+It fetches the GPG key for the Kubernetes packages and adds it to the keyring.
+
+4. Add Kubernetes repository:
+echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" >/etc/apt/sources.list.d/kubernetes.list
+
+Adds the Kubernetes repository to the system's package sources.
+
+5. Update the package list again:
+sudo apt-get update
+
+6. Install specific versions of Kubeadm, Kubectl, and Kubelet:
+sudo apt install kubeadm=1.20.0-00 kubectl=1.20.0-00 kubelet=1.20.0-00 -y
+
+Installs specific versions of Kubeadm, Kubectl, and Kubelet, in this case, version 1.20.0-00.
+
+Step 2: Configuration changes in Master Node:
+
+7. Initialize the Kubernetes cluster with a specified pod network CIDR:
+kubeadm init --pod-network-cidr=192.168.0.0/16
+
+Initializes the Kubernetes master node, specifying the pod network CIDR for 
+communication between pods.
+
+After we run the kubeadm init command, kubeadm will generate a kubeadm join command.
+This command has to be run in the one or more worker nodes to join them to this master node.
+
+8. Create a directory for kubeconfig and copy the admin.conf file:
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+
+Creates a directory for storing kubeconfig files and copies the admin.conf file
+to the appropriate location.
+
+9. Set ownership for the kubeconfig file:
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Ensures that the user has ownership of the kubeconfig file.
+
+10. Apply Calico network plugin:
+kubectl apply -f https://docs.projectcalico.org/v3.20/manifests/calico.yaml
+
+Applies the Calico network plugin manifest to enable networking within the Kubernetes cluster.
+
+11. Apply Ingress-Nginx controller:
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.49.0/deploy/static/provider/baremetal/deploy.yaml
+
+Applies the Ingress-Nginx controller manifest for handling Ingress resources in the cluster.
+i.e. steps 10 and 11 installs Custom Resource Definitions (CRDs) for ingress controller and Calico CNI.
+
+Kubeadm:
+1. initialize a control plane node; installs and configures: API server, Controller Manager and Scheduler.
+2. TLS Certifcate generation - needed for securing the communication between k8s components through 
+   Authentication and encryption.
+3. kubeconfig generation for both control plane nodes and worker nodes
+4. Joining Worker nodes - to join additional worker nodes to the cluster. 
+5. Networking - Kubeadm can help configure the chosen CNI plugin to work with the cluster.
+6. Add-ons or components installation :  can optionally install additional add-ons or components
+   Kubernetes DNS service (CoreDNS), Kubernetes Dashboard, or monitoring tools like Prometheus and Grafana.
+
+Few Initial commands that are run in the k8s master node:
 
 kubectl get nodes
+It will show the number of nodes in k8s cluster. In our case, there are two nodes,
+1 master node and 1 worker node.
 
-
+kubectl get pods
+No resouces are found in default namespace.
+The initial namespace in k8s cluster is called a default namespace.
 
 NAMESPACES
-
+what are namespaces?
 Namespaces ns - logical isolation for k8s objects. 
 It is mainly used for isolating different projects within a k8s cluster.
-It is like a seperate box for each project. In openshift, 
-namespace is called as projects.
+It is like a seperate box for each project. 
+To list all namespaces in k8s cluster:
+kubectl get namespace
+kubectl get ns # namespace short form is ns
+
+To create a namespace:
+kubectl create namespace mynamespace
+
+Note: In openshift, namespace is called as projects.
+openshift uses oc command in place of kubectl command.
+
+CREATING DEPLOYMENT AND PODS:
+
+deployment
+replicaset
+pod
+container
+
+Deployment creates the replicaset which will create the replication controller
+
+kubectl create deployment nginx123 --image=nginx 
+# pulls latest image from the dockerhub registry
+kubectl get deployment
+It shows the deployment created
+
+kubectl get pod
+It shows all the pods in the default namespace
+
+kubectl get pod -o wide
+It shows all the pods with detailed imformation such as IP address,
+NODE, NOMINATED NODE and READINESS GATES
+
+kubectl get replicaset
+It shows all the replicaset created for this deployment
+
+kubectl delete pod pod-name
+# will create a new pod and deletes the pod pod-name
+This behaviour is because of replicaset which initiates the
+creation of new pod to maintain the desired state and thereby
+does auto-healing.
+
+Edit deployment to increase the number of replicas:
+
+kuebctl edit deployment nginx123
+We will see a deployment yaml manifest file is opened and we edit the line with
+replicas: 1 to make it 2. 
+
+After this command, one more pod will be created. This behaviour is because of
+replicaset which initiates the creation of new pod to maintain the desired state 
+and thereby does scaling. The state is changed because we edited the deployment
+and changed the replicas.
+
+kubectl delete deployment nginx123
+# will delete the deployment
+
+All the pods will be terminated before the deployment is deleted.
+
 
