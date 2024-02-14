@@ -1,0 +1,85 @@
+Kubernetes Probes
+
+What are probes in k8s?
+Kubernetes Probes are the mechanisms used to determine the health and readiness
+of a container running in a Pod. They ensure that the applications are healthy 
+and readily available.
+
+Probes are the Kubernetes’ first line of defense in managing application availability
+directly at the container level. Even though monitoring tools like grafana help us
+in detection of problems, probes goes one step ahead and proactively prevent issues
+by controlling traffic flow to containers and managing container lifecycles based on
+their state. 
+
+The analogy of k8s probes in the real-life world is a good insurance policy. 
+
+What are some real-world use cases where k8s probes are used?
+1. Legacy or slow-starting applications might take more time to start.
+   For these types of applications we use startup probes.
+2. Some application need some time to wait for other dependent service or application to
+   be ready or some configurations has to be loaded before they are ready to serve the request.
+   In such cases we use readiness probes.
+3. Some applications needs to be continuosly monitored as they might go into unrecoverable 
+   state due to errors or some other reasons. For example, a dealock might occur in the 
+   application. In such cases we need to restart those applications. We use liveness probes
+   for such cases.
+
+How many types of probes are there?
+
+There are three types of probes available:
+liveness probe
+readiness probe
+startup probe
+
+liveness probe
+The Liveness Probe is a mechanism employed by Kubernetes to determine if an 
+application within a container is still running. If the liveness probe fails, 
+Kubernetes will automatically restart the container. This feature is particularly 
+beneficial for applications such as web servers, microservices, messaging, and 
+database systems, where a simple restart can rectify many issues that may otherwise
+cause the application to crash.
+
+readiness probe
+Sometimes, applications are temporarily unable to serve traffic. For example,
+an application might need to load large data or configuration files during startup, 
+or depend on external services after startup. In such cases, you don't want to kill 
+the application, but you don't want to send it requests either. Kubernetes provides 
+readiness probes to detect and mitigate these situations. A pod with containers 
+reporting that they are not ready does not receive traffic through Kubernetes Services.
+
+startup probe
+Just as the name implies, this probe checks if an application within a container has 
+successfully started. If the startup probe fails, Kubernetes assumes that your application
+is still starting and waits for a while. If the startup probe passes, then any configured 
+liveness and readiness probes will come into effect.
+
+Configuration Option	    Description     	                        Default value
+initialDelaySeconds	        Specifies the number of seconds to 
+                            wait before a probe is initiated.	            0
+periodSeconds	            Defines the frequency (seconds) of
+                            performing probes	                            10
+timeoutSeconds	            Defines the maximum time (seconds) a 
+                            probe should take to complete.	                1
+successThreshold	        Minimum consecutive successes for the
+                            probe to be considered successful after
+                            having failed.	                                1
+failureThreshold	        Defines the number of probe failures 
+                            before Kubernetes gives up; in the case
+                            of liveness probes, this means restarting
+                            the pod.	                                    3
+terminationGracePeriod      configure a grace period for the kubelet    
+Seconds                     to wait between triggering a shut down of
+                            the failed container, and then forcing the
+                            container runtime to stop that container        30   
+
+To learn more, visit the official documentation at
+https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle
+
+To summarise:
+While the liveness probe monitors the ‘aliveness’ of your applications, ensuring that
+failing containers are restarted, the readiness probe checks if your application is 
+ready to serve traffic, preventing it from receiving requests until it is fully prepared.
+On the other hand, startup probes provide an additional buffer for applications that 
+require a longer startup time, allowing them time to initialize before other probes kick in.
+So in realtime scenarios, probes are used mostly in combinations.

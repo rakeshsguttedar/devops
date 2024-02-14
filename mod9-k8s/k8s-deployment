@@ -1,15 +1,15 @@
-Kubernetes Application Deployment - B1 - Part 2 
+Kubernetes Application Deployment - B1 - Part 2
 
-k8s deployment of nginx server using yaml file 
+k8s deployment of nginx server using yaml file
 for both deployment and service.
 
-Deployment:
+Deployment
 A Deployment in Kubernetes is a resource that allows you to define, create, and 
 manage a set of identical pods. It provides features such as rolling updates, 
 scaling, and rollback.
 
-Sample YAML for a basic Deployment:
-File Name: nginx-deployment.yml
+Sample YAML for a basic Deployment
+File Name - nginx-deployment.yml
 
 apiVersion: apps/v1
 kind: Deployment
@@ -31,7 +31,7 @@ spec:
         ports:
         - containerPort: 8080
 
-Explanation of deployment yaml file:
+Explanation of deployment yaml file
 apiVersion - Which version of the Kubernetes API you're using to create this object
 kind - type of Kubernetes object such as deployment, configMap, secrets, pod,etc.
 kind - What kind of object you want to create
@@ -53,7 +53,7 @@ These replicas are then managed by the ReplicaSet.
 It has the container definition, and configuration options such as the volume 
 needed, security context and more.
 
-The template field contains the following sub-fields:
+The template field contains the following sub-fields
 
 - The Pods are labeled app: nginx using the .metadata.labels field.
 - The Pod template's specification, or .template.spec field, indicates that the Pods
@@ -75,13 +75,13 @@ Specifies the specification for the containers running in the Pods created from 
       specifies container name, image with tag and container port
 
 
-Service:
+Service
 
 A Service in Kubernetes is an abstraction that defines a logical set of pods and a policy by which 
 to access them. It enables network access to a set of pods.
 
-Sample YAML for a basic Service (LoadBalancer type):
-File Name: nginx-service.yml
+Sample YAML for a basic Service (LoadBalancer type)
+File Name nginx-service.yml
 
 apiVersion: v1
 kind: Service
@@ -95,25 +95,25 @@ spec:
       port: 80
       targetPort: 8080
 
-selector: When you create a Kubernetes Service, you specify a selector that determines
+selector - When you create a Kubernetes Service, you specify a selector that determines
 which Pods the Service will target. This selector is a set of label selectors that identify 
 the Pods backing the Service. Only Pods with labels matching the selector will be included 
 in the Service. In this example, only pods with the labels app: nginx will be selected.
 
-Matching Pods with Selector: The Kubernetes control plane continuously monitors the cluster
+Matching Pods with Selector - The Kubernetes control plane continuously monitors the cluster
 for Pods with labels matching the selector specified in the Service definition. When new Pods
 are created or existing Pods are updated, the control plane evaluates their labels against the
 selector to determine whether they should be included in the Service.
 
-Dynamic Selection: Labels and selectors allow for dynamic selection of Pods based on their 
+Dynamic Selection - Labels and selectors allow for dynamic selection of Pods based on their 
 metadata rather than static IP addresses. This is particularly useful in dynamic environments 
 where Pods may be scaled up or down dynamically, or where Pods are replaced due to failures
 or updates.
 
-port: port on which the appication will be accessed using this service
-containerPort: the port on which the application is running inside the container
+port - port on which the appication will be accessed using this service
+containerPort - the port on which the application is running inside the container
 
-Hands-on:
+Hands-on
 
 kubectl apply -f ngix-deployment.yml
 kubectl get deployment
@@ -138,8 +138,9 @@ Some Interview Questions -
 How do pods communicate across namespaces in k8s.?
 Security Questions on Kubernetes.
 Architecture of K8s and Processes running on Master and worker nodes.
+How to configure a pod to be scheduled on a particular node?
+What are readiness and liveness probes in kubernetes?
 
-Security aspect:
-VPN and whitelist
-Bastion host/jump server
+Security aspect -
+using VPN, bastion host or jump server
 
