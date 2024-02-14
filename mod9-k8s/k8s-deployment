@@ -63,9 +63,17 @@ The template field contains the following sub-fields:
 template - Specifies the Pod template used to create new Pods managed by the Deployment.
 metadata - Contains labels that are applied to all Pods created from this template.
 labels - Specifies labels to be applied to Pods created from this template. In this example, 
-         it applies the label app: example-app to all Pods.
-spec - Specifies the specification for the containers running in the Pods created from this template.
+         it applies the label app: nginx to all Pods.
+Labels in Pod Template - Labels are also used within the template section of the 
+Deployment manifest to specify labels for the Pods created by the Deployment. 
+These labels are applied to all Pods created from the template and are used for 
+various purposes such as service discovery, grouping related resources, and
+applying network policies.
+
+spec - .spec.template.spec
+Specifies the specification for the containers running in the Pods created from this template.
       specifies container name, image with tag and container port
+
 
 Service:
 
