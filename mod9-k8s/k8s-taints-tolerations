@@ -1,17 +1,33 @@
 Taints and Tolerations are the mechanisms in Kubernetes to configure
-scheduling of pods on a Node based on the attribute set on the Node.
-Setting of an attribute on a Node is called tainting of node. A node 
-is tainted to ensure that no pod is scheduled on that node unless a
-pod is configured to tolerate this node by using the same attribute
-that is set on the Node. A Pod is said to be tolerant to a tainted 
-node if the tainted Node attribute is set as tolerations on that Pod.
+scheduling of pods on a Node based on the attributes set on the Node.
 
-Taints and Tolerations are configured at the Node Level because Node 
-is the point of focus for the scheduling behaviour of pods.
+Setting of an attribute on a Node is called tainting of node. And
+the attribute that is set on the node is called Taint. If the same 
+attribute is configured on the Pod, it is called Toleration.
+Hence Taints are set on Nodes and Tolerations are set on the pods.
 
-Attribute - An attribute is in the form - 
+Taints and tolerations are mechanisms used to control which nodes a pod
+can be scheduled on. They are important for ensuring that certain pods
+are only deployed on specific nodes or types of nodes.
 
-key=value:Effect 
+A node is tainted to ensure that no pod is scheduled on that node 
+unless a pod is configured to tolerate this node by using the same 
+attribute that is set on the Node. A Pod is said to be tolerant to a 
+tainted node if the tainted Node attribute is set as tolerations on 
+that Pod.
+
+Attribute or Taint - 
+A taint is a key-value pair that is applied to a node. It prevents pods 
+from being scheduled onto a node unless the pod has a corresponding 
+toleration. 
+
+Taints are typically used to mark nodes as unsuitable for certain types of
+workloads, such as reserving nodes for specific tasks or isolating nodes 
+due to hardware limitations.
+
+An attribute or Taint is in the form
+
+      key=value:Effect 
 
 where 
 key=value is the property and its value 
@@ -20,39 +36,125 @@ Effect is the behaviour of the Pods for that attribute.
 The possible values for Effect are 
 NoSchedule, PreferNoSchedule and NoExecute.
 
-NoSchedule ensures no pods are scheduled on this node.
-Pods with tolerations for key=value will be allowed to be
-be scheduled on that node. Pods without the tolerations for
-key=value are not scheduled on this node. But already 
-scheduled non-tolerant pods continue to run unless evicted 
-because of other reasons.
+NoSchedule
+NoSchedule ensures no new pods are scheduled on this tainted node
+unless they have a matching toleration. But already scheduled pods
+continue to run unless evicted because of other reasons.
 
+PreferNoSchedule
 PreferNoSchedule can allow scheduling of pods without the tolerations 
 for key=value on that node. This effect is used when you want to 
 discourage scheduling pods onto specific nodes but allow it if necessary.
+PreferNoSchedule is a "preference" or "soft" version of NoSchedule. The
+control plane will try to avoid placing a Pod that does not tolerate the 
+taint on the node, but it is not guaranteed.
 
+NoExecute
 NoExecute will evict the Pods without tolerations if they are already
 Sceduled on that Node. This effect ensures that only pods with tolerations
 for the taint are running on the node.
 
-Let us explain using an example.
+This affects pods that are already running on the node as follows:
+Pods that do not tolerate the taint are evicted immediately
+Pods that tolerate the taint without specifying tolerationSeconds in their 
+toleration specification remain bound forever.
+Pods that tolerate the taint with a specified tolerationSeconds remain bound
+for the specified amount of time. After that time elapses, the node lifecycle
+controller evicts the Pods from the node.
+
+Taints and Tolerations are configured at the Node Level because Node 
+is the point of focus for the scheduling behaviour of pods.
+
+You can put multiple taints on the same node and multiple tolerations on the
+same pod.
+
+Let us explain using an example. 
+
 We can taint a particular node using the command
 
-kubectl taint nodes <node-name> key=value:effect
-
-
-If the attributes are set on the node, it is called
-tainting of Node. If the same attribute is set on the Pod, it is 
-called Toleration. Therefore Taints are set on Nodes and Tolerations 
-are set on the pods.
-
-
-Command format for tainting of a node
 kubectl taint nodes <node-name>  key=value:effect
-Example
 
-tolerations:
-  - key: 
-    operator:
-    value: 
-    effect:
+For example
+kubectl taint nodes node1 app=backend:NoSchedule
+
+In this example, we're tainting node1 with a key-value pair app=backend and
+the taint effect NoSchedule. This means that pods without a toleration for 
+app=backend will not be scheduled on node1.
+
+Tolerations
+A toleration is a part of a pod's specification that allows the pod to
+be scheduled onto a node with a matching taint. It effectively tells the
+scheduler that the pod is "tolerant" of the taint on the node.
+
+Example of adding a toleration to a pod:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+  - name: my-container
+    image: my-image
+  tolerations:
+  - key: "app"
+    operator: "Equal"
+    value: "backend"
+    effect: "NoSchedule"
+
+In this example, the pod has a toleration for the taint with key app, 
+value backend, and taint effect NoSchedule. This means that the pod 
+can be scheduled on a node with the taint app=backend:NoSchedule.
+
+Taint Effects:
+There are three taint effects:
+
+NoSchedule: The pod will not be scheduled on the tainted node.
+
+PreferNoSchedule: The scheduler will try to avoid placing the pod on the
+tainted node, but it's not an absolute restriction.
+
+NoExecute: If a pod is already running on a node when it gets tainted with
+NoExecute, the pod will be evicted from the node.
+
+Example of Taint and Toleration
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-boot-k8s-deployment
+spec:
+  selector:
+    matchLabels:
+      app: spring-boot-k8s
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: spring-boot-k8s
+    spec:
+      containers:
+        - name: spring-boot-k8s
+          image: adijaiswal/shopping-cart:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8070
+      tolerations:
+        - key: app
+          operator: Equal
+          value: backend
+          effect: NoSchedule
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: springboot-k8ssvc
+spec:
+  selector:
+    app: spring-boot-k8s
+  ports:
+    - protocol: TCP
+      port: 8070
+      targetPort: 8070
+  type: NodePort
