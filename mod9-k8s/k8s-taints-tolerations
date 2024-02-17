@@ -187,6 +187,8 @@ spec:
       targetPort: 8070
   type: NodePort
 
+
+
 kubectl apply -f tolerate.yml
 
 We can check all the nodes using
