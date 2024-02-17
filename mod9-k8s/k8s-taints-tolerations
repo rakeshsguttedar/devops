@@ -36,7 +36,7 @@ tainted node if the same taint is configured as tolerations on that Pod.
 Attribute or Taint - 
 A taint is a key-value pair that is applied to a node. It prevents pods 
 from being scheduled onto a node unless the pod has a corresponding 
-toleration. 
+toleration.
 
 Taints are typically used to mark nodes as unsuitable for certain types of
 workloads, such as reserving nodes for specific tasks or isolating nodes 
@@ -44,14 +44,13 @@ due to hardware limitations.
 
 An attribute or Taint is in the form
 
-      key=value:Effect 
+      key=value:taint-effect 
 
 where 
 key=value is the property and its value 
-Effect is the behaviour of the Pods for that attribute.
+taint-effect is the behaviour of the Pods after the Node is tainted.
 
-The possible values for Effect are 
-NoSchedule, PreferNoSchedule and NoExecute.
+The possible values for taint-effect are 
 
 NoSchedule
 NoSchedule ensures no new pods are scheduled on this tainted node
@@ -70,17 +69,13 @@ NoExecute
 NoExecute will evict the Pods without tolerations if they are already
 Sceduled on that Node. This effect ensures that only pods with tolerations
 for the taint are running on the node.
-
-This affects pods that are already running on the node as follows:
+This affects pods that are already running on the node as follows
 Pods that do not tolerate the taint are evicted immediately
 Pods that tolerate the taint without specifying tolerationSeconds in their 
 toleration specification remain bound forever.
 Pods that tolerate the taint with a specified tolerationSeconds remain bound
 for the specified amount of time. After that time elapses, the node lifecycle
 controller evicts the Pods from the node.
-
-Taints and Tolerations are configured at the Node Level because Node 
-is the point of focus for the scheduling behaviour of pods.
 
 You can put multiple taints on the same node and multiple tolerations on the
 same pod.
@@ -95,7 +90,7 @@ The taint has key key1, value value1, and taint effect NoSchedule.
 This means that no pod will be able to schedule onto node1 unless 
 it has a matching toleration.
 
-To remove the taint added by the command above, you can run:
+To remove the taint added by the command above, you can run
 
 kubectl taint nodes node1 key1=value1:NoSchedule-
 
@@ -111,7 +106,7 @@ A toleration is a part of a pod's specification that allows the pod to
 be scheduled onto a node with a matching taint. It effectively tells the
 scheduler that the pod is "tolerant" of the taint on the node.
 
-Example of adding a toleration to a pod:
+Example of adding a toleration to a pod
 
 apiVersion: v1
 kind: Pod
@@ -132,18 +127,19 @@ value backend, and taint effect NoSchedule. This means that the pod
 can be scheduled on a node with the taint app=backend:NoSchedule.
 The default vlaue for operator is Equal if not specified.
 
-Taint Effects:
-There are three taint effects:
+Taint Effects
 
-NoSchedule: The pod will not be scheduled on the tainted node.
+NoSchedule - The pod will not be scheduled on the tainted node.
 
-PreferNoSchedule: The scheduler will try to avoid placing the pod on the
+PreferNoSchedule - The scheduler will try to avoid placing the pod on the
 tainted node, but it's not an absolute restriction.
 
-NoExecute: If a pod is already running on a node when it gets tainted with
+NoExecute - If a pod is already running on a node when it gets tainted with
 NoExecute, the pod will be evicted from the node.
 
-Example of Taint and Toleration
+Hands-on example of Taint and Toleration
+
+Below is a spring boot application deployment manifest.
 
 tolerate.yml
 
@@ -188,27 +184,30 @@ spec:
   type: NodePort
 
 
-
+1. Deploy the spring boot application using
 kubectl apply -f tolerate.yml
 
-We can check all the nodes using
+2. We can check all the nodes using the command 
 kubectl get nodes
 
-From this list, we can taint a specific node using
+3. From this list, we can taint a specific node using
 
 kubectl taint node node2 app=backend:NoSchedule
 
-we can check on which node the pods are scheduled using the command
-
-kubectl get pods -o wide
-
-We can check the taint using
+4. We can check the taint using
 
 kubectl describe nodes | grep -e Name: -e Taint
 
-Example use cases of Taints and Tolerations
-A few of typical scenrios are:
+5. we can check on which node the pods are scheduled using the command
+
+kubectl get pods -o wide
+
+Result - 
+You can see that the 2 pods are scheduled on node2 because
+the toleration on these pods match the taint on node2.
+
+A few of typical scenrios where Taints and Tolerations are used 
 
 Dedicating a node for a user
 Binding a user to a node
-Dedicating nodes with special hardware
+Dedicating nodes with special hardware - like GPU
