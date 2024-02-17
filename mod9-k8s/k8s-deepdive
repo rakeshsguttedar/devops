@@ -21,7 +21,7 @@ GroupId: refers to the organisation or company that owns the whole project.
 ArtifactID: name of the project used in the context of pushing of artifact
 to Nexus using NexusArtifactUploader plugin in Jenkins.
 
-Architecture of k8s cluster:
+I. Architecture of k8s cluster:
 
 Master Node - a VM that manages Worker Nodes: WN-1 and WN-2
 Processes running in master node:
@@ -53,6 +53,8 @@ it to the Scheduler. Scheduler then forwards it to the kubelet in Worker node.
 kubelet creates the pods and container runtime (containerd or CRI-O) will run the 
 container inside the pod.
 
+II. Kubernetes Installation
+
 Kubernetes cluster setup on a VM using AWS EC2 instances:
 
 AWS Console -> Create 2 EC2 instances of type t2.medium with 15 GB storage. 
@@ -76,6 +78,11 @@ sudo apt-get install docker.io -y
 sudo service docker restart
 
 3. Add GPG key for downloading Kubernetes package from GCP:
+
+become root user. 
+
+sudo su 
+
 sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 
 It fetches the GPG key for the Kubernetes packages and adds it to the keyring.
@@ -84,6 +91,10 @@ It fetches the GPG key for the Kubernetes packages and adds it to the keyring.
 echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" >/etc/apt/sources.list.d/kubernetes.list
 
 Adds the Kubernetes repository to the system's package sources.
+
+exit 
+
+to become ubuntu user
 
 5. Update the package list again:
 sudo apt-get update
@@ -96,13 +107,18 @@ Installs specific versions of Kubeadm, Kubectl, and Kubelet, in this case, versi
 Step 2: Configuration changes in Master Node:
 
 7. Initialize the Kubernetes cluster with a specified pod network CIDR:
-kubeadm init --pod-network-cidr=192.168.0.0/16
+sudo kubeadm init --pod-network-cidr=192.168.0.0/16
 
 Initializes the Kubernetes master node, specifying the pod network CIDR for 
 communication between pods.
 
-After we run the kubeadm init command, kubeadm will generate a kubeadm join command.
+After we run the kubeadm init command, kubeadm will generate a 
+kubeadm join command.
+
 This command has to be run in the one or more worker nodes to join them to this master node.
+
+[ Example for reference only:
+sudo kubeadm join 172.31.16.59:6443 --token cmkjwa.oeojl14kf3tljdub  --discovery-token-ca-cert-hash sha256:d9d1a67f9a98668f72c9acfb49dad90fc3e52d303c59f125e19b8bb4a073d689 ]
 
 8. Create a directory for kubeconfig and copy the admin.conf file:
 mkdir -p $HOME/.kube

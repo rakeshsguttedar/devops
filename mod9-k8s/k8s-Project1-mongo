@@ -55,6 +55,35 @@ kubectl apply -f mongo.yml
 Note: Validate this yaml file using an online yaml validator or use 
 kubeval tool.
 
+kubectl get all
+
+NAME                                 READY   STATUS    RESTARTS   AGE
+pod/mongo-express-76bd65b78f-pq4ts   1/1     Running   0          97s
+pod/mongodb-5d569c558-mdq2k          1/1     Running   0          98s
+
+NAME                            TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+service/kubernetes              ClusterIP   10.96.0.1       <none>        443/TCP          7m7s
+service/mongo-express-service   NodePort    10.99.96.232    <none>        8081:30517/TCP   97s
+service/mongodb-service         ClusterIP   10.99.188.150   <none>        27017/TCP        98s
+
+NAME                            READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/mongo-express   1/1     1            1           98s
+deployment.apps/mongodb         1/1     1            1           98s
+
+NAME                                       DESIRED   CURRENT   READY   AGE
+replicaset.apps/mongo-express-76bd65b78f   1         1         1       98s
+replicaset.apps/mongodb-5d569c558          1         1         1       98s
+
+
+After some time, access the mongo-express UI in a browser using the Worker Node
+public IP address and port 30517 generated for mongo-express-service.
+
+http://3.228.16.69:30517/
+
+Enter 
+username: admin
+password: 123
+
 mongo.yaml
 
 ---
