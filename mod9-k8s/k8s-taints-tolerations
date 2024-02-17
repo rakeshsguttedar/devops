@@ -1,0 +1,58 @@
+Taints and Tolerations are the mechanisms in Kubernetes to configure
+scheduling of pods on a Node based on the attribute set on the Node.
+Setting of an attribute on a Node is called tainting of node. A node 
+is tainted to ensure that no pod is scheduled on that node unless a
+pod is configured to tolerate this node by using the same attribute
+that is set on the Node. A Pod is said to be tolerant to a tainted 
+node if the tainted Node attribute is set as tolerations on that Pod.
+
+Taints and Tolerations are configured at the Node Level because Node 
+is the point of focus for the scheduling behaviour of pods.
+
+Attribute - An attribute is in the form - 
+
+key=value:Effect 
+
+where 
+key=value is the property and its value 
+Effect is the behaviour of the Pods for that attribute.
+
+The possible values for Effect are 
+NoSchedule, PreferNoSchedule and NoExecute.
+
+NoSchedule ensures no pods are scheduled on this node.
+Pods with tolerations for key=value will be allowed to be
+be scheduled on that node. Pods without the tolerations for
+key=value are not scheduled on this node. But already 
+scheduled non-tolerant pods continue to run unless evicted 
+because of other reasons.
+
+PreferNoSchedule can allow scheduling of pods without the tolerations 
+for key=value on that node. This effect is used when you want to 
+discourage scheduling pods onto specific nodes but allow it if necessary.
+
+NoExecute will evict the Pods without tolerations if they are already
+Sceduled on that Node. This effect ensures that only pods with tolerations
+for the taint are running on the node.
+
+Let us explain using an example.
+We can taint a particular node using the command
+
+kubectl taint nodes <node-name> key=value:effect
+
+
+If the attributes are set on the node, it is called
+tainting of Node. If the same attribute is set on the Pod, it is 
+called Toleration. Therefore Taints are set on Nodes and Tolerations 
+are set on the pods.
+
+
+Command format for tainting of a node
+kubectl taint nodes <node-name>  key=value:effect
+Example
+
+tolerations:
+  - key: 
+    operator:
+    value: 
+    effect:

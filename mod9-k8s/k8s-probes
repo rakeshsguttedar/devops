@@ -76,6 +76,71 @@ To learn more, visit the official documentation at
 https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle
 
+Below is the Devops Shack notes for Liveness and Readiness probe
+
+Liveness & Readiness Probe
+Liveness and readiness probes are crucial for Kubernetes to ensure the health and 
+availability of your application. Here's a detailed explanation with examples:
+
+Liveness Probe:
+A liveness probe determines if a container is still running and healthy. 
+If the liveness probe fails, Kubernetes will restart the container.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+  - name: my-container
+    image: my-web-server-image
+    ports:
+    - containerPort: 80
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 15
+      periodSeconds: 10
+
+In this example:
+httpGet: Specifies that the probe should perform an HTTP GET request.
+path: The path of the request (in this case, / means the root path).
+port: The port to use for the request (in this case, 80).
+initialDelaySeconds: The number of seconds after the container has started before the first probe is performed.
+periodSeconds: How often (in seconds) to perform the probe.
+
+Readiness Probe:
+A readiness probe determines if a container is ready to start accepting traffic. 
+If the readiness probe fails, the container won't receive traffic from the service, 
+but it will not be restarted.
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+  - name: my-container
+    image: my-web-server-image
+    ports:
+    - containerPort: 80
+    readinessProbe:
+      httpGet:
+        path: /ready
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 3
+
+In this example:
+httpGet: Specifies that the probe should perform an HTTP GET request.
+path: The path of the request (in this case, /ready).
+port: The port to use for the request (in this case, 80).
+initialDelaySeconds: The number of seconds after the container has started before the first probe is performed.
+periodSeconds: How often (in seconds) to perform the probe.
+
+Using these probes, you can ensure that your application is always responsive and ready to handle traffic, and Kubernetes will take care of restarting or routing traffic accordingly.
+
 To summarise:
 While the liveness probe monitors the ‘aliveness’ of your applications, ensuring that
 failing containers are restarted, the readiness probe checks if your application is 

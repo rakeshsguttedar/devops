@@ -61,7 +61,7 @@ Below are the Ports to be opened in Inbound-rules of Secuirty Group attached
 to these EC2 instances.
 
 1. 6443
-2. 30000-32767
+2. 30000-32768
 
 Installing Kubernetes Master Nodes and Worker nodes in EC2 instances:
 
@@ -126,6 +126,12 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/cont
 
 Applies the Ingress-Nginx controller manifest for handling Ingress resources in the cluster.
 i.e. steps 10 and 11 installs Custom Resource Definitions (CRDs) for ingress controller and Calico CNI.
+
+12. kubeval - To validate the yaml manifests before applying
+Installation:
+wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+tar xf kubeval-linux-amd64.tar.gz
+sudo cp kubeval /usr/local/bin
 
 Kubeadm:
 1. initialize a control plane node; installs and configures: API server, Controller Manager and Scheduler.
@@ -207,5 +213,3 @@ kubectl delete deployment nginx123
 # will delete the deployment
 
 All the pods will be terminated before the deployment is deleted.
-
-

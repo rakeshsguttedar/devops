@@ -1,0 +1,53 @@
+This guide lists the steps for Node Maintenance.
+
+Maintenance of Node means - 
+upgrading Kubernetes components 
+rebooting the node or 
+making hardware changes
+
+Draining of Node
+Maintaining of nodes involves eviction of pods that are already 
+scheduled on that node. This eviction of pods on a node is called
+Draining of Node.
+
+Draining of Nodes involes following steps:
+
+1. Preparation     -   reschdule existing pods on a node on other nodes.
+2. Cordon the Node -   kubectl cordon <node-name>
+3. Drain the Node  -   kubectl drain <node-name> --ignore-daemonsets
+4. Confirm Pods Have Been Evicted - 
+   kubectl get pods --all-namespaces -o wide | grep <node-name>
+5. Perform Maintenance Tasks -   upgrading Kubernetes components, 
+   rebooting the node, or making hardware changes.
+6. uncordon the Node - kubectl uncordon <node-name>
+   to allow new pods to be scheduled onto it
+
+1. Preparation - 
+It involves gracefully evicting all the pods running
+on that node and ensuring that they can be rescheduled onto other nodes
+in the cluster before performing maintenance tasks on the node.
+
+2. Cordon the Node - 
+marking it as unschedulable to prevent new pods from being 
+scheduled onto it. This step ensures that no new workload is added 
+to the node while maintenance is in progress.
+
+3. Drain the Node - 
+drain it to evict all the pods running on it. Kubernetes will
+gracefully terminate the pods and reschedule them onto other nodes in the cluster.
+The --ignore-daemonsets flag is used to ensure that daemonset-managed pods 
+(pods that are supposed to run on every node) are not evicted. If you're certain 
+you want to evict daemonset-managed pods as well, you can omit this flag.
+
+4. Confirm Pods Have Been Evicted - 
+After draining the node, verify that all pods 
+have been successfully evicted and are running on other nodes in the cluster.
+
+5. Perform Maintenance Tasks - 
+With all the pods evacuated from the node, you can 
+perform maintenance tasks such as upgrading Kubernetes components, rebooting the node, 
+or making hardware changes.
+
+6. Uncordon the Node -  
+Once maintenance is complete and the node is ready to resume 
+normal operation, "uncordon" the node to allow new pods to be scheduled onto it.

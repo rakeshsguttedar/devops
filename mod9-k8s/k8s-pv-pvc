@@ -1,0 +1,146 @@
+Kubernetes PV and PVC Concepts with example manifests only
+
+PV -  PersistentVolume
+PVC - PersistentVolumeClaim
+
+https://kubernetes.io/docs/concepts/storage/volumes/
+
+In k8s, PVC (PersistentVolumeClaim) and PV (PersistentVolume) 
+are both used to manage persistent storage in Kubernetes. 
+
+What are Volumes in Kubernetes?
+A Volume is a directory, possibly with some data in it, which is
+accessible to the containers in a pod. 
+
+Why Volumes are needed?
+
+1. On-disk files in a container are ephemeral, which presents some problems for 
+non-trivial applications when running in containers. One problem occurs when 
+a container crashes or is stopped. Container state is not saved so all of the 
+files that were created or modified during the lifetime of the container are 
+lost. During a crash, kubelet restarts the container with a clean state.
+
+2. Another problem occurs when multiple containers are running in a Pod and need
+to share files. It can be challenging to setup and access a shared filesystem 
+across all of the containers. 
+
+The Kubernetes volume abstraction solves both of these problems.
+[ephemeral containers and sharing of data between containers]
+
+Volumes concept in detail
+
+Volumes in Kubernetes are similar to directories that are accessible to containers
+within a pod. They can be attached to one or more containers within the same pod, 
+allowing those containers to read from and write to the same set of files.
+
+Volumes play a crucial role in Kubernetes applications, enabling stateful workloads,
+data persistence, and data sharing between containers. They provide a flexible and 
+scalable way to manage storage within Kubernetes clusters, facilitating the deployment 
+of a wide range of applications, from simple web servers to complex databases.
+
+Therefore key aspects of k8s volumes are 
+- Data Persistence
+- Data Sharing 
+- varieties of volumes for different use cases, 
+- mounting of volumes into containers as directories to allow containers to access the
+  data stored within them.
+- Volume Lifecycle - i.e.volumes are automatically provisioned, attached, and detached 
+  by Kubernetes based on the pod's lifecycle and configuration. 
+
+Volumes can also be pre-provisioned by a cluster administrator and manually attached
+to pods as needed.
+
+Volume Types: emptyDir, hostPath, PersistentVolume (PV) and PVC, CSI Volumes
+(Container Storage Interface Volumes), Cloud Provider-specific Volumes 
+
+PersistentVolume(PV) and PersistentVolumeClaim(PVC) -
+
+PV - a physical piece of storage in the cluster ( in the underlying infrastructure),
+such as a disk, volume, or cloud storage.
+
+PV can be statically provisioned by an admininstrator or can be dynamically provisioned by
+k8s based on the storage class definitions.
+
+PVs are not namespace-specific, and they exist independently of any pod or workload.
+PV is a resource in the cluster just like a node is a cluster resource. PVs are volume 
+plugins like Volumes, but have a lifecycle independent of any individual Pod that uses 
+the PV. This API object captures the details of the implementation of the storage, be 
+that NFS, iSCSI, or a cloud-provider-specific storage system.
+
+PersistentVolumeClaim (PVC)
+A PersistentVolumeClaim (PVC) is a request for storage by a user. It is similar to a Pod.
+Pods consume node resources and PVCs consume PV resources. Pods can request specific levels 
+of resources (CPU and Memory). Claims can request specific size and access modes (e.g., 
+they can be mounted ReadWriteOnce, ReadOnlyMany, ReadWriteMany, or ReadWriteOncePod, 
+see AccessModes).
+
+Use Cases of PVC - Configure a Pod to Use a PersistentVolume for Storage
+1. You, as cluster administrator, create a PersistentVolume backed by physical storage. 
+   You do not associate the volume with any Pod.
+
+2. You, now taking the role of a developer / cluster user, create a PersistentVolumeClaim 
+   that is automatically bound to a suitable PersistentVolume.
+
+3. You create a Pod that uses the above PersistentVolumeClaim for storage.
+
+Example yaml files for PVC and PV
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /home/ubuntu/mongo/mongo-vol
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+PVC is a request for storage by a user or a pod. It acts as a way for a pod to 
+claim a certain amount of storage without needing to know the details of how 
+that storage is provisioned.
+PVCs are used by developers or administrators to request specific storage resources 
+(e.g., size, access mode, storage class) for their pods.
+When a pod specifies a PVC, Kubernetes will dynamically provision a matching 
+PersistentVolume (PV) to satisfy the claim based on the PVC's requirements.
+PVCs are ephemeral and tied to a specific namespace. They are used within the 
+scope of a particular workload to request and consume storage.
+
+In summary, PVCs are used by pods to request storage resources dynamically, 
+while PVs are the actual storage resources provisioned either statically by 
+administrators or dynamically by Kubernetes based on PVC requests. PVCs act 
+as an abstraction layer that separates the concerns of storage provisioners 
+(administrators) and consumers (developers or pods).
+
+access modes - ReadWriteOnce (RWO) ReadOnlyMany (ROX) ReadWriteMany (RWX)
+
+When a PersistentVolume is provisioned, whether statically by an administrator 
+or dynamically by Kubernetes using storage classes, it is created as an object 
+within the Kubernetes API server. This API server is part of the control plane 
+and runs on the master nodes of the Kubernetes cluster.
+
+The PV object itself represents a piece of storage in the underlying storage 
+infrastructure (such as a disk, volume, or cloud storage), but it is managed 
+centrally by the Kubernetes control plane and is accessible to all nodes in 
+the cluster.
+
+Once a PV is created, it is available for PersistentVolumeClaims (PVCs) to 
+bind to, and pods running on any node in the cluster can reference the PVCs 
+to access the underlying storage provided by the PVs.
+
+To summarize, PVs are k8s objects created and managed by the Kubernetes control
+plane, which runs on the master nodes of the Kubernetes cluster. They are not tied 
+to any specific worker node or master node in the cluster.
