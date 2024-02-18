@@ -80,9 +80,7 @@ public IP address and port 30517 generated for mongo-express-service.
 
 http://3.228.16.69:30517/
 
-Enter 
-username: admin
-password: 123
+Enter username and password to login
 
 mongo.yaml
 

@@ -1,0 +1,62 @@
+Kubernetes Node Affinity and Node anti-Affinity
+
+I. Assign Pods to Nodes
+
+Refer official kubernetes
+https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes/
+
+We can assign the pods to specific nodes using
+A. node labels - set labels on nodes and configured this label in pod specs 
+                 using nodeSelector 
+B. nodeName -    configured in pod specs to schedule the pod to run on a 
+                 specific node using setting nodeName
+
+A. node labels
+1. set label on a node 
+kubectl label nodes node1 disktype=ssd
+
+2. Check the set label
+kubectl get nodes --show-labels
+
+3. Create a pod that gets scheduled to your chosen node
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    env: test
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: IfNotPresent
+  nodeSelector:
+    disktype: ssd
+
+4. Apply above manifest to create a pod
+kubectl apply -f https://k8s.io/examples/pods/pod-nginx.yaml
+
+5. Verify that the pod is running on your chosen node:
+kubectl get pods --output=wide
+
+B. nodeName
+1. Create a pod that gets scheduled to specific node 
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  nodeName: foo-node # schedule pod to specific node
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: IfNotPresent
+
+2. apply the above manifest and check pod is scheduled on foo-node
+kubectl apply -f https://k8s.io/examples/pods/pod-nginx-specific-node.yaml
+
+II. Node affinity and Anti-affinity
+
+contstrain a pod so that it is
+1. restricted to run on particular node(s)
+2. prefers to run on particular node(s)

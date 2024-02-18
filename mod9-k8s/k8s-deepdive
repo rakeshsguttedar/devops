@@ -118,7 +118,7 @@ kubeadm join command.
 This command has to be run in the one or more worker nodes to join them to this master node.
 
 [ Example for reference only:
-sudo kubeadm join 172.31.16.59:6443 --token cmkjwa.oeojl14kf3tljdub  --discovery-token-ca-cert-hash sha256:d9d1a67f9a98668f72c9acfb49dad90fc3e52d303c59f125e19b8bb4a073d689 ]
+sudo kubeadm join 172.31.16.59:6443 --token cskhjwq.3432dfvdg5545tbfg25  --discovery-token-ca-cert-hash sha256:123456qwertyuiop423423423234255456567867867ddgnvnghhkhh ]
 
 8. Create a directory for kubeconfig and copy the admin.conf file:
 mkdir -p $HOME/.kube
