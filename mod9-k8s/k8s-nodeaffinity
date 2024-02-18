@@ -52,11 +52,26 @@ spec:
     image: nginx
     imagePullPolicy: IfNotPresent
 
-2. apply the above manifest and check pod is scheduled on foo-node
+2. apply the above manifest and check whether the pod is scheduled on foo-node
 kubectl apply -f https://k8s.io/examples/pods/pod-nginx-specific-node.yaml
+
+
 
 II. Node affinity and Anti-affinity
 
-contstrain a pod so that it is
+We can contstrain a pod so that it is
 1. restricted to run on particular node(s)
 2. prefers to run on particular node(s)
+
+nodeSelector is the simplest mechanism to constrain a pod
+to run on a node matching the label set on it.
+
+But this constraining can be expanded using node affinity and anti-affinity
+where it provides the following benefits - 
+1. expressiveness - nodeSelector only selects nodes with all the specified labels. 
+   Affinity/anti-affinity gives you more control over the selection logic.
+2. soft/preferred - the scheduler still schedules the Pod even if it can't find a 
+   matching node.
+3. co-location of pods - using labels on other Pods running on the node (or other 
+   topological domain), instead of just node labels, we can schedule pods to run
+   on a node so that they are co-located in a single AZ,  
