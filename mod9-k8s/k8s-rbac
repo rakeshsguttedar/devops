@@ -1,0 +1,85 @@
+Kubernetes RBAC - Role Based Access Control
+
+RBAC components in k8s
+
+1. ServiceAccounts
+2. Role
+3. RoleBinding
+4. ClusterRole
+5. ClusterRoleBindings
+
+ServiceAccounts
+A service account provides an identity for processes that run in a Pod, and maps
+to a ServiceAccount object. When you authenticate to the API server, you identify 
+yourself as a particular user. Kubernetes recognises the concept of a user, however, 
+Kubernetes itself does not have a User API.
+
+Every namespace has at least one ServiceAccount: the default ServiceAccount resource, 
+called default. You can list all ServiceAccount resources in your current namespace with:
+
+kubectl get serviceaccounts
+
+An RBAC Role or ClusterRole contains rules that represent a set of permissions. 
+Permissions are purely additive (there are no "deny" rules).
+
+A Role always sets permissions within a particular namespace; when you create a 
+Role, you have to specify the namespace it belongs in.
+
+ClusterRole, by contrast, is a non-namespaced resource. The resources have 
+different names (Role and ClusterRole) because a Kubernetes object always has to 
+be either namespaced or not namespaced; it can't be both.
+
+A RoleBinding or ClusterRoleBinding binds a role to subjects. Subjects can be 
+groups, users or ServiceAccounts.
+
+In summary, RBAC in Kubernetes involves defining Roles and ClusterRoles, which 
+specify a set of permissions (verbs) for accessing resources within namespaces or 
+across the entire cluster. RoleBindings and ClusterRoleBindings are then used to 
+bind Roles and ClusterRoles to users, groups, or ServiceAccounts, granting them 
+the specified permissions.
+
+Kubernetes itself does not handle user authentication directly, it integrates with
+various authentication providers and plugins to authenticate users. Similarly, 
+Kubernetes supports Role-Based Access Control (RBAC) for authorization, allowing
+administrators to define access policies and permissions for users, groups, or 
+ServiceAccounts. Therefore, Authentication in Kubernetes is pluggable, allowing 
+administrators to configure multiple authentication methods simultaneously.
+
+ServiceAccount 
+When Pods contact the API server, Pods authenticate as a particular ServiceAccount 
+(for example, default). There is always at least one ServiceAccount in each namespace.
+
+Every Kubernetes namespace contains at least one ServiceAccount: the default 
+ServiceAccount for that namespace, named default. If you do not specify a 
+ServiceAccount when you create a Pod, Kubernetes automatically assigns the 
+ServiceAccount named default in that namespace.
+
+https://kubernetes.io/docs/reference/access-authn-authz/service-accounts-admin/
+
+User accounts versus service accounts
+
+Kubernetes distinguishes between the concept of a user account and a service account
+for a number of reasons:
+
+1. User accounts are for humans. Service accounts are for application processes, 
+which (for Kubernetes) run in containers that are part of pods.
+
+2. User accounts are intended to be global: names must be unique across all namespaces
+of a cluster. No matter what namespace you look at, a particular username that represents 
+a user represents the same user. In Kubernetes, service accounts are namespaced: 
+two different namespaces can contain ServiceAccounts that have identical names.
+
+Typically, a cluster's user accounts might be synchronised from a corporate database,
+where new user account creation requires special privileges and is tied to complex
+business processes. By contrast, service account creation is intended to be more 
+lightweight, allowing cluster users to create service accounts for specific tasks 
+on demand. Separating ServiceAccount creation from the steps to onboard human users 
+makes it easier for workloads to follow the principle of least privilege.
+
+Auditing considerations for humans and service accounts may differ; the separation makes 
+that easier to achieve.
+
+A configuration bundle for a complex system may include definition of various service 
+accounts for components of that system. Because service accounts can be created without 
+many constraints and have namespaced names, such configuration is usually portable.
+

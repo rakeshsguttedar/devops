@@ -1,0 +1,101 @@
+Kubernetes - Ingress
+
+https://kubernetes.io/docs/concepts/services-networking/ingress/
+
+Ingress is an API object that manages external access to the services 
+in a cluster, typically HTTP. It provides load balancing, SSL termination 
+and name-based virtual hosting.
+
+Ingress exposes HTTP and HTTPS routes from outside the cluster to services
+within the cluster. Traffic routing is controlled by rules defined on the 
+Ingress resource.
+
+        Internet
+           |
+        Ingress
+           |
+           /\
+          /  \
+         /    \
+        /      \
+    Service1  Service2
+       |         | 
+      POD1      POD3
+       |         |
+      POD2      POD4
+
+Why Ingress feature is needed in kubernetes?
+
+After we deploy an application in a k8s cluster, we can access this application 
+using the URL - http://IPAddress:port
+But we cant always remember the IP address and it is not a good practice to expose
+the IP address of the k8s cluster for external access.
+
+1. The load balancing in k8s is only a basic Round Robin type of Load Balancing. 
+   It lacks many enterrprise level features such a TLS, host-based routing, 
+   path-based routing, whitelisting, sticky session, etc.
+3. For Loadbalancer type service in k8s, the cloud provider would charge for the 
+   public IP address for each microservice.If there are 1000 of micro-services 
+   we will need 1000 public IP addresses which would be very expensive.
+
+To solve these problems and to provide much better way to access the application, 
+Ingress feature was added to kubernetes.
+
+Ingress provides enterprise level Load balancing service i.e. a standardized way to 
+manage external access to services, offering features such as host-based routing, 
+path-based routing, SSL termination, and integration with external load balancers. 
+
+Advantages of using Ingress - 
+1. Security - Ingress increases the security of the kubernetes cluster as it 
+   will abstract the underlying k8s cluster to the external world.
+2. Flexible - Makes the application flexible as it will add advanced routing 
+   and traffic management features
+3. Scalable - As applications grow with more features, Ingress reduces the 
+   complexity of managing the application.
+
+Ingress class
+
+Ingresses can be implemented by different controllers, often with different configuration. 
+Each Ingress should specify a class, a reference to an IngressClass resource that contains 
+additional configuration including the name of the controller that should implement the class.
+
+Ingress Resource
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minimal-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx-example
+  rules:
+  - http:
+      paths:
+      - path: /testpath
+        pathType: Prefix
+        backend:
+          service:
+            name: test
+            port:
+              number: 80
+
+Ingress resource mainly contains a list of rules matched against all incoming requests. 
+Ingress resource only supports rules for directing HTTP(S) traffic.
+
+Deploying Ingress Resource in a k8s cluster is not going to work because Ingress
+resource needs Ingress Controller to act on the Ingress resource and provide access to
+the application as per the Ingress rules defined in the ingress resource.
+
+Ingress Controller
+
+In order for the Ingress resource to work, the cluster must have an ingress controller running.
+
+When we setup a kubernetes cluster, it will not have the ingress controller installed.
+Run the following in your k8s cluster to install ingress controller (if it is not already installed.)
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.49.0/deploy/static/provider/baremetal/deploy.yaml
+
+A document that will explain Ingress in a much simler way.
+
+https://matthewpalmer.net/kubernetes-app-developer/articles/kubernetes-ingress-guide-nginx-example.html

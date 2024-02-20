@@ -121,4 +121,9 @@ application container by providing additional services, or functionality
 such as logging, monitoring, security, or data synchronization, 
 without directly altering the primary application code.
 
+Difference between K8s object and resource
 
+The terms "object" and "resource" are often used interchangeably in the context
+of Kubernetes, an object represents a desired state defined by users, while a 
+resource represents an instance of that object managed by the Kubernetes API 
+server within the cluster.
