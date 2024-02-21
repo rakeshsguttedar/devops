@@ -1,0 +1,79 @@
+Kubernetes - important points, tips, tit-bits, best practices, etc .
+
+Master Node is K8s - 
+There can be more than 1 master node in a k8s cluster. But it is recommended 
+to have a single master node primarily for simplicity and ease of management, 
+coft-effectiveness and for small-scale non-production kubernetes cluster such 
+as for dev environment. 
+
+However, there are scenarios where having multiple master nodes can provide 
+advantages in terms of high availability, scalability, fault tolerance and load
+balancing, making it suitable for production environments and larger Kubernetes 
+clusters where reliability and performance are critical requirements.
+
+kubeval - To validate the yaml manifests before applying
+Installation:
+wget https://github.com/instrumenta/kubeval/releases/latest/download/kubeval-linux-amd64.tar.gz
+tar xf kubeval-linux-amd64.tar.gz
+sudo cp kubeval /usr/local/bin
+
+Jenkins user needs to be created in k8s cluster to allow jenkins
+to deploy application to k8s cluster.
+
+Troubleshooting issues in k8s -
+
+ImagePullBackOffError
+reasons could be
+credentials to private registry
+image may not exist
+
+crashloopbackoffError
+there could be many reasons.
+To find the reason, we need to go inside the pod using
+kubectl exec -it <pod-name> -- /bin/bash
+and debug
+
+kubeconfig file for kubernetes
+Location of the kubeconfig file is /root/.kube/
+cat /root/.kube/config
+cluster information like server URL is needed by third party tool like Jenkins for 
+deployment of application on k8s cluster.
+Jenkins need serverURL, credentials, service account in k8s for deploying
+an application in k8s cluster.
+
+Setting up Jenkins
+install java jdk17
+install jekins
+
+istio service mesh
+
+Difference between K8s object and resource
+
+The terms "object" and "resource" are often used interchangeably in the context
+of Kubernetes, an object represents a desired state defined by users, while a 
+resource represents an instance of that object managed by the Kubernetes API 
+server within the cluster.
+
+Doubts cleared:
+Which tools are important for devops?
+Tools very important for devops: CICD Tool, docker and k8s.
+
+What are Upstream and Downstream processes in Devops?
+These terms are used with respect to cicd and gitops. Say for 
+example, we have Jenkins job1 and job2 where job2 is dependent on
+job1 to complete, i.e. job 2 will be triggered after job1 is completed.
+Job1 process is upstream process as it produces the artifacts and 
+job2 is the downstream process as it consumes the artifacts to deploy 
+them in production or testing environment.
+
+In summary, upstream processes are those that come before in the pipeline
+and produce artifacts or changes, while downstream processes are those that 
+come after and consume or utilize those artifacts or changes. 
+
+What are GroupId and ArtifactId?
+GroupId: refers to the organisation or company that owns the whole project.
+ArtifactID: name of the project used in the context of pushing of artifact
+to Nexus using NexusArtifactUploader plugin in Jenkins.
+
+Security in kubernetes - best practices
+How to encrypt etcd for secrets?

@@ -1,36 +1,97 @@
-Kubernetes k8s - B1 - Part 1
+Kubernetes - k8s - B1 - Part 1
 
 Kubernetes (K8s) is an open-source container orchestration system 
 or platform or COE (container orchestration engine) for automating 
 deployment, scaling, and management of containerized applications.
 
-Why we need k8s? Why Docker alone cannot manage the application?
+Why we need k8s? What problem does Kubernetes solve? 
+What are some drawbacks of using docker to manage an application? 
 
-Docker is a containerisation platform that provides basic solution
-for managing the application lifecycle through containers on a 
-single host. Also, Dockers containers are ephemeral in nature and 
-they do not provide out of the box support for auto-healing, 
-auto-scaling and other enterprise level support for application 
-management.
+1. Docker runs on single host - Docker is a containerisation platform
+   that provides basic solution for managing the application lifecycle
+   through containers on a single host. If this host goes down, we 
+   need a manual intervention to restart the host, thereby affecting
+   the availability of the application. 
 
-To overcome these drawbacks of a container we use kubernetes
-as it provides:
-1. auto-healing - restarts the pod if a pod is down/stopped.
-2. auto-scaling - increases/decreases the number of pods 
-   - using Deployment with HPA
-3. enterprise level support - health checks, readiness probe, etc
+2. Docker Containers are Ephemeral in nature - Docker DO NOT provide 
+   out of the box support for auto-healing, i.e. when a container stops
+   or is having an issue, we need to restart the container manually.
 
-Because of these these features of k8s, downtime of the application is
-minimized, application is managed without manual intervention, that is 
-manual efforts is reduced.
+3. Docker lacks enterprise level features such as health-checks, 
+   auto-scaling, etc.
+
+To overcome these drawbacks of a containers we use kubernetes.
+
+These are some of the enterprise level support for applications offered 
+by kubernetes:
+
+1. High Availability: Kubernetes provides built-in support for high 
+   availability by enabling the deployment of multiple copies (replicas) of 
+   applications across multiple nodes in a cluster. It ensures that applications
+   remain available and accessible even in the event of node failures or other 
+   disruptions.
+
+2. Auto-scaling: Kubernetes supports horizontal auto-scaling, allowing applications
+   to automatically scale up or down based on resource utilization metrics such as 
+   CPU usage or custom metrics. This ensures that applications can handle varying 
+   levels of workload efficiently without manual intervention.
+
+3. Rolling Updates and Rollbacks: Kubernetes supports rolling updates and rollbacks 
+   for applications, allowing seamless updates and version rollbacks without downtime. 
+   This feature ensures minimal disruption to services during updates and provides a 
+   mechanism to revert to a previous version in case of issues.
+
+4. Resource Quotas and Limits: Kubernetes allows administrators to define resource 
+   quotas and limits for applications, namespaces, and individual containers. 
+   This helps in resource management, preventing resource contention and ensuring fair 
+   allocation of resources among different applications.
+
+5. Security: Kubernetes provides several security features to ensure the confidentiality, 
+   integrity, and availability of applications and data. This includes built-in support 
+   for network policies, pod security policies, role-based access control (RBAC), 
+   secrets management, and encryption of data in transit and at rest.
+
+6. Monitoring and Logging: Kubernetes integrates with various monitoring and logging 
+   solutions to provide visibility into the health, performance, and logs of applications 
+   running in the cluster. Popular monitoring and logging solutions include Prometheus, 
+   Grafana, Elasticsearch, and Fluentd.
+
+7. Pro-active health monitoring and auto-healing using health check probes such as 
+   readiness probe, liveness probe, startup probe. Using auto-healing feature k8s will
+   restart the pod if a pod is down/stopped.
+
+8. Service Discovery and Load Balancing: Kubernetes offers built-in service discovery and 
+   load balancing capabilities to route traffic to applications running in the cluster. 
+   It automatically assigns DNS names and IP addresses to services and distributes incoming 
+   requests across multiple instances of an application.
+
+9. Storage Orchestration: Kubernetes provides storage orchestration features to dynamically 
+   provision and manage storage resources for applications. It supports various storage 
+   backends, including local storage, network-attached storage (NAS), and cloud storage 
+   providers, and allows for the dynamic provisioning of persistent volumes (PVs) and 
+   persistent volume claims (PVCs).
+
+10. Multi-tenancy: Kubernetes supports multi-tenancy, allowing multiple teams or users to 
+    share a single Kubernetes cluster while maintaining isolation and resource segregation.
+    This is achieved through the use of namespaces, RBAC, and network policies to enforce 
+    security and resource isolation between tenants.
+
+11. Extensibility and Ecosystem: Kubernetes is highly extensible and offers a rich ecosystem 
+    of plugins, extensions, and third-party integrations to enhance its functionality. 
+    This includes support for custom resource definitions (CRDs), operators, custom controllers, 
+    and integration with various cloud providers, CI/CD tools, and application frameworks.
+
+Thanks to these capabilities of Kubernetes, the occurrence of application downtime and the 
+need for manual interventions in managing applications are minimized.
+
 
 Basic Components of k8s:
 
-pod -
-Kubernetes provides a basic deployable resource called Pod.
-A pod is the smallest deployable unit in Kubernetes which is actually a
-wrapper around containers.A pod usually contains a single container but 
-can have more than one container.
+pod - 
+A basic deployable resource in kubernetes is called a Pod.
+It is the smallest deployable unit and is actually a wrapper around containers.
+A pod usually contains a single container but can have more than one container.
+
 service - 
  - Service discovery [using labels and selectors],
  - load balancing 
@@ -39,28 +100,20 @@ service -
  b. NodePort Mode - allows access to the app within your organisation
  c. LoadBalancer Mode - allows access to the application from outside world
 ingress -  manages routing using host or path based routing instead of ip address
-config map - database connection url, etc
+
+configMap - configuration data of applications like database connection url, etc
 secrets - store sensitive informations: credentails in base64 encoding
-volumes - to maintain the staes of the deployed application
+volumes - to persist data across pod restarts so as to maintain the state of 
+          the deployed application
 
 Architecture of k8s:
 
-k8s cluster has mainly 2 components:
-Control plane (Master node) and Data plane (Worker node).
-Note: There can more than 1 master node and worker node.
-It is recommended to have a single master node primarily for simplicity and
-ease of management, coft-effectiveness and for small-scale non-production
-kubernetes cluster. However, there are scenarios where having multiple master
-nodes can provide advantages in terms of availability, scalability, and fault
-tolerance.
+The two main components of a Kubernetes (k8s) cluster are 
+the Control Plane (also known as the Master node) and 
+the Data Plane Worker nodes (also known as the Worker or Minion nodes).
 
-Deploying multiple master nodes offers benefits such as high availability,
-fault tolerance, scalability, and load balancing, making it suitable for production
-environments and larger Kubernetes clusters where reliability and performance are 
-critical requirements.
-
-Master node / Control plane components are:
--> API server - heart of k8s cluster - cluster gateway - all request are first 
+Master node / Control Plane processes are:
+-> API server - heart of k8s cluster - cluster gateway - all requests are first 
    received by API server
 -> Etcd - brain of k8s - has all info about the k8s cluster in key-value pairs 
 -> Scheduler - monitors and based on info in Etcd, it decides the nodes for
@@ -79,51 +132,8 @@ Master node / Control plane components are:
    the Cloud Controller Manager, each cloud provider typically implements its own 
    version to interact with its specific infrastructure.
 
-Data plane / Worker node components are:
--> container runtime process: ex: containerd - it manages containers 
+Data Plane / Worker node processes are:
+-> container runtime process: ex: containerd, CRIO - it runs and manages containers 
 -> kubelet - creates pods, assigning resources to the pod
 -> kube proxy - decides where to forward the access request for a resource
     Ex: database access - handles networking aspect of the pods in k8s cluster
-
-Kubernetes provides a basic resource called Pod.
- 
-A pod is the smallest deployable unit in Kubernetes which is actually a wrapper
-around containers. A pod can have one or more containers and you can pass 
-different configurations to the container(s) using the pod’s configuration 
-e.g. passing environment variables, mounting volumes, having health checks, etc.
-
-A pod is managed with the help of application manifest yaml file.
-
-Examples of pod having more than 1 container: 
--> ephemeral containers
--> init containers
--> sidecar containers
-
-Ephemeral containers:  a special type of container that runs temporarily in an 
-existing Pod to accomplish user-initiated actions such as troubleshooting. You 
-use ephemeral containers to inspect services rather than to build applications.
-Example: troubleshooting of issues in distroless image containers
-
-Init container: specialized containers that run before app containers in a Pod.
-Init containers can contain utilities or setup scripts not present in an app image
-Init containers run and complete their tasks before the main application container
-starts. Unlike sidecar containers, init containers are not continuously running 
-alongside the main containers. Init containers run to completion sequentially, and
-the main container does not start until all the init containers have successfully 
-completed. Init containers do not support lifecycle, livenessProbe, readinessProbe,
-or startupProbe whereas sidecar containers support all these probes to control 
-their lifecycle. Init containers share the same resources (CPU, memory, network) with
-the main application containers but do not interact directly with them. They can, 
-however, use shared volumes for data exchange.
-
-Sidecar container: enhance or to extend the functionality of the main
-application container by providing additional services, or functionality
-such as logging, monitoring, security, or data synchronization, 
-without directly altering the primary application code.
-
-Difference between K8s object and resource
-
-The terms "object" and "resource" are often used interchangeably in the context
-of Kubernetes, an object represents a desired state defined by users, while a 
-resource represents an instance of that object managed by the Kubernetes API 
-server within the cluster.

@@ -1,25 +1,40 @@
 Kubernetes Deep Dive - B1 - Part 2 
 
-Doubts cleared:
-Which tools are important for devops?
-Tools very important for devops: CICD Tool, docker and k8s.
+Kubernetes provides a basic resource called Pod.
+ 
+A pod is the smallest deployable unit in Kubernetes which is actually a wrapper
+around containers. A pod can have one or more containers and you can pass 
+different configurations to the container(s) using the pod’s configuration 
+e.g. passing environment variables, mounting volumes, having health checks, etc.
 
-What are Upstream and Downstream processes in Devops?
-These terms are used with respect to cicd and gitops. Say for 
-example, we have Jenkins job1 and job2 where job2 is dependent on
-job1 to complete, i.e. job 2 will be triggered after job1 is completed.
-Job1 process is upstream process as it produces the artifacts and 
-job2 is the downstream process as it consumes the artifacts to deploy 
-them in production or testing environment.
+A pod is managed with the help of application manifest yaml file.
 
-In summary, upstream processes are those that come before in the pipeline
-and produce artifacts or changes, while downstream processes are those that 
-come after and consume or utilize those artifacts or changes. 
+Examples of pod having more than 1 container: 
+-> ephemeral containers
+-> init containers
+-> sidecar containers
 
-What are GroupId and ArtifactId?
-GroupId: refers to the organisation or company that owns the whole project.
-ArtifactID: name of the project used in the context of pushing of artifact
-to Nexus using NexusArtifactUploader plugin in Jenkins.
+Ephemeral containers:  a special type of container that runs temporarily in an 
+existing Pod to accomplish user-initiated actions such as troubleshooting. You 
+use ephemeral containers to inspect services rather than to build applications.
+Example: troubleshooting of issues in distroless image containers
+
+Init container: specialized containers that run before app containers in a Pod.
+Init containers can contain utilities or setup scripts not present in an app image
+Init containers run and complete their tasks before the main application container
+starts. Unlike sidecar containers, init containers are not continuously running 
+alongside the main containers. Init containers run to completion sequentially, and
+the main container does not start until all the init containers have successfully 
+completed. Init containers do not support lifecycle, livenessProbe, readinessProbe,
+or startupProbe whereas sidecar containers support all these probes to control 
+their lifecycle. Init containers share the same resources (CPU, memory, network) with
+the main application containers but do not interact directly with them. They can, 
+however, use shared volumes for data exchange.
+
+Sidecar container: enhance or to extend the functionality of the main
+application container by providing additional services, or functionality
+such as logging, monitoring, security, or data synchronization, 
+without directly altering the primary application code.
 
 I. Architecture of k8s cluster:
 
