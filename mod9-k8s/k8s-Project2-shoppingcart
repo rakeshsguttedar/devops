@@ -40,11 +40,12 @@ docker run -d -p 9000:9000 --name sonar sonarqube:lts-community
 
 Access Sonarqube server:
 http://<sonar-vm-ip>:9000
+with initial credentials of admin/admin
 
 
 NEXUS
 
-Install and confige nexus server
+Install and configure Nexus server
 
 sudo apt update -y
 docker run -d -p 8081:8081 sonatype/nexus3
@@ -168,10 +169,10 @@ Go to Pipeline Script Generator ->
 dependencyCheckPublisher pattern: '**/dependency-check-report.xml', odcInstallation: 'DC'
 
 Copy the scripts generated in the above 2 steps to the steps block of 
-stage('Owasp Dependency Check').
+stage('Owasp FileSystem Check').
 
 // 3rd stage 
-stage('Owasp Dependency Check') {
+stage('Owasp FileSystem Check') {
   steps {
     dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'DC'
     dependencyCheckPublisher pattern: '**/dependency-check-report.xml', odcInstallation: 'DC'
@@ -231,8 +232,8 @@ Replace <nexus-vm-ip> with the public-ip address of the EC2 instance that is run
 a Nexus Repository server.
 
 2. Push the application executable files (artifacts) to the Nexus Artifact repository.
-   For this stage we need to add Nexus repository in the maven configuration using 
-   maven-settings.xml provided by Config File Provider plugin installed in jenkins.
+   For this stage we need to add Nexus server credentials in the maven configuration
+   using maven-settings.xml provided by Config File Provider plugin installed in jenkins.
 
 Jenkins -> Manage Jenkins -> Managed Files select Maven settings.xml and 
 rename id:  maven-settings-default
