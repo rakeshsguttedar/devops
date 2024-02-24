@@ -1,0 +1,105 @@
+Kubernetes Resource Quotas
+
+k8s resource quotas is a mechanism used to limit and control the amount of CPU, 
+memory, and other compute resources that can be consumed by pods, containers, 
+and other Kubernetes objects within a namespace. 
+
+These are usually set by the k8s administrators.
+They are used to enforce fair resource allocations to applications inside the k8s cluster.
+This ensures some kubernetes workloads are prevented from monopolizing cluster resources.
+
+Usually, the real-world kubernetes clusters are very huge with many nodes and there can 
+be multiple users or teams using these clusters in their namespaces across the world. 
+Some users or teams use more cluster resources than other users or teams. 
+Therefore, a cluster operators (an administrators) can define resource limits and usage
+constraints specific to a particular namespace.
+
+Resource Types that can be constrained are CPU, memory, storage, and the number of pods 
+or services.
+
+There can 2 types of limits: Hard and Soft Limits.
+Hard limits represent strict enforcement of resource constraints, preventing resource usage 
+beyond the specified limit.
+Soft limits provide a threshold beyond which warnings or notifications are triggered
+but resource usage is not restricted.
+
+The resource quotas can can be applied to Pods and Containers within a namespace.
+An admin can control the number of pods or containers that can be created or the amount of CPU
+or memory that can be allocated to a pod or container.
+
+These resource quotas can be dynamically adjusted during application lifecycle based on the 
+application usage patters and application demands.
+
+What are the differences between Resource requests and Resource limits?
+
+Resource requests specify the minimum amount of CPU and memory resources that a 
+container needs to run properly. They are used for resource allocation and capacity 
+planning. If a container's resource requests cannot be satisfied on any node in the 
+cluster, Kubernetes will not schedule the pod until sufficient resources become available.
+
+Resource limits specify the maximum amount of CPU and memory resources that a container is 
+allowed to consume. Resource limits are used to prevent containers from monopolizing node 
+resources and causing performance degradation or resource contention with other pods.
+If the container exceeds the limits, kubernetes can take action to mitigate resource usage.
+Action: throttling CPU usage, terminating the container
+
+By specifying both resource requests and resource limits in pod specifications, administrators
+can ensure efficient resource utilization, maintain stability, and prevent resource contention 
+within Kubernetes clusters.
+
+Here is an example Deployment of nginx that sets the resource request and limits
+at the container level 
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: example
+  template:
+    metadata:
+      labels:
+        app: example
+    spec:
+      containers:
+      - name: example-container
+        image: nginx
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: example-resource-quota
+spec:
+  hard:
+    pods: "10"
+    requests.cpu: "1"
+    requests.memory: 1Gi
+    limits.cpu: "2"
+    limits.memory: 2Gi
+
+The Deployment creates a set of pods, each running an NGINX container.
+Resource requests are specified as 256Mi memory and 100m CPU, and limits are 
+specified as 512Mi memory and 200m CPU.
+
+The ResourceQuota defines limits for the entire namespace, including a maximum 
+of 10 pods, 1 CPU core for resource requests, 1Gi memory for resource requests, 
+2 CPU cores for resource limits, and 2Gi memory for resource limits.
+
+CPU requests or limits are specified in millicores (m), where 1 millicore equals
+1/1000th of a CPU core. For example, a CPU request of "100m" represents 0.1 CPU core.
+
+LimitRange is used to enforce resource constraints at the container level within a
+namespace, while Resource Quotas are used to enforce overall resource limits on all
+Kubernetes objects within a namespace. LimitRange provides fine-grained control over
+resource requests and limits for containers, while Resource Quotas provide broader 
+enforcement of resource constraints across the entire namespace. 

@@ -1,0 +1,531 @@
+k8s Project 2 - shopping cart application
+
+Deploying shopping cart application in a self-hosted kubernetes cluster using:
+Jenkins as CICD tool, sonarqube, nexus, OWASP dependency check, docker and trivy.
+
+We are going to use 5 AWS EC2 instances to create the complete CICD setup.
+
+1. k8s Master Node  - Instance type is t2.large, storage 20 GB
+2. k8s Worker Node  - Instance type is t2.large, storage 20 GB
+3. Sonarqube        - Instance type is t2.medium, storage 15 GB
+4. Nexus repository - Instance type is t2.medium, storage 15 GB
+5. Jenkins          - Instance type is t2.large, storage 20 GB
+
+The project setup will be done in two phases.
+
+I. CI phase:
+First we are going to setup Sonarqube, Nexus and Jenkins in seperate Virtual machines
+using AWS EC2 instances. We will create a pipeline job in Jenkins to perform CI operation.
+We will build the source code, test, push the artifacts, create a docker image, scan it 
+using trivy image scan and then push the docker image to the docker hub registry.
+
+II. CD phase:
+After the CI Operation, we are going to deploy the docker image to the self-hosted 
+kubernetes cluster.
+
+I. CI phase:
+
+SONARQUBE
+
+Install and configure sonarqube 
+sudo apt update -y
+
+Installing docker:
+sudo apt install docker.io -y
+sudo usermod -aG docker ubuntu
+newgrp docker
+
+Setting up sonarqube server in VM-2:
+docker run -d -p 9000:9000 --name sonar sonarqube:lts-community
+
+Access Sonarqube server:
+http://<sonar-vm-ip>:9000
+
+
+NEXUS
+
+Install and confige nexus server
+
+sudo apt update -y
+docker run -d -p 8081:8081 sonatype/nexus3
+
+Wait for around 2-3 minutes and then access Nexus server
+Access Nexus UI:
+http://<nexus-vm-ip>:8081
+
+First time authentication to Nexus server:
+Username: admin
+Initial password for nexus admin user can be accessed
+by running a shell inside the nexus container using
+
+docker exec -it <nexus-container-id> /bin/bash
+cat sonatype-work/nexus3/admin.password
+
+Create a new admin password and Enable Anonymous Access.
+
+JENKINS
+
+Jenkins Plugins installation 
+Eclipse Temurian installer - for installing specific ver of tools: maven,jdk
+SonarQube Scanner - for performing sonarqube analysis 
+Maven Integration - for deep integrating between jenkins and maven
+Config File Provider - for configuring maven settings.xml file
+Pipeline Maven Integration - for integrating pipeline with maven
+Owasp Dependency Check - scanning dependent packages for vulnerabilities
+Docker - for using docker inside the jekins pipeline
+Docker Pipeline - integrate docker commands with pipeline
+docker-build-step
+
+Install tools 
+jdk17, maven, Dependency-Check DC v 6.5.1, 
+docker (install automatically download from Docker)
+apply
+
+Configure Sonarqube Scanner
+Generate sonarqube server user token, copy it and add it to the new credential 
+inside jenkins Credential store using the kind: 'Secret text'. id: 'sonar-token' 
+
+Add Sonar sever URL in Jenkins
+name: sonar, Server URL: http://<sonar-vm-ip>:9000
+Token: sonar-token [created in previous step]
+
+Installing kubernetes Plugins in Jenkins
+kubernetes
+kubernetes CLI
+
+Create the CICD Pipeline in Jenkins:
+create a pipeline job: shopping-cart-k8s; Discard old builds - max 2 builds 
+to keep in history. Use Pipeline Script and create Hello world pipeline script, make 
+copies of the hello World script, edit them to create the stages in Jenkins pipeline.
+
+1st stage is 'Git Checkout'
+
+We will check-out the project source code in jekins from the public github repository
+at https://github.com/rakeshsguttedar/Shopping-Cart.git
+
+pipeline {
+  agent any
+
+  stages {
+    stage('Git Checkout') {
+      steps {
+        git branch: 'main', url: 'https://github.com/rakeshsguttedar/Shopping-Cart.git'
+      }
+    }
+  }
+}
+
+2nd stage is 'mvn compile'
+
+This stage compiles the project source code and generates the compiled binaries
+in target/classes. These will be scanned for security vulnerabilites during 
+sonarqube analysis stage.
+
+Below is the pipeline script for compiling the project source. Note the use of tools
+block at the beginning of the pipeline as jdk and maven are needed for compilation.
+
+pipeline {
+  agent any
+
+  tools {
+    maven 'maven3'
+    jdk 'jdk17'
+  }
+
+  stages {
+    stage('maven compile') {
+      steps {
+        sh "mvn compile"
+      }
+    }
+  }
+}
+
+3rd stage is 'OWASP FileSystem Check'
+
+This stage performs file system dependency check for security vulnerabilities
+in the dependent packages used by the application.
+We need to call 2 methods of OWASP dependency plugin:
+1. dependencyCheck - for scanning dependencies, libraries of the project
+2. dependencyCheckPublisher -  for printing the result of security scan
+
+1. dependencyCheck
+Go to Pipeline Script Generator -> 
+select dependencyCheck and Generate Pipeline Script:
+dependencyCheck additionalArguments: '', odcInstallation: 'DC'
+To check required arguments for Owasp Dependecny check go to:
+https://jeremylong.github.io/DependencyCheck/dependency-check-cli/arguments.html
+Check Requirement column and we can see that --scan is the required argument.
+Add --scan ./ to scan all the files in the current directory.
+The resulting script:
+dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'DC'
+
+2. dependencyCheckPublisher
+Go to Pipeline Script Generator -> 
+-> select dependencyCheckPublisher 
+-> Add XML report Pattern: **/dependency-check-report.xml 
+-> Generate Pipeline Script:
+dependencyCheckPublisher pattern: '**/dependency-check-report.xml', odcInstallation: 'DC'
+
+Copy the scripts generated in the above 2 steps to the steps block of 
+stage('Owasp Dependency Check').
+
+// 3rd stage 
+stage('Owasp Dependency Check') {
+  steps {
+    dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'DC'
+    dependencyCheckPublisher pattern: '**/dependency-check-report.xml', odcInstallation: 'DC'
+  }
+}
+
+4th stage is 'solarqube-analysis'
+
+Before we add the 4th stage to the Jenkins pipeline, we need to define sonar-scanner tool
+(SonarQube Scanner plugin) in the beginning of the pipeline script using environment block
+as shown below:
+
+pipeline {
+  agent any
+  
+  tools {
+    maven 'maven3'
+    jdk 'jdk17'
+  }
+  
+  environment {
+    SCANNER_HOME= tool 'sonar-scanner'
+  }
+}
+
+// 4th stage
+stage('solarqube-analysis') {
+  steps {
+    withSonarQubeEnv('sonar') {
+      sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Shopping-Cart \
+         -DprojectKey=Shopping-Cart -Dsonar.java.binaries=target/classes '''
+    }
+  }
+}
+
+5th stage is 'Build Application and Push Artifact'
+
+After we compile the application, we need to perform the below 2 steps
+1. Add the Nexus URL in the pom.xml file.
+2. Configure Nexus repository in maven settings.xml file.
+
+1. Add <distributionManagement></distributionManagement> Element in pom.xml
+   file located inside the project root directory of Shopping-Cart application
+
+<distributionManagement>
+  <repository>
+    <id>maven-releases</id>
+    <url>http://<nexus-vm-ip>:8081/repository/maven-releases/</url>
+  </repository>
+  <snapshotRepository>
+    <id>maven-snapshots</id>
+    <url>http://<nexus-vm-ip>:8081/repository/maven-snapshots/</url>
+  </snapshotRepository>
+</distributionManagement>
+
+Replace <nexus-vm-ip> with the public-ip address of the EC2 instance that is running
+a Nexus Repository server.
+
+2. Push the application executable files (artifacts) to the Nexus Artifact repository.
+   For this stage we need to add Nexus repository in the maven configuration using 
+   maven-settings.xml provided by Config File Provider plugin installed in jenkins.
+
+Jenkins -> Manage Jenkins -> Managed Files select Maven settings.xml and 
+rename id:  maven-settings-default
+-> Add inside content of settings.xml file:
+inside the tag <servers></servers>
+<server>
+    <id>maven-releases</id>
+    <username>admin</username>
+    <password>nexus</password>
+</server>
+<server>
+    <id>maven-snapshots</id>
+    <username>admin</username>
+    <password>nexus</password>
+</server>
+
+Note: Instead of adding these credential in plain text form in settings.xml,
+we can add them to Jenkins Credential store and use them in the global-maven-settings. 
+-> Submit
+
+As we have installed Pipeline Maven Integration plugin in Jenkins, we can use withMaven 
+function inside the 5th stage to push the artifacts to the Nexus respository server.
+
+// 5th stage
+stage('Build Application and Push Artifact') {
+    steps {
+        withMaven(globalMavenSettingsConfig: '', jdk: 'jdk17', maven: 'maven3',mavenSettingsConfig: 'maven-settings-default', traceability: true) {
+            sh "mvn deploy -Dmaven.test.failure.ignore=true"
+        }
+    }
+}
+
+This application has issues with the running test cases. Hence mvn test will fail. But to 
+proceed with the pipeline setup, we can ignore the testing of the application using
+-Dmaven.test.failure.ignore=true during deploying of the application artifcats.
+
+We can to skip testing of the application only for this project as it is a dev environment setup. 
+The testing of an application should Not to be skipped in real-time applications and in production 
+environments.
+
+6th stage is 'Docker Build and Tag Image'
+
+NExt stage is to build the docker image for this application. 
+
+install docker in the Jenkins VM
+(even though we have Docker plugin installed in Jenkins, we need to install
+Docker in the node Jenkins is installed because docker plugin does not provide
+Docker Daemon)
+
+sudo apt install docker.io -y
+sudo usermod -aG docker ubuntu
+
+And then add the jenkins user to the docker group
+sudo usermod -aG docker jenkins
+newgrp docker
+
+We will build and tag the docker image for this application
+using 6th stage of the Jenkins pipeline
+
+// 6th stage
+stage('Docker Build and Tag Image') {
+  steps {
+    script {
+      withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
+        sh "docker build -t rockondock/shopping-cart:latest -f docker/Dockerfile ."
+      }
+    }
+  }
+ }
+
+7th stage is 'Trivy image scan'
+
+We need to scan the docker image using trivy tool for any security vulnerabilites.
+
+Trivy is mainly used for scanning docker images especially for vulnerabilities 
+in docker base image (FROM baseimage:latest in dockerfile), outdated software 
+packages(using updated docker image), CVEs(public database listing known issues 
+CVE-2022-12567), misconfigurations(K8s cluster not using best practices in the 
+manifests), security risks or sensitive data (secrets,tokens), package manager 
+vulnerabilities (dependency vulnerabilities)
+
+Install Trivy in Jenkins VM
+
+Add repository setting to /etc/apt/sources.list.d.
+sudo apt-get install wget apt-transport-https gnupg lsb-release
+wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+
+sudo apt-get update
+sudo apt-get install trivy -y
+
+Add the trivy image scan command in the jenkins pipeline stage for scanning the 
+
+// 7th stage 
+stage('Trivy image scan') {
+    steps {
+        sh "trivy image --format table -o trovy-report.html rockondock/shopping-cart:latest "
+    }
+}
+
+8th Stage is to push the image to docker-hub registry
+
+// 8th stage
+stage('Docker Push') {
+  steps {
+    script {
+      withDockerRegistry(credentialsId: 'docker-cred', toolName: 'docker') {
+        sh "docker push rockondock/shopping-cart:latest"
+      }
+    }
+  }
+ }
+
+
+II. CD phase:
+
+KUBERNETES
+
+Kubernetes setup for deploying the Shopping Cart application to kubernetes cluster.
+
+A. Install or setup kubernetes cluster in Master Node and Worker Node VMs using the 
+installation steps given in k8s-deepdive.
+
+We use root account to install k8s.
+
+Why root user is used to create the k8s?
+We should note that for CICD, we use Jenkins tool to deploy the application in 
+kubernetes cluster and it does not matter which account we use to create the 
+kubernetes cluster as we are going to use k8s RBAC with Service Account created 
+for Jenkins.
+
+B. Edit the name of the docker image in deploymentservice.yml
+located at the root of the Shopping-Cart project folder.
+
+spec.template.spec.containers.name: shopping-cart
+spec.template.spec.containers.image: rockondock/shopping-cart:latest
+
+
+C. Create Service Account, Role, RoleBinding(to bind the role to the service account )
+   and create a token to be used by Service Account to authenticate with the k8s API server.
+
+1. We need to create a Service Account to allow Jenkins to authenticate to the Kubernetes
+API server. For this Service Account, we need a seperate namespace. So we will first create 
+a namespace with the name 'webapps'.
+
+kubectl create namespace webapps
+
+2. Create a Service Account 
+
+# jenkins-svc-account.yml:
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jenkins
+  namespace: webapps
+
+kubectl apply -f jenkins-svc-account.yml 
+
+3. Create a role so as to allow the account bound to this role 
+   the permission to access and deploy the application on the 
+   kubernetes cluster 
+
+# role.yml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-role
+  namespace: webapps
+rules:
+  - apiGroups:
+        - ""
+        - apps
+        - autoscaling
+        - batch
+        - extensions
+        - policy
+        - rbac.authorization.k8s.io
+    resources:
+      - pods
+      - componentstatuses
+      - configmaps
+      - daemonsets
+      - deployments
+      - events
+      - endpoints
+      - horizontalpodautoscalers
+      - ingress
+      - jobs
+      - limitranges
+      - namespaces
+      - nodes
+      - pods
+      - persistentvolumes
+      - persistentvolumeclaims
+      - resourcequotas
+      - replicasets
+      - replicationcontrollers
+      - serviceaccounts
+      - services
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+kubectl apply -f role.yml
+
+4. Bind the Role to the Service Account
+
+# bind-role-svcacc.yml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-rolebinding
+  namespace: webapps 
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: app-role 
+subjects:
+- namespace: webapps 
+  kind: ServiceAccount
+  name: jenkins 
+
+kubectl apply -f bind-role-svcacc.yml
+
+5. We now need Jenkins to authenticate to the Kubernetes API server and deploy the application
+image using kubectl commands. 
+
+A. For authentication, Jenkins will use the token generated for jenkins Service Account.
+B. For Jenkins to connect to the kubernetes, it need to know the API server URL.
+C. Install kubectl tool inside Jenkins VM
+
+A. Create a token for the service account to deploy the application on k8s cluster
+
+# token-secret.yml
+
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/service-account-token
+metadata:
+  name: mysecretname
+  namespace: webapps
+  annotations:
+    kubernetes.io/service-account.name: jenkins
+
+kubectl apply -f token-secret.yml
+
+It will generate the token for the secret which can be accessed using
+
+kubectl -n webapps describe secret mysecretname
+
+Now, copy the token displayed and add it to a new credential in
+Jenkins credentials store using the kind: 'secret text' and id: 'k8s-auth'
+-> Create
+
+B. Configure the Kubernetes API server URL inside Jenkins pipeline script
+
+9th stage is kubernetes step.
+
+We will use Pipeline Syntax in Jenkins to create the script for deploying the 
+application in kubernetes cluster. We will use withKubeConfig function of the 
+kubernetes plugin installed in Jenkins. 
+
+Credentials: k8s-auth
+
+cd /root
+cat .kube/config
+
+copy the url in the key name server and paste it to the Kubernetes server endpoint
+field in Jenkins UI.
+
+Kubernetes server endpoint: https://<ipaddress:6443>
+Cluster name: kubernetes
+Namespace: webapps
+
+-> Generate Pipeline script
+
+// 9th stage - k8s-deploy - deploy the application in kubernetes 
+stage('K8s-Deploy') {
+  steps{
+    withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8-auth', namespace: 'webapps', restrictKubeConfigAccess: false, serverUrl: 'https://serverIP:6443')  {
+      sh "kubectl apply -f deploymentservice.yml"
+      sh "kubectl get pods -n webapps"
+      sh "kubectl get svc -n webapps"
+    }
+  }
+}
+
+C. Install kubectl tool inside Jenkins VM (EC2 instance)
+
+sudo snap install kubectl --classic
+
+After all the stages have run successfully, we can now run the complete 
+CICD Jenkins Pipeline Job and access the shopping-cart application using 
+http://worker-node-ip:<nodeport>/home
+

@@ -100,8 +100,8 @@ Nexus can also be installed using docker.
 Follow below steps for docker installation:
 
 docker run -d -p 8081:8081 --name nexus sonatype/nexus3
-Wait for around 2-3 minutes and then access Sonarqube server : 
-http://<ec2instanceipaddress>:9000
+Wait for around 2-3 minutes and then access Nexus server : 
+http://<ec2instanceipaddress>:8081
 
 First time authentication to Nexus server:
 Username: admin
