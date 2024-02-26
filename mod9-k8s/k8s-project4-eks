@@ -1,0 +1,72 @@
+Kubernetes EKS - Project 4 
+
+Deploy 10 micro-services based application in AWS EKS using Jenkins CICD tool
+
+For setting up CICD  we will use a Jenkins on 
+a VM named jenkins-master (AWS Ec2 instance with t2.large and 20GiB storage)
+sudo apt update -y
+
+setup EKS cluster
+Assuming you have an AWS Account, AWS CLI to used run AWS commands from this VM.
+
+1. Install AWS CLI
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+sudo apt install unzip -y
+unzip awscliv2.zip
+sudo ./aws/install
+aws --version
+
+2. aws configure
+
+To create and manage AWS cloud resources (like setting up of EKS cluster) we can do it 
+from AWS console UI or through AWS CLI. For AWS CLI, we need either a root user or an
+IAM user, with necessary roles assigned to the user.
+
+Any user running AWS CLI commands needs AWS access key and a secret access key. These keys
+can be generated in AWS console for that user(IAM or root user).
+
+So we will create these keys in AWS console for the root user account and using these keys 
+we can configure AWS CLI to allow it to execute AWS commands on behalf the root user.
+
+aws configure
+
+In real-time scenarios, it is recommended to use an IAM user instead of root user account.
+
+3. Install EKSCTL
+
+We will use eksctl, simple CLI tool for creating and managing clusters on EKS. It is similar
+to kubectl for kubernetes. It is written in Go and uses CloudFormation in the background.
+
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+sudo mv /tmp/eksctl /usr/local/bin
+eksctl version
+
+4. Install kubectl
+
+To interact with the kubernetes cluster inside EKS, we we install kubectl
+
+curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin
+kubectl version --short --client
+
+
+Cleanup:
+Since this is a demo EKS cluster for learning, we can delete the EKS cluster using
+
+eksctl delete cluster -n devops
+
+When you use the `eksctl delete cluster` command to delete an Amazon EKS cluster, 
+it will delete not only the EKS control plane but also the associated worker nodes 
+and other resources created alongside the cluster. This includes resources such as:
+
+1. Worker nodes (EC2 instances)
+2. Autoscaling groups
+3. Security groups
+4. IAM roles and policies
+5. VPC resources (subnets, route tables, internet gateways, etc.)
+6. Load balancers (if created by EKS)
+7. EKS-specific resources like IAM OIDC provider, Amazon EBS CSI driver resources (if utilized), etc.
+
+

@@ -77,3 +77,81 @@ to Nexus using NexusArtifactUploader plugin in Jenkins.
 
 Security in kubernetes - best practices
 How to encrypt etcd for secrets?
+Encrypting etcd data, including secrets, helps enhance the security of your 
+Kubernetes cluster by ensuring that sensitive information stored in etcd is 
+protected from unauthorized access. Here's how you can encrypt etcd for secrets:
+
+1. Generate Encryption Key:
+2. Configure etcd Encryption:
+3. Create Encryption Configuration File:
+4. Restart etcd Pod:
+5. Verify Encryption:
+
+1. **Generate Encryption Key**:
+   - First, you need to generate an encryption key that will be used to encrypt 
+     and decrypt data stored in etcd. You can generate a key using a tool like `openssl`:
+     ```
+     openssl rand -hex 32
+     ```
+
+2. **Configure etcd Encryption**:
+   - Once you have the encryption key, you need to configure etcd to use it for 
+     encryption. This typically involves adding the encryption key to the etcd 
+     configuration file.
+   - For example, in a Kubernetes cluster managed by `kubeadm`, you can edit the 
+     etcd configuration file located at `/etc/kubernetes/manifests/etcd.yaml` and 
+     add the encryption key under the `etcd` container's command-line arguments:
+     ```yaml
+     apiVersion: v1
+     kind: Pod
+     metadata:
+       name: etcd
+       namespace: kube-system
+     spec:
+       containers:
+       - command:
+         - etcd
+         - --data-dir=/var/lib/etcd
+         - --encryption-provider-config=/etc/kubernetes/pki/etcd/encryption-config.yaml
+         - --cert-file=/etc/kubernetes/pki/etcd/server.crt
+         - --key-file=/etc/kubernetes/pki/etcd/server.key
+         - --trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
+         image: k8s.gcr.io/etcd:latest
+         ...
+       ...
+     ```
+
+3. **Create Encryption Configuration File**:
+   - Next, create an encryption configuration file (`encryption-config.yaml`) that specifies 
+     the encryption key:
+     ```yaml
+     kind: EncryptionConfiguration
+     resources:
+       - resources:
+           - secrets
+         providers:
+           - aescbc:
+               keys:
+                 - name: key1
+                   secret: <encryption-key>
+     ```
+     Replace `<encryption-key>` with the actual encryption key generated in step 1.
+
+4. **Restart etcd Pod**:
+   - After making changes to the etcd configuration and encryption configuration files, 
+     you need to restart the etcd pod for the changes to take effect. In a Kubernetes 
+     cluster managed by `kubeadm`, you can restart the etcd pod by restarting the kubelet service:
+     ```
+     sudo systemctl restart kubelet
+     ```
+
+5. **Verify Encryption**:
+   - Once etcd is restarted with the new configuration, you can verify that encryption 
+     is enabled by checking the etcd logs or querying etcd to ensure that the stored 
+     secrets are encrypted.
+
+By following these steps, you can encrypt secrets stored in etcd, thereby enhancing the 
+security of your Kubernetes cluster and protecting sensitive information from unauthorized access.
+
+EKS Best practices Guide at
+https://aws.github.io/aws-eks-best-practices/
