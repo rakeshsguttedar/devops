@@ -175,7 +175,7 @@ stage('Owasp FileSystem Check').
 stage('Owasp FileSystem Check') {
   steps {
     dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'DC'
-    dependencyCheckPublisher pattern: '**/dependency-check-report.xml', odcInstallation: 'DC'
+    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
   }
 }
 
@@ -330,7 +330,7 @@ Add the trivy image scan command in the jenkins pipeline stage for scanning the
 // 7th stage 
 stage('Trivy image scan') {
     steps {
-        sh "trivy image --format table -o trovy-report.html rockondock/shopping-cart:latest "
+        sh "trivy image --format table -o trivy-report.html rockondock/shopping-cart:latest "
     }
 }
 
@@ -499,11 +499,9 @@ kubernetes plugin installed in Jenkins.
 
 Credentials: k8s-auth
 
-cd /root
-cat .kube/config
-
 copy the url in the key name server and paste it to the Kubernetes server endpoint
 field in Jenkins UI.
+cat ~/.kube/config
 
 Kubernetes server endpoint: https://<ipaddress:6443>
 Cluster name: kubernetes
@@ -529,4 +527,38 @@ sudo snap install kubectl --classic
 After all the stages have run successfully, we can now run the complete 
 CICD Jenkins Pipeline Job and access the shopping-cart application using 
 http://worker-node-ip:<nodeport>/home
+
+Issue faced:
+I used t2.medium instance types instead of t2.large for both master and worker nodes.
+As t2.medium uses less number of CPUs, one pod was in Pending status as it was not 
+getiing scheduled on the worker node because of less CPU resource in the worked node. 
+
+kubectl get pods -n webapps
+NAME                                         READY   STATUS    RESTARTS   AGE
+spring-boot-k8s-deployment-9cbcddd98-66rmc   0/1     Pending   0          29s
+spring-boot-k8s-deployment-9cbcddd98-w7g6l   1/1     Running   0          29s
+
+kubectl describe pod spring-boot-k8s-deployment-9cbcddd98-66rmc -n webapps
+
+Events:
+  Type     Reason            Age                From               Message
+  ----     ------            ----               ----               -------
+  Warning  FailedScheduling  50s (x2 over 50s)  default-scheduler  0/2 nodes are available: 1 
+  Insufficient cpu, 1 node(s) had taint {node-role.kubernetes.io/master: }, that the pod didn't tolerate.
+
+So, I untained the master node to allow scheduling of pods on to the master node.
+
+kubectl taint nodes --all node-role.kubernetes.io/master-
+node/ip-172-31-16-67 untainted
+error: taint "node-role.kubernetes.io/master" not found
+
+But in real-time, it is not recommended to untaint the master node as it is only 
+used for control and management of worker nodes and no pods should be scheduled on it.
+Hence master node is always tainted to disallow scheduling of pods on it.
+
+kubectl get pods -n webapps -o wide
+
+NAME                                         READY   STATUS    RESTARTS   AGE   IP                NODE              NOMINATED NODE   READINESS GATES
+spring-boot-k8s-deployment-9cbcddd98-66rmc   1/1     Running   0          17m   192.168.86.130    ip-172-31-16-67   <none>           <none>
+spring-boot-k8s-deployment-9cbcddd98-w7g6l   1/1     Running   0          17m   192.168.106.199   ip-172-31-16-12   <none>           <none>
 

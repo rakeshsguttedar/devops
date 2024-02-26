@@ -209,7 +209,7 @@ Go to Pipeline Script Generator ->
 -> select dependencyCheckPublisher 
 -> Add XML report Pattern: **/dependency-check-report.xml 
 -> Generate Pipeline Script:
-dependencyCheckPublisher pattern: '**/dependency-check-report.xml', odcInstallation: 'DC'
+dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
 
 Copy the scripts generated in the above 2 steps to the steps block of 
 stage('Owasp Dependency Check').
@@ -218,7 +218,7 @@ Resulting stage5: Owasp Dependency Check
 stage('Owasp Dependency Check') {
   steps {
     dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'DC'
-    dependencyCheckPublisher pattern: '**/dependency-check-report.xml', odcInstallation: 'DC'
+    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
   }
 }
 
