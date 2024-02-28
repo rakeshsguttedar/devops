@@ -29,7 +29,8 @@ Why Ingress feature is needed in kubernetes?
 After we deploy an application in a k8s cluster, we can access this application 
 using the URL - http://IPAddress:port
 But we cant always remember the IP address and it is not a good practice to expose
-the IP address of the k8s cluster for external access.
+the IP address of the k8s cluster for external access. So using ingress we can
+access the application using the domain name ( which has to be purchased ).
 
 1. The load balancing in k8s is only a basic Round Robin type of Load Balancing. 
    It lacks many enterrprise level features such a TLS, host-based routing, 
@@ -41,11 +42,12 @@ the IP address of the k8s cluster for external access.
 To solve these problems and to provide much better way to access the application, 
 Ingress feature was added to kubernetes.
 
-Ingress provides enterprise level Load balancing service i.e. a standardized way to 
-manage external access to services, offering features such as host-based routing, 
-path-based routing, SSL termination, and integration with external load balancers. 
+Ingress provides enterprise level Load balancing service, that means a standardized
+way to manage external access to services, offering features such as load balancing, 
+host-based routing, path-based routing, SSL termination, and integration with 
+external load balancers. 
 
-Advantages of using Ingress - 
+Advantages of using Ingress -
 1. Security - Ingress increases the security of the kubernetes cluster as it 
    will abstract the underlying k8s cluster to the external world.
 2. Flexible - Makes the application flexible as it will add advanced routing 
@@ -96,6 +98,8 @@ Run the following in your k8s cluster to install ingress controller (if it is no
 
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v0.49.0/deploy/static/provider/baremetal/deploy.yaml
 
-A document that will explain Ingress in a much simler way.
+Go through the demo project documentation for setting up ingress. 
+Location:  ./k8s-projects/k8s-ingress-project
 
+A document that will explain Ingress in a much simler way.
 https://matthewpalmer.net/kubernetes-app-developer/articles/kubernetes-ingress-guide-nginx-example.html

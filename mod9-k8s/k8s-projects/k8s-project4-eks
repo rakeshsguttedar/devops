@@ -1,0 +1,531 @@
+Kubernetes EKS - Project 4
+
+Deploy 10 microservices based application in AWS EKS using Jenkins CICD tool
+
+For setting up CICD, we will use a AWS VM EC2 instance of type t2.large
+and 20 GiB storage - We will setup Jenkins Master on this VM.
+
+sudo apt update -y
+
+setup EKS cluster
+Assuming you have an AWS Account, AWS CLI to used run AWS commands from this VM.
+
+1. Install AWS CLI
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+sudo apt install unzip -y
+unzip awscliv2.zip
+sudo ./aws/install
+aws --version
+
+2. Configure and setup AWS CLI using 'aws configure' command.
+
+To create and manage AWS cloud resources (like setting up of EKS cluster) we can do it 
+from AWS console UI or through AWS CLI. For AWS CLI, we need either a root user or an
+IAM user, with necessary roles assigned to the user.
+
+Any user running AWS CLI commands needs AWS access key and a secret access key. 
+These keys can be generated in AWS console for that user(IAM or root user).
+
+So we will create these keys in AWS console for the root user account and using these keys 
+we can configure AWS CLI to allow it to execute AWS commands on behalf the root user.
+
+aws configure
+
+In real-time scenarios, it is recommended to use an IAM user instead of root user account.
+
+3. Install EKSCTL
+
+We will use eksctl, a simple CLI tool for creating and managing clusters on EKS.
+It is similar to kubectl for kubernetes. It is written in Go and uses CloudFormation 
+in the background.
+
+curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+sudo mv /tmp/eksctl /usr/local/bin
+eksctl version
+
+4. Install kubectl
+
+To interact with the created EKS cluster, we will install kubectl
+
+curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.19.6/2021-01-05/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin
+kubectl version --client
+
+5. Create EKS Cluster
+
+We are now going to create an EKS cluster. This EKS cluster is a kubernetes master node
+in AWS.
+
+eksctl create cluster \
+            --name=my-eks-cluster \
+            --region=ap-south-1 \
+            --zones=ap-south-1a, ap-south-1b \
+            --without-nodegroup
+
+It will take 15 to 20 minutes as it will create many resources in AWS cloud.
+CloudFormation is an AWS service which uses templates to create resources on AWS.
+
+6. Associate OIDC connect provider wih EKS
+
+In the context of Amazon EKS, the OIDC provider is associated with IAM roles.
+This association allows IAM roles to be assumed by authenticated users through 
+the OIDC provider. When a user authenticates through the OIDC provider and 
+assumes an IAM role, they inherit the permissions associated with that IAM role, 
+allowing them to perform actions within the EKS cluster based on those permissions.
+
+When you create an EKS cluster, it automatically comes with an OIDC (OpenID Connect)
+identity provider. but  you need to manually associate this OIDC provider with your 
+IAM roles for Kubernetes service accounts to utilize IAM roles for authentication 
+and authorization within the cluster.
+
+By associating the IAM OIDC provider with your EKS cluster, you allow Kubernetes 
+service accounts to assume IAM roles mapped to them. This enables you to manage 
+access to AWS resources using IAM policies and roles, providing fine-grained access 
+control for applications running on Kubernetes.
+
+In summary the above command establishes the necessary trust between the IAM OIDC 
+provider and the EKS cluster, allowing Kubernetes service accounts to assume IAM 
+roles for accessing AWS resources.
+
+Therefore, to enable and use AWS IAM roles for Kubernetes service accounts on our 
+EKS cluster, we must create & associate OIDC identity provider.
+
+eksctl utils associate-iam-oidc-provider \
+             --region ap-south-1 \
+             --cluster my-eks-cluster \
+             --approve
+
+7. Create Worker Nodes nodegroup using AWS Auto Scaling Group
+
+We need to create an AWS managed worker nodes nodegroup so that the 
+application is managed by EKS cluster using these worker nodes with the
+help of Auto Scaling Group. Auto Scaling Group in AWS is used to scale 
+the number of nodes in the nodegroup i.e. it automatically increases or 
+decreses the number of worker nodes in the nodegroup using node-min and 
+node-max values depending upon the peak demand on the application.
+
+eksctl create nodegroup --cluster=my-eks-cluster \
+                       --region=ap-south-1 \
+                       --name=node2 \
+                       --node-type=t3.medium \
+                       --nodes=3 \
+                       --nodes-min=2 \
+                       --nodes-max=3 \
+                       --node-volume-size=20 \
+                       --ssh-access \
+                       --ssh-public-key=aws-kvp \
+                       --managed \
+                       --asg-access \
+                       --external-dns-access \
+                       --full-ecr-access \
+                       --appmesh-access \
+                       --alb-ingress-access
+
+Verify whether the nodes are created using 'kubectl get nodes' command.
+
+8. Allow all traffic in In-bound rules of Additional Security group for
+   this cluster through AWS console.
+
+
+9. Install Jenkins, docker and install and configure Jenkins plugins
+
+Install jdk, jenkins and docker and add users: jenkins and ubuntu to docker group
+allow these users to run docker commands.
+
+Configure Jenkins
+I. Install below mentioned Plugins in Jenkins:
+kubernetes cli
+kubernetes
+Docker
+CloudBees Docker Build and Publish plugin
+docker-build-step
+Docker Pipeline
+
+II. Configure Tools to add docker plugin
+
+III. Add docker hub credentials in Jenkins Credential Store 
+with kind: 'Username and Password', Id: 'docker' and the docker
+hub registry username: rockondock and password.
+
+10. Create Service Account, Role, RoleBinding and secret to
+allow Jenkins to create and manage resources in the EKS cluster.
+
+a. Namespace - Create a namespace
+
+We need to create a Service Account to allow Jenkins to authenticate to 
+the Kubernetes API server. For this Service Account, we will create and 
+use a seperate namespace with the name 'devops'.
+
+kubectl create namespace devops
+
+b. Service Account - Create a Service Account 
+
+# jenkins-svc-account.yml:
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jenkins
+  namespace: devops
+
+Note: Validate this yaml file using https://www.yamllint.com/
+
+kubectl apply -f jenkins-svc-account.yml 
+
+c. Role - Create a role that grants few permissions (in verbs) wrt 
+   kubernetes resources. We can bind this role to the Service Account 
+   to allow it to deploy the application in a kubernetes cluster.
+
+# role.yml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-role
+  namespace: devops
+rules:
+  - apiGroups:
+        - ""
+        - apps
+        - autoscaling
+        - batch
+        - extensions
+        - policy
+        - rbac.authorization.k8s.io
+    resources:
+      - pods
+      - componentstatuses
+      - configmaps
+      - daemonsets
+      - deployments
+      - events
+      - endpoints
+      - horizontalpodautoscalers
+      - ingress
+      - jobs
+      - limitranges
+      - namespaces
+      - nodes
+      - pods
+      - persistentvolumes
+      - persistentvolumeclaims
+      - resourcequotas
+      - replicasets
+      - replicationcontrollers
+      - serviceaccounts
+      - services
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+Note: Validate this yaml file using https://www.yamllint.com/
+
+kubectl apply -f role.yml
+
+d. RoleBinding - Bind the Role to the Service Account
+
+# bind-role-svcacc.yml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-rolebinding
+  namespace: devops 
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: app-role 
+subjects:
+- namespace: devops 
+  kind: ServiceAccount
+  name: jenkins 
+
+Note: Validate this yaml file using https://www.yamllint.com/
+
+kubectl apply -f bind-role-svcacc.yml
+
+11. Create or update a kubeconfig file for your cluster
+
+We need to generate or update kubeconfig file for our EKS cluster. This file contains
+the configuration of our EKS cluster which will be used to communicate with the API 
+server of a cluster. This config file will be created at $USER/.kube/config. It contains
+cluster endpoint, cluster certificate authority data, and authentication token, which 
+allows you to interact with the EKS cluster using kubectl command. 
+
+Therefore, updating the kubeconfig file with the authentication details and configuration 
+settings specific to the EKS cluster is necessary to enable kubectl to authenticate with 
+the cluster's API server, securely communicate with it, and perform operations on the cluster. 
+It ensures proper access control and allows users to switch between different Kubernetes 
+clusters seamlessly.
+
+aws eks update-kubeconfig --region ap-south-1 --name my-eks-cluster
+
+12. Jenkins Pipeline Creation
+
+We now need configure Jenkins to authenticate it with the Kubernetes API server and 
+deploy the application image using kubectl commands. For authentication, Jenkins will 
+use the token created for jenkins Service Account.
+
+A. Create a token for the Service Account to deploy the application on k8s cluster
+
+# token-secret.yml
+
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/service-account-token
+metadata:
+  name: secrettoken
+  namespace: devops
+  annotations:
+    kubernetes.io/service-account.name: jenkins
+
+Note: Validate this yaml file using https://www.yamllint.com/
+
+kubectl apply -f token-secret.yml
+
+It will generate the token for the secret. It acts like a password for the 
+jenkins Service Account.
+
+kubectl -n devops describe secret mysecretname
+
+Using above command, use the value of the token to create a new credential in
+Jenkins credentials store with kind: 'secret text' and id: 'k8s-secrettoken'
+
+Jenkins UI - Generate Pipeline Script for Kubernetes Step
+
+Using Pipeline Syntax, use withKubeConfig function and add secrettoken (created above), 
+Kubernetes server endpoint URL (from .kube/config file or AWS EKS cluster: my-eks-cluster), 
+namespace: devops and Generate Pipeline Script.
+
+10 microservices project
+Clone the github repository of 10 Microservice application
+https://github.com/jaiswaladi246/10-Tier-MicroService-Appliction.git
+
+Update the name of the docker images to have your docker username in deployment-service.yml 
+file in the latest branch of the this project.
+
+Edit the below Jenkins Pipeline script and make changes such that:
+1. We will create a seperate stage for each of the microservice, 
+   build docker image and push it to the dockerhub registry.
+1. Update the Github URL and branch name in Git Checkout stage.
+2. Edit the name of the Pipeline Job to '10microsvc' or to the name of
+   the Jenkins Job in the dir block for each microservice stage.
+    dir('/var/lib/jenkins/workspace/10microsvc/...)
+3. Change the docker username in docker build and docker push 
+   commands for all microservices.
+    docker build -t rockondock/<service-name:latest> and 
+    docker push -t rockondock/<service-name:latest> 
+4. Update the stage('K8') with the following value in withKubeConfig:
+    clusterName:   'my-eks-cluster',
+    credentialsId: 'k8s-secrettoken', 
+    namespace:     'devops', 
+    restrictKubeConfigAccess: false, 
+    serverUrl: '' # use the value of Server key in ~/.kube/config or 
+                  # get it from the EKS cluster: my-eks-cluster in AWS console
+
+pipeline {
+  agent any
+  stages {
+      stage('Git') {
+          steps {
+              git branch: 'latest', url: 'https://github.com/rakeshsguttedar/10-Tier-MicroService-Appliction.git'
+          }
+      }
+
+      stage('adservice') {
+          steps {
+              script{
+                  withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        dir('/var/lib/jenkins/workspace/10microsvc/src/adservice/') {
+                               sh "docker build -t rockondock/adservice:latest ."
+                               sh "docker push rockondock/adservice:latest"
+                      }
+                  }
+              }
+          }
+      }
+
+	stage('cartservice') {
+          steps {
+              script{
+                  withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        dir('/var/lib/jenkins/workspace/10microsvc/src/cartservice/src/') {
+                               sh "docker build -t rockondock/cartservice:latest ."
+                               sh "docker push rockondock/cartservice:latest"
+                      }
+                  }
+              }
+          }
+      }
+
+	stage('checkoutservice') {
+          steps {
+              script{
+                  withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        dir('/var/lib/jenkins/workspace/10microsvc/src/checkoutservice/') {
+                               sh "docker build -t rockondock/checkoutservice:latest ."
+                               sh "docker push rockondock/checkoutservice:latest"
+                      }
+                  }
+              }
+          }
+      }
+
+	stage('currencyservice') {
+          steps {
+              script{
+                  withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        dir('/var/lib/jenkins/workspace/10microsvc/src/currencyservice/') {
+                               sh "docker build -t rockondock/currencyservice:latest ."
+                               sh "docker push rockondock/currencyservice:latest"
+                      }
+                  }
+              }
+          }
+      }
+
+	stage('emailservice') {
+          steps {
+              script{
+                  withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                      dir('/var/lib/jenkins/workspace/10microsvc/src/emailservice/') {
+                               sh "docker build -t rockondock/emailservice:latest ."
+                               sh "docker push rockondock/emailservice:latest"
+                      }
+                  }
+              }
+          }
+      }
+
+	stage('frontend') {
+          steps {
+              script{
+                  withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        dir('/var/lib/jenkins/workspace/10microsvc/src/frontend/') {
+                               sh "docker build -t rockondock/frontend:latest ."
+                               sh "docker push rockondock/frontend:latest"
+                      }
+                  }
+              }
+          }
+      }
+
+	stage('loadgenerator') {
+          steps {
+              script{
+                  withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        dir('/var/lib/jenkins/workspace/10microsvc/src/loadgenerator/') {
+                               sh "docker build -t rockondock/loadgenerator:latest ."
+                               sh "docker push rockondock/loadgenerator:latest"
+                      }
+                  }
+              }
+          }
+      }
+
+	stage('paymentservice') {
+          steps {
+              script{
+                  withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        dir('/var/lib/jenkins/workspace/10microsvc/src/paymentservice/') {
+                               sh "docker build -t rockondock/paymentservice:latest ."
+                               sh "docker push rockondock/paymentservice:latest"
+                      }
+                  }
+              }
+          }
+      }
+
+	stage('productcatalogservice') {
+          steps {
+              script{
+                  withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        dir('/var/lib/jenkins/workspace/10microsvc/src/productcatalogservice/') {
+                               sh "docker build -t rockondock/productcatalogservice:latest ."
+                               sh "docker push rockondock/productcatalogservice:latest"
+                      }
+                  }
+              }
+          }
+      }
+
+	stage('recommendationservice') {
+          steps {
+              script{
+                  withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        dir('/var/lib/jenkins/workspace/10microsvc/src/recommendationservice/') {
+                               sh "docker build -t rockondock/recommendationservice:latest ."
+                               sh "docker push rockondock/recommendationservice:latest"
+                      }
+                  }
+              }
+          }
+      }
+
+	stage('shippingservice') {
+          steps {
+              script{
+                  withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        dir('/var/lib/jenkins/workspace/10microsvc/src/shippingservice/') {
+                               sh "docker build -t rockondock/shippingservice:latest ."
+                               sh "docker push rockondock/shippingservice:latest"
+                      }
+                  }
+              }
+          }
+      }
+
+      stage('K8') {
+          steps {
+              withKubeConfig(caCertificate: '', clusterName: 'my-eks-cluster', contextName: '', credentialsId: 'k8s-secrettoken', namespace: 'devops', restrictKubeConfigAccess: false, serverUrl: '') {
+                     sh "kubectl apply -f deployment-service.yml"
+				   sh "kubectl get pods -n devops"
+				   sh "kubectl get svc -n devops"
+              }
+          }
+      }
+
+      stage('Delete local docker images') {
+          steps {
+              script {
+                  withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                      sh "docker rmi -f \$(docker image -aq)"
+                  }
+              }
+          }
+      }
+  }
+}
+
+We can now access the 10-microservcice application using the URL generated for 
+the cluster: my-eks-cluster in AWS console.
+
+kubectl get svc -n devops 
+
+As both NodePort and External LoadBalancer type service is enable for this application,  
+we can access the application from the browser either by using the NodeIP and mapped port
+of frontEnd service (NodePort svc type ) or by using URL generated in frontend-external 
+service (using LoadBalancer service type).
+
+Cleanup:
+
+1. Removing docker images:
+As docker images consumes lot of disk space, we can either manually run the command -
+docker rmi -f $(docker image -aq)
+or we can add this command to the last stage of the Jenkins job( see pipeline script).
+
+2. Delete EKS Cluster:
+Deleting the EKS cluster through AWS Console is not going to delete each and every associated 
+resource created for this cluster. Therefore we should delete the EKS cluster using eksctl command.
+
+eksctl delete cluster -n devops
+
+When you use the `eksctl delete cluster` command to delete an Amazon EKS cluster, 
+it will delete not only the EKS control plane but also the associated worker nodes 
+and other resources created alongside the cluster. This includes resources such as
+
+1. Worker nodes (EC2 instances)
+2. Autoscaling groups
+3. Security groups
+4. IAM roles and policies
+5. VPC resources (subnets, route tables, internet gateways, etc.)
+6. Load balancers (if created by EKS)
+7. EKS-specific resources like IAM OIDC provider, Amazon EBS CSI driver resources (if utilized), etc.
