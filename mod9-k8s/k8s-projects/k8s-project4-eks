@@ -115,7 +115,7 @@ eksctl create nodegroup --cluster=my-eks-cluster \
                        --nodes-max=3 \
                        --node-volume-size=20 \
                        --ssh-access \
-                       --ssh-public-key=aws-kvp \
+                       --ssh-public-key=aws-aps-key \
                        --managed \
                        --asg-access \
                        --external-dns-access \

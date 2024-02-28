@@ -15,6 +15,7 @@ for AWS EKS.
 In AWS Console:
 Create an IAM user: eks-iam-user with the following permissions
 
+IAMFullAccess
 AmazonEC2FullAccess
 AmazonEKS_CNI_Policy
 AmazonEKSClusterPolicy
@@ -71,7 +72,7 @@ eksctl create iamserviceaccount \
   --name=aws-load-balancer-controller \
   --attach-policy-arn=arn:aws:iam::<Account-ID>:policy/AWSLoadBalancerControllerIAMPolicy \
   --override-existing-serviceaccounts \
-  --approv
+  --approve
 
 3. Install an Ingress Controller
 
@@ -92,7 +93,7 @@ helm upgrade --install aws-load-balancer-controller eks/aws-load-balancer-contro
   --set serviceAccount.create=false \
   --set serviceAccount.name=aws-load-balancer-controller \
   --set region=ap-south-1 \
-  --set vpcId=<use-your-vpc-id>
+  --set vpcId=vpc-0f54b641019bda3e7
 
 AWS Load Balancer Ingress Controller:
 
