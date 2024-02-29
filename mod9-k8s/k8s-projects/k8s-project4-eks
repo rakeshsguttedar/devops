@@ -326,7 +326,7 @@ pipeline {
   stages {
       stage('Git') {
           steps {
-              git branch: 'latest', url: 'https://github.com/rakeshsguttedar/10-Tier-MicroService-Appliction.git'
+              git branch: 'latest', url: 'https://github.com/rakeshsguttedar/10-MicroService-Appliction.git'
           }
       }
 
@@ -509,7 +509,7 @@ Cleanup:
 
 1. Removing docker images:
 As docker images consumes lot of disk space, we can either manually run the command -
-docker rmi -f $(docker image -aq)
+docker rmi -f $(docker images -aq)
 or we can add this command to the last stage of the Jenkins job( see pipeline script).
 
 2. Delete EKS Cluster:
