@@ -1,0 +1,93 @@
+IaC - Infrastructure as Code
+
+Lets say we have developed an application and we deploy it on a k8s cluster.
+The k8s clusters such as EKS, Virtual machines like EC2 are infrastructures.
+
+Deploying the application on the infrastructure for once is ok. But if this 
+needs to be repeated many times and on many environments, then it is going 
+to be hectic, prone to errors and it would not be an efficient way to do.
+
+Therefore we use IaC.
+IaC - a way to provision and manage resources using scripts and executing these
+scripts one or many times to create resources instead of creating them fron UI
+manually. This script can be tracked or Version controlled in Git. 
+
+IaC - Provision resources and Configure
+Provision - creating 10 ubuntu VMs is Provision of compute resource
+Configration - installing jenkins, Nexus on these VMs is configuration
+
+IaC Tools - Terraform, Ansible are most popular tools as they are open source,
+provide better features compared to other IaC tools and has wide community support.
+
+Provisioning - Terraform is best suited for Provisioning resources
+Configuring  - Ansible is best suited for Configuring
+
+Terraform
+IaC tool by Hashicorp for provisioning of resources on AWS, GCP and Azure.
+by using scripts in HCL format. It is written in Go language.
+
+declarative
+Terraform script uses declarative language of definging the resources to be
+provisioned. Terraform ensures that current state or final state should be 
+the desired state as defined in the terraform scripts(.tf files) 
+
+idempotent - the desired state should not change and there should not be an
+increase in the number of resources even if we run the script multiple times.
+
+Some basic terminologies
+
+Infrastructure:
+
+Infrastructure is the computer data centre resources such as virtual machines,
+containers, networks, and storage.
+
+IaC means defining the infrastructure resources using machine readable declarative
+configuration files or scripts so as to allow for automated provisioning, scaling,
+and management of infrastructure resources rather than doing it manually.
+
+What is Declarative configuration in IaC?
+
+Declarative Configuration means using a declarative syntax to specify 'what' must 
+be the desired state of the infrastructure rather than 'how' it has to be achieved. 
+'What' is the functional approach of creating the resources where as 'How' is the 
+procedural or imperative approach as it gives steps to achieve the desired state
+
+Why IaC? What are the problems with the traditional management of infrastrcuture?
+
+Problems with the manaual management of infrastructure resources are 
+
+Manual Configuration Errors
+prone to human errors. Small inconsistencies or misconfigurations can lead to 
+system failures, security vulnerabilities, or performance issues.
+
+Lack of Consistency
+it's challenging to ensure consistency across different environments (e.g., 
+development, staging, production). Each environment may be configured differently,
+leading to inconsistencies and difficulties in replicating deployments.
+
+Slow and Error-Prone Deployment Processes
+increases the likelihood of errors and delays in deploying changes to infrastructure.
+
+Difficulty in Scaling
+scaling infra is complex and time-consuming. 
+
+Limited Visibility and Control
+manually managed infr lacks visibility, difficult to track changes, audit configurations, 
+and enforce compliance with security policies and best practices.
+
+High Operational Overhead
+requires significant operational effort, including repetitive tasks such as provisioning, 
+configuration, and maintenance. It can hinder productivity and divert resources from 
+higher-value activities.
+
+What is Provisioning of resources? How is it different from Configuration Management?
+
+Provisioning of resource means creating of infrastructure resources on a cloud. 
+Terraform is the mist popular Provisioning tool
+
+Configuration means installing the necesaary tools, softwares in those resources
+and managing them like updating the tools, fixing security issues, applying patches
+etc. Ansible is the most popular Iac Configuration tool.
+
+
+

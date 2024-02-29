@@ -1,0 +1,75 @@
+Terraform - hands-on
+
+Installation of Terraform:
+
+Download the terraform from Hashicorp and install it either on your laptop or in 
+an AWS VM EC2 instance.
+
+wget -O- https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt update && sudo apt install terraform
+
+a. Create an IAM user account for provisioning of resources on AWS with the 
+following Permissions
+1. AdministratorAccess
+2. AmazonRDSFullAccess
+3. AmazonS3FullAccess
+4. AmazonVPCFullAccess
+5. AWSCloudFormationFullAccess
+6. IAMFullAccess
+
+b. create access key and secret access keys for this user account in AWS IAM console
+
+c. Install AWS CLI and configure it using these access keys
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+sudo apt install unzip -y
+unzip awscliv2.zip
+sudo ./aws/install
+aws --version
+
+Run the command:
+
+aws configure 
+
+to provide your access keys, add region and specify the output format.
+
+After configuring the AWS CLI, the resources will be created in the region
+specified above. So make sure to use region specific configrations in the
+terraform script.
+
+Terrform script
+
+Create a terraform script with an extension of .tf
+Ex: main.tf
+
+# main.tf
+resource "aws_instance" "ec2_instance" {
+  ami = "ami-03f4878755434977f"
+  instance_type = "t2.micro"
+  key_name = "aws-aps-key"
+  vpc_security_group_ids = ["sg-0d5b8a73ea7f968ca"]
+  tags = {
+    Name = "first_instance"
+  }
+}
+
+output "public_ip" {
+  value = aws_instance.ec2_instance.public_ip
+}
+
+terraform init - initialises the terraform for providers
+
+terraform validate - validates the syntax of the terraform script
+
+terraform plan - dry run the tf script to check what resources
+will be created. It will show the output in the terminal
+
+terraform apply -  will actually create the resources
+
+The flag --auto-approve to terraform apply will not prompt for confirmation yes during
+terminal interaction
+
+terrofmr destroy - will delete the resources we created
+
+
