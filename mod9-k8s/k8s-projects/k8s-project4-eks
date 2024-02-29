@@ -2,7 +2,7 @@ Kubernetes EKS - Project 4
 
 Deploy 10 microservices based application in AWS EKS using Jenkins CICD tool
 
-For setting up CICD, we will use a AWS VM EC2 instance of type t2.large
+For setting up CICD, we will use a AWS VM EC2 instance of type t3.large
 and 20 GiB storage - We will setup Jenkins Master on this VM.
 
 sudo apt update -y
@@ -487,7 +487,7 @@ pipeline {
           steps {
               script {
                   withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
-                      sh "docker rmi -f \$(docker image -aq)"
+                      sh "docker rmi -f \$(docker images -aq)"
                   }
               }
           }
@@ -516,7 +516,7 @@ or we can add this command to the last stage of the Jenkins job( see pipeline sc
 Deleting the EKS cluster through AWS Console is not going to delete each and every associated 
 resource created for this cluster. Therefore we should delete the EKS cluster using eksctl command.
 
-eksctl delete cluster -n devops
+eksctl delete cluster -n my-eks-cluster
 
 When you use the `eksctl delete cluster` command to delete an Amazon EKS cluster, 
 it will delete not only the EKS control plane but also the associated worker nodes 
