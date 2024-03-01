@@ -6,19 +6,22 @@ resource block
 output block
 
 In this session we will cover: 
-variables
+variables (and their default values)
 data sources
 tfvars file
-how we can create resources for different environments: production, staging and dev
+
+How we can create resources for different environments: production, staging and dev
 
 Create an EC2 instance and ssh to it or install terraform locally in your laptop.
 
 mkdir Terra
 cd terra
-# variable.tf file
-# To avoid hardcoding of values in tf script, we use variables
-# also for resuability of variables in modules
 
+# variable.tf
+
+# To avoid hardcoding of values in tf script, we use variables
+# we can pass value to this instance_type variable from terraform command
+# terraform apply -var="instance_type=t2.medium" --auto-approve 
 variable "instance_type" {
     default = "t2.micro"
 }
@@ -31,9 +34,10 @@ variable "ssh_key_name" {
     default="aws-aps-key"
 }
 
-We define variables to provide default values
-and we can change it at run time to specify 
-particular value
+# We define variables to provide default values
+# and we can change it at run time to specify 
+# particular value
+# terraform apply -var="instance_type=t2.medium" --auto-approve 
 
 # main.tf
 
@@ -41,8 +45,8 @@ provider "aws" {
     region = "ap-south-1"
 }
 
-/* Data sources is used to fetch the information about existing resources in cloud
-Using UI we cannot always check the default value. Therefore we use data sources.
+/* Data sources is used to fetch the information about existing resources in cloud.
+Using UI, we cannot always check the default values. Therefore we use data sources.
 Example, fetching existing or default vpc. */
 
 # VPC
