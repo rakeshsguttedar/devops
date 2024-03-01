@@ -1,0 +1,160 @@
+Terraform - 2 
+
+Topics already covered:
+provider block
+resource block
+output block
+
+In this session we will cover: 
+variables
+data sources
+tfvars file
+how we can create resources for different environments: production, staging and dev
+
+Create an EC2 instance and ssh to it or install terraform locally in your laptop.
+
+mkdir Terra
+cd terra
+# variable.tf file
+# To avoid hardcoding of values in tf script, we use variables
+# also for resuability of variables in modules
+
+variable "instance_type" {
+    default = "t2.micro"
+}
+
+variable "ami_id" {
+    default = "ami-03f4878755434977f"
+}
+
+variable "ssh_key_name" {
+    default="aws-aps-key"
+}
+
+We define variables to provide default values
+and we can change it at run time to specify 
+particular value
+
+# main.tf
+
+provider "aws" {
+    region = "ap-south-1"
+}
+
+/* Data sources is used to fetch the information about existing resources in cloud
+Using UI we cannot always check the default value. Therefore we use data sources.
+Example, fetching existing or default vpc. */
+
+# VPC
+data "aws_vpc" "default" {
+    default = true
+}
+
+# Subnet
+data "aws_subnet" "example" {
+    vpc_id = data.aws_vpc.default.id
+    tags = {
+        Name =  "Subnet-B"
+    }
+}
+
+# Security Group
+resource "aws_security_group" "instance_sg" {
+    name = "instance_sg"
+    description = "security group for ec2 instance"
+    vpc_id = data.aws_vpc.default.id
+
+    ingress {
+        from_port = 22
+        to_port = 22
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+    
+    ingress {
+        from_port = 80
+        to_port = 80
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    egress {
+        from_port = 0
+        to_port = 0
+        protocol = "-1" # all protocols allowed
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+}
+
+resource "aws_instance" "ec2-instance" {
+    ami - var.ami_id
+    instance_type = var.instance_type
+    subnet_id = data.aws_subnet.example.id
+    key_name = var.ssh_key_name
+    security_groups = [aws_security_group.instance_sg.id]
+
+    tags = {
+        Name = "second_instance"
+  }
+}
+
+# output.tf
+output "public_ip" {
+  value = aws_instance.ec2_instance.public_ip
+}
+
+# Run the terraform commands in this order
+terraform init
+terraform validate
+terraform plan
+terraform apply --auto-approve
+terraform destroy --auto-approve
+
+STATE FILE
+
+What is a state file in Terraform.?
+
+terraform.tfstate (default name)
+
+Terraform state file is  locally created file in the directory you 
+run terraform command, when you run a terraform apply or terraform 
+plan command.
+
+Why state file is created or needed? What is its purpose?
+1. State Management - keeps track of the current state of your infrastructure
+
+2. Resource Dependencies - dependencies between resources, allowing Terraform 
+to determine the correct order in which to create, update, or delete resources
+
+3. Concurrency and Collaboration - manage concurrency and prevent conflicts 
+when multiple users are working on the same infrastructure using state file 
+locking mechanism to ensure only one user can modify the statefile at a time.
+
+4. Idempotent Operations: running the same Terraform configuration multiple 
+times will result in the same infrastructure state, regardless of the current 
+state of the infrastructure.
+
+Why terraform creates a tfstate backup file: terraform.tfstate.backup?
+
+terraform.tfstate.backup - created for safety - to prevent data loss or 
+corruption in case of failures or errors during terraform Operations. 
+
+INPUTS
+
+Providing input values to variables at runtime
+
+There are three ways of providing input values to Terraform configuration 
+using variables
+
+1. CLI arguments  
+2. .tfvars file
+3. default values 
+
+The precedence is given to values passed via CLI arguments. 
+This is followed by values passed using the .tfvars file and 
+lastly, the default values are considered.
+
+1. CLI arguments
+
+terraform apply -var="instance_type=t2.medium" --auto-approve 
+
