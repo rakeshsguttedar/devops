@@ -1,0 +1,15 @@
+Terraform Workspaces
+
+They are a terraform feature to manage multiple environments such as staging, dev and production
+using environment specific statefiles within a single Terraform configuration directory.
+
+Advantages:
+1. Prevents conflicts between envionments
+2. Allows applying configuration changes to each envionment in a controlled and organized manner.
+3. State management is isolated and specific to the environment. Therefore chnages in one 
+   environment will not affect the other.
+4. Allows Variable overrides - it allows to use same configuration for different environments
+   by using environment specific variable definition and thus reduces duplication of code. 
+5. Allows us to manage mulitple envionments using a single terraform commands workflow.
+
+
