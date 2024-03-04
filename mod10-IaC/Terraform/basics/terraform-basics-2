@@ -1,4 +1,4 @@
-Terraform - 2 
+Terraform basics - 2 
 
 Topics already covered:
 provider block
@@ -12,7 +12,16 @@ tfvars file
 
 How we can create resources for different environments: production, staging and dev
 
-Create an EC2 instance and ssh to it or install terraform locally in your laptop.
+Two ways:
+1. We can create resources in different environments using tfvars file for each 
+   environment and use them in a seperate subdirectory of created for those environments.
+2. Using Terraform workspaces - refer tf-workspace file
+
+Hands-on:
+
+Create an EC2 instance and ssh to it 
+or 
+Install terraform locally in your windows laptop.
 
 mkdir Terra
 cd terra
@@ -22,22 +31,25 @@ cd terra
 # To avoid hardcoding of values in tf script, we use variables
 # we can pass value to this instance_type variable from terraform command
 # terraform apply -var="instance_type=t2.medium" --auto-approve 
+
 variable "instance_type" {
+    description = "Instance type of the EC2 instance"
     default = "t2.micro"
 }
 
 variable "ami_id" {
+    description = "Amazon Machine Image identifier"
     default = "ami-03f4878755434977f"
 }
 
 variable "ssh_key_name" {
+    description = "ssh public key name to access EC2 instance via ssh"
     default="aws-aps-key"
 }
 
 # We define variables to provide default values
-# and we can change it at run time to specify 
-# particular value
-# terraform apply -var="instance_type=t2.medium" --auto-approve 
+# and we can change it at run time to specify a particular value
+# Example: terraform apply -var="instance_type=t2.medium" --auto-approve 
 
 # main.tf
 
@@ -45,9 +57,11 @@ provider "aws" {
     region = "ap-south-1"
 }
 
-/* Data sources is used to fetch the information about existing resources in cloud.
+/* 
+Data sources is used to fetch the information about existing resources in cloud.
 Using UI, we cannot always check the default values. Therefore we use data sources.
-Example, fetching existing or default vpc. */
+Example, fetching existing or default vpc id, ami id for creating EC2 instance,etc 
+*/
 
 # VPC
 data "aws_vpc" "default" {
@@ -143,20 +157,18 @@ Why terraform creates a tfstate backup file: terraform.tfstate.backup?
 terraform.tfstate.backup - created for safety - to prevent data loss or 
 corruption in case of failures or errors during terraform Operations. 
 
-INPUTS
+ASSIGNING VALUES TO VARIABLES
 
 Providing input values to variables at runtime
 
-There are three ways of providing input values to Terraform configuration 
-using variables
+There are three ways of providing input values to variables in Terraform configuration. 
 
-1. CLI arguments  
+1. CLI arguments
 2. .tfvars file
-3. default values 
+3. default values
 
-The precedence is given to values passed via CLI arguments. 
-This is followed by values passed using the .tfvars file and 
-lastly, the default values are considered.
+The precedence is given to the values passed via CLI arguments. This is followed by values
+passed using .tfvars file. Lastly, the default values are used if not input values are provided.
 
 1. CLI arguments
 

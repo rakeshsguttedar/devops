@@ -1,0 +1,23 @@
+Terraform Modules
+
+Modules in Terraform are reusable Terraform configurations packages that represent a set
+of resources or infrastructure components. 
+
+Advantages/features
+
+Terraform Modules:
+1. encapsulate the terraform configuration as a single unit 
+2. abstract away the implementation details and expose a clean interface
+3. make terraform configurations reusable - we can package common infrastructure patterns, 
+   such as web servers, databases, or networking configurations and resuse them.
+4. Modules can be stored locally within the same Terraform configuration directory or 
+   fetched from remote sources, such as version control repositories or module registries. 
+   This allows for flexibility in managing module dependencies and sharing modules with others.
+5. We can use modules as building blocks to assemble larger infrastructure components. 
+   As a result, it reduces the complexity of managing large infrastructure components.
+6. Can be Version controlled or tracked and helps with the collaboration.
+
+Overall, Terraform modules provide a powerful mechanism for organizing, sharing, and reusing
+infrastructure configurations. They help improve productivity, maintainability, and collaboration 
+in managing infrastructure as code with Terraform.
+
