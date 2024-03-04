@@ -25,7 +25,5 @@ Overall, Terraform modules provide a powerful mechanism for organizing, sharing,
 infrastructure configurations. They help improve productivity, maintainability, and collaboration 
 in managing infrastructure as code with Terraform.
 
-Creating a module:
-
-
-mo
+Refer to folders modules/ec2-instance and project2-modules for the example usage
+of an ec2-instance module
