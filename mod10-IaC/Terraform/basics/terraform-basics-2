@@ -161,19 +161,29 @@ ASSIGNING VALUES TO VARIABLES
 
 Providing input values to variables at runtime
 
-There are three ways of providing input values to variables in Terraform configuration. 
+There are four ways of providing input values to variables in Terraform configuration. 
+(precendence - 1 is of highest priority and 4 is the lowest)
 
-1. CLI arguments
-2. .tfvars file
-3. default values
+1. CLI arguments         - using -var="var-name=var_value"
+2. .tfvars               - file terrform.tfvars, *.tfvars, *.auto.tfvars
+3. environment variables - using TF_VAR_var_name, ex: TF_VAR_instance_type, TF_VAR_ami_id
+4. default values        - specified in the variable declaration blocks 
 
-The precedence is given to the values passed via CLI arguments. This is followed by values
-passed using .tfvars file. Lastly, the default values are used if not input values are provided.
+First priority is with CLI arguments, followed by tfvars files, environment variables
+and default values. If variables are not defined in either of the above 4 ways, then 
+terraform will prompt the user to enter values of the variables during runtime.
+(i.e. while running terraform plan or terraform apply commands).
 
-If variables are defined using empty blocks i.e. default values are not defined, then terraform
-will prompt the user to enter values of the variables during runtime (terraform apply).
-
-1. Providing values to variables using CLI arguments with -var option:
+Example: Providing values to variables using CLI arguments with -var option:
 
 terraform apply -var="instance_type=t2.medium" --auto-approve
+env variable: export TF_VAR_instance_type=t3.large
 
+Input variables, Output values and Local values
+
+Using analogy from traditional programming languages, it can be useful to 
+compare Terraform modules to function definitions:
+
+Input variables are like function arguments.
+Output values are like function return values.
+Local values are like a function's temporary local variables.

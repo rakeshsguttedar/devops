@@ -3,6 +3,10 @@ Terraform Modules
 Modules in Terraform are reusable Terraform configurations packages that represent a set
 of resources or infrastructure components. 
 
+DRY principle - Dont Repeat Yourself - 
+DRY principle discourages duplication of code so as to reduce redundancy, making code 
+easy to maintain, understand and modify.
+
 Advantages/features
 
 Terraform Modules:
@@ -21,3 +25,7 @@ Overall, Terraform modules provide a powerful mechanism for organizing, sharing,
 infrastructure configurations. They help improve productivity, maintainability, and collaboration 
 in managing infrastructure as code with Terraform.
 
+Creating a module:
+
+
+mo

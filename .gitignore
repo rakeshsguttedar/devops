@@ -6,3 +6,8 @@ mod10-IaC/Terraform/Terra/.terraform/providers/registry.terraform.io/hashicorp/a
 mod10-IaC/Terraform/Terra/.terraform.lock.hcl
 mod10-IaC/Terraform/Terra/terraform.tfstate
 mod10-IaC/Terraform/Terra/terraform.tfstate.backup
+mod10-IaC/Terraform/basics/Terra/.terraform/providers/registry.terraform.io/hashicorp/aws/5.39.0/windows_amd64/terraform-provider-aws_v5.39.0_x5.exe
+mod10-IaC/Terraform/basics/Terra/.terraform.lock.hcl
+mod10-IaC/Terraform/project2-modules/.terraform/providers/registry.terraform.io/hashicorp/aws/5.39.0/windows_amd64/terraform-provider-aws_v5.39.0_x5.exe
+mod10-IaC/Terraform/project2-modules/.terraform/modules/modules.json
+mod10-IaC/Terraform/project2-modules/.terraform.lock.hcl
