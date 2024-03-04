@@ -25,5 +25,9 @@ Overall, Terraform modules provide a powerful mechanism for organizing, sharing,
 infrastructure configurations. They help improve productivity, maintainability, and collaboration 
 in managing infrastructure as code with Terraform.
 
-Refer to folders modules/ec2-instance and project2-modules for the example usage
-of an ec2-instance module
+Refer to folders modules/ec2-instance and project2-modules for the example usage of an 
+ec2-instance module
+
+When we use locals block in modules for setting values of variables, we will not be 
+able to override the value in the terraform script using this module. 
+Refer modules\ec2-module\main.tf file.

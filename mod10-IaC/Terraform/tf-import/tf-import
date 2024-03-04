@@ -1,0 +1,36 @@
+Terraform import
+
+Starting from Terraform version 1.5, the Terraform import functionality has been enhanced. 
+Previously, it solely imported pre-existing resources that were not managed by Terraform, 
+typically manually created resources. Initially, this command merely updated the 
+`terraform.tfstate` file, necessitating the creation of `.tf` files based on the state files. 
+This process proved cumbersome, particularly for large infrastructures with numerous resources.
+
+With the latest version, Terraform not only imports the resources but also generates the 
+corresponding Terraform configuration files. This significant improvement has substantially 
+reduced the time required to create configuration files for existing resources.
+
+Hands-on:
+
+# import.tf
+provider "aws" {
+    region = "ap-south-1"
+}
+
+import {
+    to = aws_security_group.mysg
+    id = "sg-09e429631952a5913"
+}
+
+terraform plan -generate-config-out=my-security-group.tf
+
+After we run the above terraform plan command, a configuration file by the name 
+my-security-group.tf gets created.
+
+We can go through the configuration file, and if all resources match with the existiing
+resources in AWS, we can apply as shown below
+
+terraform apply
+
+Before applying, these resources were not managed by terraform.
+After applying, terraform will manage the imported infrastructure resources.
