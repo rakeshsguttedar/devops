@@ -170,7 +170,10 @@ There are three ways of providing input values to variables in Terraform configu
 The precedence is given to the values passed via CLI arguments. This is followed by values
 passed using .tfvars file. Lastly, the default values are used if not input values are provided.
 
-1. CLI arguments
+If variables are defined using empty blocks i.e. default values are not defined, then terraform
+will prompt the user to enter values of the variables during runtime (terraform apply).
 
-terraform apply -var="instance_type=t2.medium" --auto-approve 
+1. Providing values to variables using CLI arguments with -var option:
+
+terraform apply -var="instance_type=t2.medium" --auto-approve
 
