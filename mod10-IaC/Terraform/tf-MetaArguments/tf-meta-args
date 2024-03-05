@@ -1,0 +1,13 @@
+
+Meta-arguments - special arguments that can be used within resource blocks to modify the behavior of
+resources.
+
+Meta-Arguments are 
+1. depends_on
+2. count
+3. for_each
+4. provider
+5. lifecycle
+
+1. depends_on is used to specify the dependency of one resource with another resource. 
+   That means, the dependent resource must be created before the current resource.

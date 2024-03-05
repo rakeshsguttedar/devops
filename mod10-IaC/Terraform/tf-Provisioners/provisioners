@@ -1,0 +1,103 @@
+Terraform Provisioners
+
+Provisioners
+
+Provisioners are used to execute scripts on a local or remote machine as part of resource creation
+or destruction. Provisioners can be used to bootstrap a resource, cleanup before destroy, run 
+configuration management, etc.
+
+Drawbacks of Provisioners:
+However, they also add a considerable amount of complexity and uncertainty to Terraform usage. 
+Firstly, Terraform cannot model the actions of provisioners as part of a plan because they can
+in principle take any action. Secondly, successful use of provisioners requires coordinating 
+many more details than Terraform usage usually requires: direct network access to your servers, 
+issuing Terraform credentials to log in, making sure that all of the necessary external software 
+is installed, etc.
+
+Since provisioners are non-declarative and potentially unpredictable, Terraform documetation on
+provisoners strongly recommends us to treat them as a last resort.
+
+Provisioner types: 
+file, local-exec, remote-exec
+
+file Provisioner
+
+The file provisioner copies files or directories from the machine running Terraform to the 
+newly created resource. The file provisioner supports both ssh and winrm type connections.
+
+Example usage:
+resource "aws_instance" "web" {
+  # ...
+
+  # Copies the myapp.conf file to /etc/myapp.conf
+  provisioner "file" {
+    source      = "conf/myapp.conf"
+    destination = "/etc/myapp.conf"
+  }
+
+  # ...
+}
+
+local-exec Provisioner
+
+The local-exec provisioner invokes a local executable after a resource is created. 
+This invokes a process on the machine running Terraform, not on the resource. 
+
+resource "aws_instance" "web" {
+  # ...
+
+  provisioner "local-exec" {
+    command = "echo ${self.private_ip} >> private_ips.txt"
+  }
+}
+
+remote-exec Provisioner
+
+remote-exec provisioners are used to execute the scripts in the remote vm 
+during the creation or destruction of resources.
+
+Example usage 
+resource "aws_instance" "web" {
+  # ...
+  
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("~/.ssh/id_rsa")
+    host        = self.public_ip
+  }
+
+  # ...
+
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'Hello from the remote-exec'",
+      "sudo apt update -y",
+      "sudo apt-get install python3-pip -y",
+      "cd /home/ubuntu",
+      "sudo pip3 install flask",
+      "sudo python3 app.py"
+    ]
+  }
+  # ...
+}
+
+The self Object
+Expressions in provisioner blocks cannot refer to their parent resource by name. 
+Instead, they can use the special self object.
+
+The self object represents the provisioner's parent resource, and has all of that 
+resource's attributes. For example, use self.public_ip to reference an aws_instance's 
+public_ip attribute.
+
+Creation-Time Provisioners and Destruction-Time Provisioners
+
+By default, provisioners run when the resource they are defined within is created. 
+Creation-time provisioners are only run during creation, not during updating or any other lifecycle. 
+They are meant as a means to perform bootstrapping of a system.
+
+If a creation-time provisioner fails, the resource is marked as tainted. A tainted resource will be 
+planned for destruction and recreation upon the next terraform apply. Terraform does this because a 
+failed provisioner can leave a resource in a semi-configured state. Because Terraform cannot reason 
+about what the provisioner does, the only way to ensure proper creation of a resource is to recreate 
+it. This is tainting.
