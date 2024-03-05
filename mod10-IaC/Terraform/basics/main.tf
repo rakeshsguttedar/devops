@@ -1,8 +1,11 @@
 # This is the first sample terraform script written in HCL [ Hashicorp Configuration Language ]
 # This is a comment in hcl. Aslo supports /* multiline comment */ // single line comment
 
-/*  We can also using provider block to specify the region but it is already specified in aws cli
-    using aws configure command. Hence this provider block is in this comment.
+/*  We can also use provider block to specify the region but it is already specified in
+    shared configuration files setup with the help of aws cli by using aws configure command. 
+    Hence the provider block is commented below. But in real-time work environments, it is a good 
+    practice to add a provider block either in main.tf or modules or in a seperate provider.tf file.
+    
     provider "aws" {
       region = "us-east-1"  # Set your desired AWS region
     }
