@@ -14,8 +14,8 @@ many more details than Terraform usage usually requires: direct network access t
 issuing Terraform credentials to log in, making sure that all of the necessary external software 
 is installed, etc.
 
-Since provisioners are non-declarative and potentially unpredictable, Terraform documetation on
-provisoners strongly recommends us to treat them as a last resort.
+Since provisioners are non-declarative and potentially unpredictable, Terraforms official 
+documentation strongly recommends us to treat them as a last resort.
 
 Provisioner types: 
 file, local-exec, remote-exec
@@ -28,6 +28,12 @@ newly created resource. The file provisioner supports both ssh and winrm type co
 Example usage:
 resource "aws_instance" "web" {
   # ...
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("~/.ssh/id_rsa")
+    host        = self.public_ip
+  }
 
   # Copies the myapp.conf file to /etc/myapp.conf
   provisioner "file" {
@@ -90,14 +96,69 @@ The self object represents the provisioner's parent resource, and has all of tha
 resource's attributes. For example, use self.public_ip to reference an aws_instance's 
 public_ip attribute.
 
-Creation-Time Provisioners and Destruction-Time Provisioners
+Difference between user_data and remote-exec provisioner:
+
+user_data:   
+1. cloud-init configurations that are executed when an instance is launched.
+2. runs with elevated privileges, allowing it to perform system-level tasks.
+3. Does not need a ssh or WinRM access
+
+remote-exec: 
+1. to execute commands on a running instance after it has been provisioned.
+2. for post-provisioning tasks, such as further configuration, software 
+   installation, or application setup.
+3. As it operates on an already running instance, it requires SSH (or WinRM) 
+   access to the instance. 
+
+user_data is used for instance initialization during creation, while remote-exec
+is used for executing commands on a running instance after it has been provisioned. 
+They serve different purposes and are used at different stages of the instance 
+lifecycle in Terraform configurations.
+
+Provisioner Types:
+
+Creation-Time Provisioners
 
 By default, provisioners run when the resource they are defined within is created. 
-Creation-time provisioners are only run during creation, not during updating or any other lifecycle. 
-They are meant as a means to perform bootstrapping of a system.
+Creation-time provisioners are only run during creation, not during updating or any 
+other lifecycle. They are meant as a means to perform bootstrapping of a system.
 
-If a creation-time provisioner fails, the resource is marked as tainted. A tainted resource will be 
-planned for destruction and recreation upon the next terraform apply. Terraform does this because a 
-failed provisioner can leave a resource in a semi-configured state. Because Terraform cannot reason 
-about what the provisioner does, the only way to ensure proper creation of a resource is to recreate 
-it. This is tainting.
+If a creation-time provisioner fails, the resource is marked as tainted. A tainted 
+resource will be planned for destruction and recreation upon the next terraform apply. 
+Terraform does this because a failed provisioner can leave a resource in a 
+semi-configured state. Because Terraform cannot reason about what the provisioner does, 
+the only way to ensure proper creation of a resource is to recreate it. This is tainting.
+
+By default, provisioners that fail will also cause the Terraform apply itself to fail. 
+The on_failure setting can be used to change this. The allowed values are:
+
+continue - Ignore the error and continue with creation or destruction.
+fail - Raise an error and stop applying (the default behavior). If this is a creation 
+provisioner, taint the resource.
+
+resource "aws_instance" "web" {
+  # ...
+
+  provisioner "local-exec" {
+    command    = "echo The server's IP address is ${self.private_ip}"
+    on_failure = continue
+  }
+}
+
+Destroy-Time Provisioners
+
+Destroy provisioners are run before the resource is destroyed. If they fail, Terraform 
+will error and rerun the provisioners again on the next terraform apply. Due to this 
+behavior, care should be taken for destroy provisioners to be safe to run multiple times.
+
+If when = destroy is specified, the provisioner will run when the resource it is defined 
+within is destroyed.
+
+resource "aws_instance" "web" {
+  # ...
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "echo 'Destroy-time provisioner'"
+  }
+}

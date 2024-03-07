@@ -1,0 +1,179 @@
+Terraform statefile:
+
+What is a state file in Terraform? why is it needed? Where is it created? Why do we need
+to lock the statefile?
+
+Statefile is the Heart of Terraform - it stores or records the information regarding the
+infrastructure resources it has created. This information helps terraform to keep track of
+already created resources thereby allowing it to further modify and destroy the resources.
+It makes terraform idempotent (terraform will not create same resource once again). It 
+further helps terraform manage dependencies among resources using which terraform will 
+create or detroy the resource in the correct order. Finally it enables collaboration among 
+multiple users by using terraform remote backend locking mechanism.
+
+terraform.tfstate (default name) is created in the directory we run terraform commands.
+
+Drawbacks of terraform statefile:
+
+1. Sensitive information stored in the statefile needs to be prevented from getting exposed.
+2. Multiple team members across the projects are allowed access to the infrastrcuture resources.
+   If the statefile is modified but is not updated consistently in the git repository, it leads 
+   to a mismatch between the terraform state and the actual resources.
+
+To overcome these drawbacks terraform uses the concept of remote backend locking of statefile.
+
+Drawbacks of Terraform:
+Actions of Terraform are recorded in the statefile including the sensitive information.
+Hence sensitive statefile has to be stored securely. But it also needs to be shared with 
+the collaborators of the project for creating/updating the resources. If it is stored
+in VCS like Github and the team member updates the infrastructure using the statefile 
+from git, he might forget to commit the updated stateFile back into the git. Also if Git
+repository is compromised, the statefile might also be compromised.
+
+To overcome these 2 drawbacks, Terraform proposes using Remote backend.
+
+IF we configure s3 bucket as remote backend, the statefile is created inside the s3 
+bucket instead of a local directory. This solves the 2 drawbacks of Terraform statefile 
+mentioned above.
+
+Other than S3 bucket, Terraform can be configured to use Terraoform cloud or Azure storage
+as remote backend.
+
+A remote backend stores the Terraform state file outside of your local file system and 
+version control. Using S3 as a remote backend is a popular choice due to its reliability 
+and scalability. Here's how to set it up.
+
+1. Create an S3 Bucket - Create an S3 bucket in your AWS account to store the Terraform state. 
+Ensure that the appropriate IAM permissions are set up.
+
+2. Configure Remote Backend in Terraform
+
+# In your Terraform configuration file (e.g. backend.tf). Defines the remote backend.
+terraform {
+  backend "s3" {
+    bucket         = "your-terraform-state-bucket"
+    key            = "path/to/your/terraform.tfstate"
+    region         = "us-east-1" # Change to your desired region
+    encrypt        = true
+    dynamodb_table = "your-dynamodb-table"
+  }
+}
+
+Replace "your-terraform-state-bucket" and "path/to/your/terraform.tfstate" with your S3 bucket 
+and desired state file path.
+
+3. DynamoDB Table for State Locking
+
+To enable state locking, create a DynamoDB table and provide its name in the dynamodb_table field. 
+This prevents concurrent access issues when multiple users or processes run Terraform.
+
+After the statefile is stored in the AWS S3 bucket (remote backend), we need to reconfigure using 
+terraform init command with -reconfigure option.
+
+Terraform init will check the statefile in the S3 bucket
+
+terraform show # command to show the Terraform stateFile
+
+terraform init -reconfigure # the statefile will be created in the s3 bucket.
+
+Initializing the backend...
+Do you want to copy existing state to the new backend?
+  Pre-existing state was found while migrating the previous "local" backend to the
+  newly configured "s3" backend. No existing state was found in the newly
+  configured "s3" backend. Do you want to copy this state to the new "s3"
+  backend? Enter "yes" to copy and "no" to start with an empty state.
+
+  Enter a value: yes
+
+Releasing state lock. This may take a few moments...
+
+Successfully configured the backend "s3"! Terraform will automatically
+use this backend unless the backend configuration changes.
+
+Initializing provider plugins...
+- Reusing previous version of hashicorp/aws from the dependency lock file
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+
+terraform apply
+Acquiring state lock. This may take a few moments...
+aws_dynamodb_table.terraform_lock: Refreshing state... [id=terraform-lock]
+aws_s3_bucket.s3_bucket: Refreshing state... [id=rakesh-s3-bucket-4-tfstatelock]
+aws_instance.rakesh1: Refreshing state... [id=i-0f6866b7dc3f3f2ef]
+
+No changes. Your infrastructure matches the configuration.
+
+Terraform has compared your real infrastructure against your configuration and 
+found no differences, so no changes are needed. Releasing state lock. 
+This may take a few moments...
+
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+PS C:\Users\rakesh\terraform\Day4>
+
+Lessons learnt from the handson - follow below steps in the same order
+Note: Never delete the local backend terraform state file.
+
+1. Create terraform configuration for creating aws resources such as 
+   ec2 resource, s3 bucket and dynamodb table.
+2. Run terraform init and terraform apply to create the above resources.
+3. After terraform apply, add remote s3 backend in the backend.tf configuration file.
+4 Run terraform init -reconfigure to copy terraform state file to s3 bucket.
+
+After all the above steps, check whether S3 bucket contains tf/terraform.tfstate file.
+
+Migrating statefile back to the local
+1. Dont run terraform destroy without migrating the statefile to local direcotry.
+   Therefore terraform destroy has to done very carefully.
+2. First comment/delete the s3 backend configuration and then run terraform init with -migrate-state
+   command to copy the terraform.tfstate file back to the local backend.
+
+terraform init with -migrate-state
+
+Initializing the backend...
+Terraform has detected you're unconfiguring your previously set "s3" backend.
+Do you want to copy existing state to the new backend?
+  Pre-existing state was found while migrating the previous "s3" backend to the
+  newly configured "local" backend. No existing state was found in the newly
+  configured "local" backend. Do you want to copy this state to the new "local"
+  backend? Enter "yes" to copy and "no" to start with an empty state.
+
+  Enter a value: yes
+
+Successfully unset the backend "s3". Terraform will now operate locally.
+
+Initializing provider plugins...
+- Reusing previous version of hashicorp/aws from the dependency lock file
+- Using previously-installed hashicorp/aws v5.39.1
+
+Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, 
+other commands will detect it and remind you to do so if necessary.
+
+3. Now run the terraform destroy command to destroy the resources.
+   Note: terraform destroy will not delete s3 bucket because it is not 
+   empty as it contains the statefile. We need to manually delete the 
+   terraform.tfstatefile in the s3 bucket because 
+   terrform init -migrate-state will not delete the statefile
+
+Why terraform creates a terraform.tfstate.backup file:
+
+terraform.tfstate.backup - created for safety - to prevent data loss or 
+corruption in case of failures or errors during terraform Operations. 
+
+
+
+
