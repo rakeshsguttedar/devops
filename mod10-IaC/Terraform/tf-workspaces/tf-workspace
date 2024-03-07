@@ -1,15 +1,197 @@
 Terraform Workspaces
 
-They are a terraform feature to manage multiple environments such as staging, dev and production
-using environment specific statefiles within a single Terraform configuration directory.
+TF Workspaces:
+
+What is Terraform Workspaces? Why we need it or What problem does it solve?
+
+TF Workspaces is feature to create and manage infrastructure resources for multiple
+environments (such as staging, dev and production) by creating environment specific 
+statefiles within a single Terraform configuration directory.
 
 Advantages:
 1. Prevents conflicts between envionments
-2. Allows applying configuration changes to each envionment in a controlled and organized manner.
-3. State management is isolated and specific to the environment. Therefore chnages in one 
-   environment will not affect the other.
-4. Allows Variable overrides - it allows to use same configuration for different environments
-   by using environment specific variable definition and thus reduces duplication of code. 
+2. Allows applying configuration changes to each envionment in a controlled and 
+   organized manner.
+3. State management is isolated and specific to the environment. Therefore changes 
+   in one environment will not affect the other.
+4. reduces duplication of code -  Allows Variable overrides - it allows to use same 
+   configuration for different environments by using environment specific variable 
+   definition 
 5. Allows us to manage mulitple envionments using a single terraform commands workflow.
 
+Scenario:
+Suppose, we have been given a task to create an EC2 instance and S3 bucket for a
+team named Alpha. A devops engineer would normally create a module for these two 
+resources and share the module code to Alpha team. The same module can be used by
+multiple teams for creating same set of resources by changing the variable values 
+in tfvars file.
 
+But what will happen if the Alpha team wants to setup the same resources for 
+their staging and production environments? One might be thinking that we can 
+create a seperate tfvars file for each environment such as dev.tfvars, stage.tfvars, 
+prod.tfvars and resuse the terraform module to create same set of resources on
+different environments. But terraform will create a single statefile for the
+environments. Fo example, if we use dev.tfvars file and create the resources for 
+dev environment, terraform will create resources for dev environment. And if we 
+change the tfvars file to use stage.tfvars, terraform will update the same statefile
+and but will not create seperate set of resources for staging environment. 
+
+Creating seperate folders for each environemt will duplicate the code for each 
+environemt which is not the efficient way to manage the resources.
+
+To solve all these problems, Terraform provides us the feature of Workspaces.
+
+Workspaces will create statefile for each environment.
+Conflicts are avoided by creating a seperate statefile for each env.
+
+terraform.tfstate.d/dev/terraform.tfstate
+terraform.tfstate.d/stage/terraform.tfstate
+terraform.tfstate.d/prod/terraform.tfstate
+
+Hands-on:
+# Create terraform modules and resources. 
+Run tree command: cmd //c "tree /F"
+# run: terraform apply
+terraform apply
+
+# create a seperate tfvars file for stage named: stage.tfvars
+If we run terraform plan you will notice that terraform is going
+to update the existing resource instead of creating a seperate
+seperate resource for staging environment.
+
+# destroy
+terraform destroy
+# delete stage.tfvars, terraform.tfstate files
+
+# Create workspace for dev 
+terraform workspace new dev
+Created and switched to workspace "dev"!
+
+You're now on a new, empty workspace. Workspaces isolate their state,
+so if you run "terraform plan" Terraform will not see any existing state
+for this configuration.
+
+# Create workspace for staging and production
+terraform workspace new stage
+terraform workspace new prod
+
+$ cmd //c "tree /F"
+Folder PATH listing
+Volume serial number is 86E3-B896
+C:.
+│   .terraform.lock.hcl
+│   main.tf
+│   terraform.tfvars
+│   tf-workspace
+│
+├───.terraform
+│   │   environment
+│   │
+│   ├───modules
+│   │       modules.json
+│   │
+│   └───providers
+│       └───registry.terraform.io
+│           └───hashicorp
+│               └───aws
+│                   └───5.39.1
+│                       └───windows_amd64
+│                               terraform-provider-aws_v5.39.1_x5.exe
+│
+├───modules
+│   └───ec2_instance
+│           main.tf
+│
+└───terraform.tfstate.d
+    ├───dev
+    ├───prod
+    └───stage
+
+terraform workspace list
+  default
+  dev
+* prod
+  stage
+terraform workspace show
+prod
+
+# switch to workspace: dev
+terraform workspace select dev
+Switched to workspace "dev".
+
+# run terraform init
+terraform init
+
+# Run terraform apply to create ec2 instance for dev environment
+terraform apply
+
+# A seperate instance and a seperate statefile is created for dev environment
+cmd //c "tree /F"
+│
+└───terraform.tfstate.d
+    ├───dev
+    │       terraform.tfstate
+    │
+    ├───prod
+    └───stage
+
+# switch to workspace: dev
+terraform workspace select dev
+Switched to workspace "dev".
+
+# Run terraform apply to create ec2 instance for dev environment
+update terraform.tfvars file to change the instance type to t2.medium
+
+run terraform apply
+You will notice that a seperate ec2 instance with instance type t2.medium
+is created.
+
+cmd //c "tree /F"
+│
+└───terraform.tfstate.d
+    ├───dev
+    │       terraform.tfstate
+    │
+    ├───prod
+    └───stage
+            terraform.tfstate
+
+# run terraform destroy
+cmd //c "tree /F"
+│
+└───terraform.tfstate.d
+    ├───dev
+    │       terraform.tfstate
+    │
+    ├───prod
+    └───stage
+            terraform.tfstate
+            terraform.tfstate.backup
+
+# Selecting the instance_type based on the environment
+
+# change the instance_type variable type to hash map 
+variable "instance_type" {
+  description = "value"
+  type = map(string)
+
+  default = {
+    "dev" = "t2.micro"
+    "stage" = "t2.medium"
+    "prod" = "t3.large"
+  }
+}
+
+# Comment instance_type line in terraform.tfvars file
+# instance_type = "t2.micro"
+
+# modify the module configuration to set the instance_type
+# variable to the default value based on terraform.workspace
+# for fallback, the default value is t2.micro
+
+module "ec2_instance" {
+    source = "./modules/ec2_instance"
+    ami = var.ami
+    instance_type = lookup(var.instance_type, terraform.workspace, "t2.micro")
+    ssh_key_name = var.ssh_key_name
+}
