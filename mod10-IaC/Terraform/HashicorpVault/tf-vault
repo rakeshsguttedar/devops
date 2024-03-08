@@ -1,0 +1,16 @@
+Secrets Management
+
+Secrets management is handling of sensitive information.
+Sensitive information includes passwords, API tokens, access keys, credentials,etc
+
+Hashicorp Vault - integrate it with Terraform
+
+End to demo using Hashicorp Vault
+
+1. Create Linux EC2 instance
+2. Install Hashicorp Vault in the EC2 instance
+3. Integrate Hashicorp Vault with Terraform 
+4. Create an EC2 instance using Terraform and Vault integration
+
+
+

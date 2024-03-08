@@ -1,0 +1,261 @@
+Terraform Advanced concepts
+
+1. Providers
+2. Resources
+3. Variables, Outputs and tfvars
+4. Conditional Expressions
+5. built-in functions
+
+debugging TF files - set env variables
+export TF_VAR_LOG_LEVEL=DEBUG to enable logging with log
+level set to debug. 
+
+formatting TF files - to format terraform configuration files, 
+run command: terraform fmt
+
+1. Providers
+
+ multi region, multi cloud and hybrid cloud
+
+When we create resource in cloud,  we write provider configuration in main.tf 
+configuration file. But they can also be written in provider.tf file.
+
+provider "aws" {
+    region = "us-east-1
+}
+
+How will tf know where to create the resources?
+provider is a plugin that helps tf to understand where the resources
+are to be created. 
+
+Go to Terraform provider page in Terraform official documentation for
+providers. You will find
+
+official providers - hashicorp maintains them - AWS, GCP, Azure
+partner providers - maintained by cloud providers such as oracle and alibaba
+community providers - community users and open source will maintain these providers
+
+Using multi-region providers
+
+i. multi region providers:
+
+# using alias keyword, implement multi region infrastructure setup in terraform
+# refer multi_region.tf file - rename it to main.tf for testing
+provider "aws" {
+  alias = "us-east-1"
+  region = "us-east-1"
+}
+
+provider "aws" {
+  alias = "ap-south-1"
+  region = "ap-south-1"
+}
+
+resource "aws_instance" "example1" {
+  ami = "ami-0123456789abcdef0"
+  instance_type = "t2.micro"
+  provider = aws.us-east-1
+}
+
+resource "aws_instance" "example2" {
+  ami = "ami-0123456789abcdef0"
+  instance_type = "t2.micro"
+  provider = aws.ap-south-1
+}
+
+ii. Using multi cloud providers:
+
+# You can use multiple providers in one single terraform project.
+# For example,
+
+Create a providers.tf file in the root directory of your Terraform project.
+In the providers.tf file, define the AWS and Azure providers. 
+For example:
+
+# providers.tf
+provider "aws" {
+  region = "us-east-1"
+  # run aws configure and store access keys in aws configuration, 
+  # use these access keys in tf through shared aws configuration
+}
+
+provider "azurerm" {
+  subscription_id = "your-azure-subscription-id"
+  client_id = "your-azure-client-id"
+  client_secret = "your-azure-client-secret"
+  tenant_id = "your-azure-tenant-id"
+}
+
+2. Resources
+
+information regarding resources can be obtained from the Terraform
+official documentation of providers.
+
+First we need to create resources in AWS console or UI and then we can 
+use Terraform to create same resources through scripts. This way we will
+get to know what resources needs to be created, how to create them and 
+in which order we have to create those resources.
+
+Resource names and tags in cloud: The difference
+Tags are useful for organizing and categorizing resources, implementing governance policies, 
+and automating resource management operations. While resource names are essential for 
+identifying individual resources, tags provide a flexible mechanism for organizing and managing 
+resources at scale.
+
+3. Variables, Outputs and tfvars
+
+Variables
+
+No hardcoding of values like instance_type and ami values
+parameterise terraform script for reusability
+
+Refer variables-impl.tf file for implementation of variables
+
+# creating variables
+variable "example_var" {
+  description = "An example input variable"
+  type        = string
+  default     = "default_value"
+}
+
+# using variables
+resource "example_resource" "example" {
+  name = var.example_var
+  # other resource configurations
+}
+
+Outputs
+
+# output variables
+output "example_output" {
+  description = "An example output variable"
+  value       = resource.example_resource.example.id
+}
+
+Organisation of Terraform configuration
+
+Definitions       in   Filename
+providers         in   provider.tf
+input variables   in   input.tf
+output variables  in   output.tf
+resources         in   main.tf
+
+tfvars
+
+Variable values are defined in: Terraform tfvars
+
+Terraform.tfvars file - taking values of variables dynamically
+Setting instance_type to t2.micro or t3.medium dynamically
+based on the project requirement. We use terraform.tfvars file for this.
+
+Suppose we have three environemts in an organsiation
+We can define environment specific tf vars file.
+
+For dev environement         dev.tfvars 
+For staging environement     stage.tfvars
+For production environement  prod.tfvars
+
+Example, defining instance_type based on the environment.
+
+For dev env        - in dev.tfvars    define instance_type = t2.micro
+For staging env    - in stage.tfvars  define instance_type = t2.medium
+For production env - in prod.tfvars   define instance_type = t3.large
+
+By default, terraform apply will use the values from terraform.tfvars file
+and assign them to the variables. We can select specific tfvars file in 
+terraform plan or terraform apply by using --var-file option.
+
+terraform apply --var-file dev.tfvars
+or 
+terraform apply -var-file=dev.tfvars
+
+4. Conditional Expression in Terraform
+
+condition ? true_val : false_val
+
+Example:
+
+resource "aws_security_group" "example" {
+  name = "example-sg"
+  description = "Example security group"
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = var.enable_ssh ? ["0.0.0.0/0"] : []
+  }
+}
+
+In this example, the ingress block within the aws_security_group resource 
+uses a conditional expression to control whether SSH access is allowed. 
+If enable_ssh is true, it allows SSH traffic from any source ("0.0.0.0/0"); 
+otherwise, it allows no inbound traffic.
+
+Another example
+
+resource "aws_instance" "example" {
+  count = var.create_instance ? 1 : 0
+
+  ami           = "ami-XXXXXXXXXXXXXXXXX"
+  instance_type = "t2.micro"
+}
+
+In this example, the count attribute of the aws_instance resource uses 
+a conditional expression. If the create_instance variable is true, it 
+creates one EC2 instance. If create_instance is false, it creates zero 
+instances, effectively skipping resource creation.
+
+3rd Example:
+
+variable "environment" {
+  description = "Environment type"
+  type        = string
+  default     = "development"
+}
+
+variable "production_subnet_cidr" {
+  description = "CIDR block for production subnet"
+  type        = string
+  default     = "10.0.1.0/24"
+}
+
+variable "development_subnet_cidr" {
+  description = "CIDR block for development subnet"
+  type        = string
+  default     = "10.0.2.0/24"
+}
+
+resource "aws_security_group" "example" {
+  name        = "example-sg"
+  description = "Example security group"
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = var.environment == "production" ? [var.production_subnet_cidr] : [var.development_subnet_cidr]
+  }
+}
+
+In this example, the locals block uses a conditional expression to 
+assign a value to the subnet_cidr local variable based on the value 
+of the environment variable. If environment is set to "production", 
+it uses the production_subnet_cidr variable; otherwise, it uses the 
+development_subnet_cidr variable.
+
+5. Built-in Functions
+
+Refer: built-in-functions.tf
+
+Using built-in functions on List data type:
+
+concat(list1, list2, ...): Combines multiple lists into a single list.
+element(list, index): Returns the element at the specified index in a list.
+length(list): Returns the number of elements in a list.
+
+map data type
+map(key, value): Creates a map from a list of keys and a list of values.
+lookup(map, key): Retrieves the value associated with a specific key in a map.
+join(separator, list): Joins the elements of a list into a single string using
+the specified separator.
