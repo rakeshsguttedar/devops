@@ -15,9 +15,11 @@ run command: terraform fmt
 
 1. Providers
 
- multi region, multi cloud and hybrid cloud
+providers can be multi region, multi cloud and hybrid cloud
 
-When we create resource in cloud,  we write provider configuration in main.tf 
+provider block:
+
+When we create resource in a cloud,  we write provider configuration in main.tf 
 configuration file. But they can also be written in provider.tf file.
 
 provider "aws" {
@@ -25,17 +27,17 @@ provider "aws" {
 }
 
 How will tf know where to create the resources?
-provider is a plugin that helps tf to understand where the resources
+provider is a plugin that helps terraform to understand where the resources
 are to be created. 
 
 Go to Terraform provider page in Terraform official documentation for
-providers. You will find
+providers. You will find:
 
 official providers - hashicorp maintains them - AWS, GCP, Azure
 partner providers - maintained by cloud providers such as oracle and alibaba
 community providers - community users and open source will maintain these providers
 
-Using multi-region providers
+Using multi region providers
 
 i. multi region providers:
 
@@ -85,6 +87,30 @@ provider "azurerm" {
   client_secret = "your-azure-client-secret"
   tenant_id = "your-azure-tenant-id"
 }
+
+The required_providers block in Terraform is used to declare and 
+specify the required provider configurations for your Terraform 
+module or configuration. It allows you to specify the provider name, 
+source, and version constraints.
+
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.0"
+    }
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = ">= 2.0, < 3.0"
+    }
+  }
+}
+
+Hybrid Cloud:
+
+A hybrid cloud—sometimes called a cloud hybrid—is a computing environment 
+that combines an on-premises datacenter (also called a private cloud) with 
+a public cloud, allowing data and applications to be shared between them.
 
 2. Resources
 
