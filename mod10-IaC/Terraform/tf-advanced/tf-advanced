@@ -146,10 +146,10 @@ Variable values are defined in: Terraform tfvars
 
 Terraform.tfvars file - taking values of variables dynamically
 Setting instance_type to t2.micro or t3.medium dynamically
-based on the project requirement. We use terraform.tfvars file for this.
+based on the project requirement.
 
 Suppose we have three environemts in an organsiation
-We can define environment specific tf vars file.
+We can define environment specific tfvars file:
 
 For dev environement         dev.tfvars 
 For staging environement     stage.tfvars

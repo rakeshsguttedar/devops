@@ -9,5 +9,81 @@ Meta-Arguments are
 4. provider
 5. lifecycle
 
-1. depends_on is used to specify the dependency of one resource with another resource. 
-   That means, the dependent resource must be created before the current resource.
+depends_on
+Terraform automatically creates a dependency graph based on references and thus enforces 
+ordering of resources. Ordering of resources is used to ensure dependent resource are 
+created before the main resource. But when terraform does not automatically determine
+resource dependencies, we can use depends_on to specify dependencies between them.
+
+Example usage:
+resource "aws_instance" "example" {
+    ami           = "ami-123456780"
+    instance_type = "t2.micro"
+    ...
+    ...
+    depends_on = {
+        aws_iam_role_policy.example
+    }
+
+}
+
+2. count is used to specify multiple resources or modules from a single block.
+count is used when creating nearly identical resources such as multiple
+EC2 instances, S3 buckets, etc..
+
+count.index can be referenced for each resource.
+
+count = 0 can also be used to prevent creation of a resource or modules. This is 
+usually used in conjunction with conditional expression to selectively determine 
+if the resource needs to be created.
+
+resource "aws_instance" "example" {
+    count = 4
+    ami = "ami-123456780"
+    instance_type = "t2.micro"
+
+    tags = {
+        Name = "Server-${count.index}"
+    }
+}
+
+3. for_each (inside a dynamic block)
+
+Repeated configrations can be moved to single block using dynamic block with for_each
+see security_groups.tf
+
+4. provider
+
+It is used to implement multi region infrastructure setup in terraform
+refer tf-advanced/multi_region.tf file.
+
+5. lifecycle
+
+Lifecycle meta-arguments control how Terraform treats particular resources.
+
+create_before_destroy
+Specifying create_before_destroy = true indicates that if the resource does 
+need to be destroyed, Terraform should first provision its replacement before 
+destroying the deprecated resource. This can be useful for things such as 
+zero downtime deployments.
+
+resource "some_resource" "example" {
+  # ...
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+ignore_changes
+Sometimes an entity outside of terraform will automatically modify a resource 
+(e.g. adding metadata, etc...). The ignore_changes argument allows you to ignore 
+specific types of resource changes to prevent this from causing Terraform to 
+attempt to revert those changes.
+
+prevent_destroy
+prevent_destroy provides an additional stopgap against accidentally destroying 
+resources with terraform. If set to true, Terraform will reject any attempt to 
+destroy that resource.
+
+

@@ -24,6 +24,7 @@ file Provisioner
 
 The file provisioner copies files or directories from the machine running Terraform to the 
 newly created resource. The file provisioner supports both ssh and winrm type connections.
+It is mainly used for copying configuration files.
 
 Example usage:
 resource "aws_instance" "web" {
