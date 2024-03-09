@@ -1,0 +1,144 @@
+Terraform - scenarios for interview
+
+Terraform Migration: 
+
+migrating or importing of exsiting resources into terraform using:
+terraform import
+It will save tons of efforts and time particularly when we have some 100s of resources.
+
+Hands-on:
+
+1. Write main.tf:
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+import {
+    
+    # Instance ID - resource identifier of EC2 instance 
+    id = "i-05bec80881d7a8be6"
+    
+    # name of the imported resource
+    to = aws_instance.example
+}
+
+2. Initialise Terraform configuration
+
+terraform init
+
+3. Import existing resources in AWS using terraform plan command
+
+terraform plan -generate-config-out=generated-resources.tf
+
+You wil also receive this error (which needs to be ignored):
+Error: Conflicting configuration arguments
+"ipv6_addresses": conflicts with ipv6_address_count
+
+4. Remove the ipv6 attributes from the generated_resource.tf configuration file 
+   # ipv6_address_count = 0
+   # ipv6_addresses = []
+   
+   run another terraform plan and view the output
+   terraform plan
+   
+   You will see that the existing resource is ready for import:
+   Plan: 1 to import, 0 to add, 0 to change, 0 to destroy.
+
+5. Copy the content of generated_resource.tf to main.tf file
+
+6. Delete the generated_resource.tf file.
+
+7. Run terraform import to import the existing resource using 
+   resource name and its identifier.
+
+terraform import aws_instance.example i-05bec80881d7a8be6
+
+Output:
+aws_instance.example: Importing from ID "i-05bec80881d7a8be6"...
+aws_instance.example: Import prepared!
+  Prepared aws_instance for import
+aws_instance.example: Refreshing state... [id=i-05bec80881d7a8be6]
+
+Import successful!
+
+8. Run terraform plan to confirm:
+
+No changes. Your infrastructure matches the configuration.
+
+Terraform has imported the existing resources into the statefile.
+
+
+Drift Detection:
+
+What is Drift detection - 
+Drift detection is the detection of manual changes made to the existing resources
+which are managed by terraform outside of the terraform lifecycle.
+
+1. Drift detection with terraform -
+   1. Run terraform refresh, setup cronjob to run periodic terraform refresh to detect drift.
+       Note: terraform refresh is deprecated. See below for more info.
+   2. a. Configure very strict IAM rules and strictly enforce these rules and policies.
+      b. setup audit logs and in the audit logs, you can perform some automation to check
+         if someone has made a manual change in the resources using lambda functions or any 
+         other mechanism and if the drift is detected, send email notification regarding 
+         the changes and the IAM role that made the changes.
+
+As per terrafrom offcial documentation at 
+https://developer.hashicorp.com/terraform/cli/commands/refresh
+the command: terraform refresh  is deprecated.
+
+This command is effectively an alias for the following command:
+terraform apply -refresh-only -auto-approve
+
+But Terraform recommends not using -auto-approve and using: 
+
+terraform apply -refresh-only
+or
+terraform plan -refresh-only
+
+Because it is better to review the changes before applying the changes.
+This alternative command will present an interactive prompt for you to 
+confirm the detected changes.
+
+Note: Wherever possible, avoid using terraform refresh explicitly and 
+instead rely on Terraform's behavior of automatically refreshing existing 
+objects as part of creating a normal plan.
+
+Example:
+Chnage/Edit the name of the ec2 instance in AWS console which is managed 
+by terraform.
+
+terraform plan -refresh-only
+aws_instance.example: Refreshing state... [id=i-05bec80881d7a8be6]
+
+Note: Objects have changed outside of Terraform
+
+Terraform detected the following changes made outside of Terraform since the 
+last "terraform apply" which may have affected this plan:
+
+  # aws_instance.example has changed
+  ~ resource "aws_instance" "example" {
+        id                                   = "i-05bec80881d7a8be6"
+      ~ tags                                 = {
+          ~ "Name" = "tt" -> "ttdd"
+        }
+      ~ tags_all                             = {
+          ~ "Name" = "tt" -> "ttdd"
+        }
+        # (30 unchanged attributes hidden)
+
+        # (8 unchanged blocks hidden)
+    }
+
+
+This is a refresh-only plan, so Terraform will not take any actions to undo these. 
+If you were expecting these changes then you can apply this plan 
+to record the updated values in the Terraform state without changing any remote objects.
+
+terraform apply
+
+Confirm the changes by running 
+terraform show 
+
+terraform destroy
