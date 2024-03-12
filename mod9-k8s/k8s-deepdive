@@ -87,10 +87,18 @@ Step 1: Configuration changes in both Master node and Worker node:
 1. Update the package lists for all repositories:
 [configured in /etc/apt/sources.list and in the /etc/apt/sources.list.d/ directory.]
 sudo apt update -y
+sudo apt-get update
 
 2. Install docker and restart docker service:
 sudo apt-get install docker.io -y
 sudo service docker restart
+sudo chmod 666 /var/run/docker.sock
+
+3. Install Dependencies for Kubernetes:
+
+For V1.28 
+sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
+sudo mkdir -p -m 755 /etc/apt/keyrings
 
 3. Add GPG key for downloading Kubernetes package from GCP:
 
@@ -99,11 +107,16 @@ become root user.
 sudo su 
 
 sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+For V1.28 
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
 It fetches the GPG key for the Kubernetes packages and adds it to the keyring.
 
 4. Add Kubernetes repository:
 echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" >/etc/apt/sources.list.d/kubernetes.list
+
+For V1.28 
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
 
 Adds the Kubernetes repository to the system's package sources.
 
@@ -116,8 +129,10 @@ sudo apt-get update
 
 6. Install specific versions of Kubeadm, Kubectl, and Kubelet:
 sudo apt install kubeadm=1.20.0-00 kubectl=1.20.0-00 kubelet=1.20.0-00 -y
+For V1.28
+sudo apt install -y kubeadm=1.28.1-1.1 kubelet=1.28.1-1.1 kubectl=1.28.1-1.1
 
-Installs specific versions of Kubeadm, Kubectl, and Kubelet, in this case, version 1.20.0-00.
+Installs specific versions of Kubeadm, Kubectl, and Kubelet
 
 Step 2: Configuration changes in Master Node:
 

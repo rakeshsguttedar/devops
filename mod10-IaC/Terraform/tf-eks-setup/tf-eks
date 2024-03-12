@@ -1,0 +1,10 @@
+Terraform EKS setup to deploy a 10 Microservices application
+
+Get the Terraform configuration into your local directory
+
+git clone https://github.com/rakeshsguttedar/Terraform-EKS.git
+
+Follow instructions in Readme.md file. It has all the steps to 
+setup aws cli, terraform and to create EKS cluster in AWS. 
+After the EKS cluster is setup, we can deploy the application 
+using yaml manifests which are in dep.yml file.

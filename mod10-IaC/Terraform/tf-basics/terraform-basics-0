@@ -1,0 +1,173 @@
+Terraform Notes Basics
+
+Terraform is an IaC tool in which we configure our cloud platforms or 
+infrastructure using code, for example configuring the cloud servers 
+can be done through configuration files provided by Terraform.
+For example, AWS EC2 instances can be provisioned and configured using 
+the AWS console as well as through Terraform.
+
+TF allows us to build, manage and change the state of the resources in 
+a safe, consistent and repeatable way.
+
+Advantages of using TF:
+- Supports multiple cloud platforms, on-premises and tools such as 
+  docker, kubernetes, etc. 
+- Human readable configuration language( HCL)
+- Track resources using statefile.
+- Helps us to Collaborate with cloud platforms
+
+Terraform uses plugins called Providers in order to interact with 
+different cloud providers and other services through their APIs.
+
+Terraform uses Hashicorp Configuration Language (HCL) to provision the 
+cloud infra. It is a declarative language that describes the desired end
+state of the infrastructure.
+
+Automatic dependency detection for resource lifecycle:
+Terraform providers automatically identify the dependencies between the 
+resources so that they are created or destroyed in the correct order.
+
+Example: VPC creation before creating an EC2 instance
+
+Terraform Lifecycle - Steps to be followed to configure:
+Install - AWS CLI and Terraform
+Scope   - Identify the infrastructure resources of the project
+Script  - Write the configuration file to define the infrastructure in main.tf file
+Init    - Initialize Terraform (terraform init) - Install the required Terraform providers.
+Plan    - Preview the changes Terraform is going to make before implementing or 
+          applying the changes so make sure we are not missing something
+Apply   - Implement or make planned changes.
+Destroy - to delete the resources
+
+Providers:
+
+main.tf - provider block
+Where to create the instance  - place
+https://registry.terraform.io/browse/providers
+
+Create infrastructure on 
+Multiple region set up of terrafrom
+Multi-providers - Hybrid cloud
+
+Terraform Zero to Hero Abhishek Veeramalla Youtube Videos
+https://www.youtube.com/playlist?list=PLdpzxOOAlwvI0O4PeKVV1-yJoX2AqIWuf
+
+
+Day 1 Notes
+
+# Overview of steps
+
+Create a directory for your Terraform project and create a Terraform 
+configuration file (usually named `main.tf`) in that directory. In this
+file, you define the AWS provider and resources you want to create. 
+
+Here's a basic example:
+
+```hcl
+   provider "aws" {
+     region = "us-east-1"  # Set your desired AWS region
+   }
+
+   resource "aws_instance" "example" {
+     ami           = "ami-0c55b159cbfafe1f0"  # Specify an appropriate AMI ID
+     instance_type = "t2.micro"
+   }
+```
+
+## Initialize Terraform**
+
+In your terminal, navigate to the directory containing your Terraform 
+configuration files and run:
+
+```
+terraform init
+```
+
+This command initialises the Terraform working directory, downloading any 
+necessary provider plugins.
+
+## Apply the Configuration
+
+Run the following command to create the AWS resources defined in your 
+Terraform configuration:
+
+```
+terraform apply
+```
+
+Terraform will display a plan of the changes it's going to make. 
+Review the plan and type "yes" when prompted to apply it.
+
+## Verify Resources
+
+After Terraform completes the provisioning process, you can verify the 
+resources created in the AWS Management Console or by using AWS CLI commands.
+
+aws ec2 describe-instances #to verify whether the instance is created
+
+## Destroy Resources
+
+If you want to remove the resources created by Terraform, you can use the following command:
+
+```
+terraform destroy
+```
+
+Be cautious when using `terraform destroy` as it will delete resources 
+as specified in your Terraform configuration.
+
+```
+provider "aws" {
+    region = "us-east-1"  # Set your desired AWS region
+}
+
+
+ resource "aws_instance" "example" {
+  ami = "${data.aws_ami.ubuntu.id}"  # get the latest AMI ID through data resource query 
+  #ami = "ami-053b0d53c279acc90"
+  instance_type = "t2.micro"
+ }
+
+# data source block to fetch the AMI of Ubuntu image provided by canonical
+data "aws_ami" "ubuntu" {
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20230516"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"] # Canonical
+}
+
+# to display the ami.id using output variable 
+output ami_id {
+    value = data.aws_ami.ubuntu.id
+}
+```
+
+Commands:
+First command to run in terraform
+Prerequisite: Install aws CLI as aws is required for terraform
+
+```
+aws configure
+```
+
+AWS Access Key ID [****************X2FO]: Enteryouraccesskeyidhere
+AWS Secret Access Key [****************sPPe]: Enteryoursecretaccesskeyhere
+Default region name [us-east-1]: Enter
+Default output format [json]: Enter
+
+```
+aws ec2 describe-instances # to check aws is configured or not
+
+terraform init
+terraform plan
+terraform apply
+aws ec2 describe-instances # to verify whether the instance is created
+terraform destroy
+```

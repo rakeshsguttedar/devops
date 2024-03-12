@@ -1,14 +1,15 @@
 Terraform - scenarios for interview
 
-Terraform Migration: 
+1. Terraform Migration: 
 
 migrating or importing of exsiting resources into terraform using:
 terraform import
 It will save tons of efforts and time particularly when we have some 100s of resources.
 
 Hands-on:
+Steps:
 
-1. Write main.tf:
+- Create a terraform script to import the resources into terraform
 
 provider "aws" {
   region = "us-east-1"
@@ -23,11 +24,11 @@ import {
     to = aws_instance.example
 }
 
-2. Initialise Terraform configuration
+- Initialise Terraform configuration
 
 terraform init
 
-3. Import existing resources in AWS using terraform plan command
+- Import existing resources in AWS using terraform plan command
 
 terraform plan -generate-config-out=generated-resources.tf
 
@@ -35,7 +36,7 @@ You wil also receive this error (which needs to be ignored):
 Error: Conflicting configuration arguments
 "ipv6_addresses": conflicts with ipv6_address_count
 
-4. Remove the ipv6 attributes from the generated_resource.tf configuration file 
+- Remove the ipv6 attributes from the generated_resource.tf configuration file 
    # ipv6_address_count = 0
    # ipv6_addresses = []
    
@@ -45,12 +46,11 @@ Error: Conflicting configuration arguments
    You will see that the existing resource is ready for import:
    Plan: 1 to import, 0 to add, 0 to change, 0 to destroy.
 
-5. Copy the content of generated_resource.tf to main.tf file
+- Copy the content of generated_resource.tf to main.tf file and 
+  delete the generated_resource.tf file
 
-6. Delete the generated_resource.tf file.
-
-7. Run terraform import to import the existing resource using 
-   resource name and its identifier.
+- Run terraform import to import existing resource using resource name and 
+  its identifier.
 
 terraform import aws_instance.example i-05bec80881d7a8be6
 
@@ -62,14 +62,14 @@ aws_instance.example: Refreshing state... [id=i-05bec80881d7a8be6]
 
 Import successful!
 
-8. Run terraform plan to confirm:
+- Run terraform plan to confirm:
 
 No changes. Your infrastructure matches the configuration.
 
 Terraform has imported the existing resources into the statefile.
 
 
-Drift Detection:
+2. Drift Detection:
 
 What is Drift detection - 
 Drift detection is the detection of manual changes made to the existing resources
@@ -142,3 +142,4 @@ Confirm the changes by running
 terraform show 
 
 terraform destroy
+

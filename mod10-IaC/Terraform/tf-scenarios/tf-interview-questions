@@ -1,0 +1,52 @@
+Q. What are Explicit and Implicit dependencies in Terraform?
+
+In Terraform, a "dependency" refers to a relationship between resources, 
+where one resource depends on another resource to be created or updated. 
+There are two types of dependencies in Terraform:
+1. Explicit Dependency
+2. Implicit Dependency
+
+1. Explicit Dependency: This is a direct relationship between two resources 
+that is explicitly defined in the Terraform configuration using the 
+"depends_on" parameter.
+
+When one resource depends on another resource, Terraform will create or 
+update the dependent resource after the resource it depends on has been 
+created or updated.
+
+For example, if you have a web server that depends on a database server, 
+you can define the dependency explicitly by adding the following to your 
+Terraform configuration:
+
+resource "aws_instance" "web" {
+# ... other configuration ...
+
+depends_on = [aws_instance.database]
+}
+
+resource "aws_instance" "database" {
+# ... other configuration ...
+}
+
+This tells Terraform that the "web" instance depends on the "database" instance, 
+and Terraform will ensure that the "database" instance is created or updated 
+before the "web" instance.
+
+
+2. Implicit Dependency: This is an indirect relationship between two resources 
+that is not explicitly defined in the Terraform configuration.
+
+Terraform will automatically detect implicit dependencies based on the resource 
+attributes or references used in the configuration.
+
+For example, if you have a security group that allows traffic from a certain IP 
+address range, and you create an EC2 instance that uses that security group, 
+Terraform will detect the implicit dependency between the instance and the 
+security group. Terraform will create or update the security group before creating
+or updating the instance, to ensure that the security group exists and allows the 
+necessary traffic.
+
+In summary, explicit dependencies are direct relationships between resources that 
+are explicitly defined in the Terraform configuration using "depends_on", while 
+implicit dependencies are indirect relationships that are automatically detected 
+based on the resource attributes used in the configuration.
