@@ -1,0 +1,115 @@
+IaC - Configuration Management
+
+Ansible
+
+Day 14  - Abhishek Veeramalla 
+https://www.youtube.com/watch?v=I5_NF8nvACg&list=PLdpzxOOAlwvIKMhk8WhzN1pYoJ1YU8Csa&index=18
+
+Configuration Management is the simplest topic in Devops.
+
+Why Ansible is most popular Configuration Management tool.?
+
+What is Configuration Management?
+It is a way how devops engineer manage the configuration of the imfrastructure.
+
+Before devops, System Administrators and Build and Release Engineers used to manage 
+the servers which were on-premises. On-premises means data-centre is located within
+the organisation.
+
+Let us say we have a sys admin managing 50 on-premises Servers, 25 are Centos 
+and 25 are ubuntu. The sys admin has to
+1. Upgrade these servers with latest version of hardwares or softwares.
+2. Applying security patches on these servers.
+3. Installations of Git Server, database, etc has to be taken care.
+
+Manually managing these 50 servers by a team of 5 devops engineer is a very 
+cumbersome and a daunting task. Previously sys admin used to write some scripts
+such as shell scripts for linux and powershell script for windows for automating
+management of these servers like upgardes, installations, applying security 
+patches, etc.
+
+There were two problems associated with using scripts for the management.
+1. managing these scripts specific to each OS type was difficult task. One script
+for Ubuntu linux distribution may or may not work for another Linux distribution
+such as Centos. Also the commands were changing. Windows and Linux used different 
+scripting languages.
+2. managing these servers was very diffciult because the servers were from different
+distributions. 
+
+As organisations started moving to cloud, the number of servers increased by 10x
+i.e. by Leaps and bounds and the emergence of microservcices aggrevated this situation
+further. The above mentioned two problems increased further.
+
+Hence there was a need felt to solve this problem. 
+
+A concept known as Configuration Management was discovered to solve this problem.
+
+Configuration Managament solves the problem of configuring multiple servers
+using tools like Ansible, Puppet, Chef, Salt.
+
+Puppet and Chef were among first few tools for CM. 
+Ansible was acquired by RedHat. Later Ansible and Puppet became more popular.
+Ansible became the eventual winner or it is used by most number of devops engineer.
+
+Start with Ansible. Because Ansible is the most popular or 90% of people use
+this tool for Configuration Management.
+
+Why Ansible is most used tool or why is it better among the CM tools?
+
+Lets discuss the architecture of two tools Asnible and Puppet with an example of
+managing the configuraton of 10 EC2 instances.
+
+Puppet uses pull mechanism, Ansible used Push mechanism.
+Push - configuration is pushed from one control node to all 10 EC2 instances.
+
+Ansible is agent less (no master or slave architecture) where as Puppet uses 
+master-slave architecture. Puppet has to be configured on a master node. 10 EC2 
+instances managed by Puppet will be regarded as slave 1 to slave 10. 
+
+Ansible uses inventory and passwordless authentication using ssh. In this world 
+of dynamic environment where we are using 1000s of microservies based applications, 
+we always have to dynamically scale up or scale down these servers in a very short 
+span. Using Dynamic Inventories, Ansible can autodetect newly added servers and manage
+them along with existing servers/nodes. 
+
+Also the Community support for using Ansible on Linux and Windows is very good.
+Ansible Linux support is much better than Windows.
+
+Puppet uses a new language such as Puppet Language but for Anisble uses global
+language which is very popular among Devops engineers and no need to learn it. 
+Yaml is also used in Kubernetes.
+
+Ansible is written in Python and one more advantage of using Anisble is that we 
+can write our own modules for mmost common configurations or reuse the already 
+written modules in order to save time and effort. 
+Example, for installing F5 Load Balancer, we can write some Ansible modules, 
+share them with other users through Ansible Galaxy.
+
+To Summarise Pull and Push, Agent less and Master-Slave architecture Community 
+Support, Configuration Language yml vs Puppet language and Ansible modules.
+
+Drawbacks of using Ansible
+1. Windows congiguration management using Ansible is not good. 
+2. Debugging - Ansible is not good with the Debugging
+3. Performance is not good and Ansible is improving it.
+
+Most commonly asked Ansible Interview Questions
+1. Which is the Programming Language used in Ansible? 
+Python
+2. Have you written any custom modules in Ansible?
+3. What is the Protocal that Ansible uses to support Linux and windows? 
+For Linux   -   Ansible uses ssh
+For Windows -   Ansible uses winRM
+
+4. What are the difference between Chef and Ansible or Puppet and Ansible ?
+4. Why Ansible is most widely used among various CM tools?
+Read above
+
+5. Does Ansible uses Push or Pull mechanism? 
+Push
+6. What programming language does ansible script uses? 
+yaml
+7. Does ansible support all the cloud providers?
+Ansible is cloud agnostic, it does not matter which Cloud env we use,
+Ansible only needs ssh or winRM enabled in the machine and the public IP 
+addresses of machines to access other machines.
