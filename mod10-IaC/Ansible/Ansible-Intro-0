@@ -1,0 +1,14 @@
+Installing and configuring Ansible in Ubuntu Linux
+
+Install Ansible: 
+sudp apt update
+sudo apt install ansible
+
+Configuring ssh connection between Ansible VMs (Control Node)
+and Target Machines(managed nodes)
+
+Generate key-pair using ssh-keygen in the Ansible machine using ssh-keygen.
+
+Now, copy the public key of the Ansible machine to the 
+~/.ssh/authorized_keys of the target machine.
+

@@ -1,0 +1,34 @@
+Ansible - Written in Python Programming Language
+
+Best features of Ansible:
+1. Ansible Nodes: Ansible is installed on a machine called as Control Node.
+   The target machines that Ansible configures are called as Managed Nodes.
+2. Agentless:  Ansible is Agentless - means Ansible need to be installed only 
+   on the Control Node and it not required on Target machines or Managed nodes.
+3. Working: Ansible in Control Node connects to Managed nodes using ssh for Linux 
+   machines and winRM for windows machines. After connecting to the managed nodes,
+   Ansible executes the configuration scripts or commands on these Managed nodes.
+3. Passwordless authentication: An ssh connection uses key-value pairs containing
+   a public key and a private key. These keys are generated using ssh-keygen command 
+   on the Control Node. Once the keys are generated, we push the public key of the
+   Control Node to all the managed nodes and setup the Ansible connection between
+   Control Node and managed nodes.
+4. Inventory file: How does Ansible knnow which are the Managed nodes?
+   Ansible Inventory file: /etc/ansible/hosts on the Control Node has the list of IP 
+   address of the Managed Nodes. We create a group [client-vm] in the hosts file 
+   and add the public IP addresses of the managed nodes in that group. We use multiple
+   groups to group related managed nodes.
+   Ex: [database]  [webservers]
+       ipaddress1   ipaddress2
+       ipaddress2   ipaddress4
+5. Ansible Modules: Using modules in asnible commands. modules are programs that are
+   pushed to the servers or managed nodes for executing certain tasks.
+   examples: 
+    apt module: for installation or removal of packages in ubuntu machines
+    copy module: to copy files from control node to managed nodes
+    shell module: to execute shell commands in the managed nodes
+
+Steps for ssh connection setup:
+
+1. Login to the control node as root user.
+2. Generate ssh key-pair using ssh-keygen command 

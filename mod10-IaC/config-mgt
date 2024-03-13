@@ -47,7 +47,7 @@ A concept known as Configuration Management was discovered to solve this problem
 Configuration Managament solves the problem of configuring multiple servers
 using tools like Ansible, Puppet, Chef, Salt.
 
-Puppet and Chef were among first few tools for CM. 
+Puppet and Chef were among first few tools for CM. Later Ansible
 Ansible was acquired by RedHat. Later Ansible and Puppet became more popular.
 Ansible became the eventual winner or it is used by most number of devops engineer.
 
