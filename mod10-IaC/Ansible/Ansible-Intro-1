@@ -46,3 +46,7 @@ Hands-on: steps for setting up ssh connection
 7. From Control Node, ssh to the managed node(s) to ascertain that the connection
    between Ansible node and managed nodes is working.
 8. Run Ansible commands in Control Node to configure the Managed nodes.
+
+Running Ansible adhoc commands
+
+ansible 
