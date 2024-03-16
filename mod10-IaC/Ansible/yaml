@@ -1,0 +1,60 @@
+YAML - YAML Ain't Markup Language
+yaml formatted data is stored in a yaml file with .yml or .yaml extension
+
+yaml is a most popular programming language that is mainly used for storing 
+configuration information and for storing and transporting data between processes.
+
+It is a data serialization language. It's often used as a format for configuration files, 
+but its object serialization abilities make it a viable replacement for languages like JSON. 
+
+YAML is easy for humans to read, which is why it's a good choice for configuration. 
+
+Below is a sample yaml file
+
+# comment in yaml 
+---
+ doe: "a deer, a female deer"
+ ray: "a drop of golden sun"
+ pi: 3.14159
+ xmas: true
+ french-hens: 3
+ calling-birds:
+   - huey
+   - dewey
+   - louie
+   - fred
+ xmas-fifth-day:         # this is another comment
+   calling-birds: four
+   french-hens: 3
+   golden-rings: 5
+   partridges:
+     count: 1
+     location: "a pear tree"
+   turtle-doves: two
+
+Three dashes
+The file starts with three dashes. These dashes indicate the start of a new YAML 
+document. YAML supports multiple documents, and compliant parsers will recognize 
+each set of dashes as the beginning of a new one. 
+
+key-value pairs
+The “doe” is a key that points to a string value: “a deer, a female deer”. YAML supports more than just string values. The file starts with six key-value pairs. They have four different data types. “doe” and “ray” are strings. The “pi” is a floating-point number. The “xmas” is a boolean. The “french-hens” is an integer. You can enclose strings in single(‘) or double-quotes(“) or no quotes at all. YAML recognizes unquoted numerals as integers or floating point.
+
+array
+The seventh item is an array. The “calling-birds” has four elements, each denoted by an opening dash. I indented the elements in “calling-birds” with two spaces. Indentation is how YAML denotes nesting. The number of spaces can vary from file to file, but tabs are not allowed. 
+
+dictionary
+Finally, we see “xmas-fifth-day”, which has five more elements inside it, each of them indented. We can view “xmas-fifth-day” as a dictionary that contains two string, two integers, and another dictionary. YAML supports nesting of key-values, and mixing types.
+
+Whitespaces as indentation
+Whitespace is part of YAML's formatting. Unless otherwise indicated, newlines indicate the end of a field. You structure a YAML document with indentation. The indentation level can be one or more spaces. The specification forbids tabs because tools treat them differently.
+
+Key-Value Pairs and Dictionaries
+The key-value is YAML's basic building block. Every item in a YAML document is a member of at least one dictionary. The key is always a string. The value is a scalar so that it can be any datatype. So, as we've already seen, the value can be a string, a number, or another dictionary.
+
+comments
+# This is a full line comment
+foo: bar # this is a comment, too
+
+Source: https://www.cloudbees.com/blog/yaml-tutorial-everything-you-need-get-started
+Reference: https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html#yaml-syntax

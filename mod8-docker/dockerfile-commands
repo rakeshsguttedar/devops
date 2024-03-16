@@ -1,0 +1,61 @@
+Dockefile Commands
+FROM, RUN, EXPOSE, ENV, COPY, ADD, CMD, ENTRYPOINT, ARG, VOLUME, WORKDIR, MAINTAINER
+LABEL, USER, SHELL, HEALTHCHECK, STOPSIGNAL
+
+FROM: This command specifies the base image to use for the Docker image you're building.
+It's the starting point for your Dockerfile.
+
+RUN: The RUN command is used to execute commands inside the Docker container during the 
+build process. These commands are typically used to install packages, update software, 
+or perform any other tasks needed to set up the environment.
+
+EXPOSE: This command informs Docker that the container listens on specific network ports 
+at runtime. It doesn't actually publish the ports, but it's a way to document which ports 
+should be published later.
+
+COPY: The COPY command is used to copy files or directories from the host machine into 
+the Docker image. It takes two arguments: the source path (on the host) and the destination 
+path (in the image).
+
+ENV: This command sets environment variables within the Docker container. These variables 
+can be used by subsequent Dockerfile commands or by the application running inside the 
+container.
+
+CMD: CMD specifies the default command to run when the container starts. It can be 
+overridden by passing arguments to docker run. If a Dockerfile has multiple CMD 
+instructions, only the last one will take effect.
+
+ENTRYPOINT: Similar to CMD, ENTRYPOINT specifies a command to run when the container starts. 
+However, the difference is that the command specified by ENTRYPOINT cannot be overridden by 
+passing arguments to docker run. Arguments passed to docker run will be appended to the 
+command specified by ENTRYPOINT.
+
+ADD: ADD is similar to COPY but has additional features. It can copy files from local 
+directories as well as URLs. It also supports auto-extraction of compressed files.
+
+ARG: ARG is used to define build-time variables that are accessible only during the build 
+process and not persisted in the final image.
+
+VOLUME: This command creates a mount point with the specified name and marks it as 
+externally mounted. It's commonly used for persisting data outside the container.
+
+WORKDIR: WORKDIR sets the working directory for any RUN, CMD, ENTRYPOINT, COPY, and ADD 
+instructions that follow it in the Dockerfile.
+
+MAINTAINER: This command is used to specify the name and contact details of the person
+maintaining the Dockerfile.
+
+LABEL: LABEL adds metadata to the Docker image. It's often used to provide additional 
+information about the image, such as version numbers, descriptions, or licensing information.
+
+USER: USER sets the user (by username or UID) that will run the subsequent RUN, CMD, and 
+ENTRYPOINT instructions in the Dockerfile.
+
+HEALTHCHECK: HEALTHCHECK defines a command to periodically check the health of a running 
+container. It's used to determine if the container is still working correctly.
+
+SHELL: SHELL allows you to override the default shell used for the shell form of commands 
+in the Dockerfile.
+
+STOPSIGNAL: This command sets the system call signal that will be sent to the container 
+to stop it gracefully. By default, SIGTERM is used.

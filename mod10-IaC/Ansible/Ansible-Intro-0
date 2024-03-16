@@ -1,8 +1,9 @@
 Installing and configuring Ansible in Ubuntu Linux
 
-Install Ansible: 
+Install Ansible
+
 sudp apt update
-sudo apt install ansible
+sudo apt install ansible -y
 
 Configuring ssh connection between Ansible VMs (Control Node)
 and Target Machines(managed nodes)
@@ -12,3 +13,71 @@ Generate key-pair using ssh-keygen in the Ansible machine using ssh-keygen.
 Now, copy the public key of the Ansible machine to the 
 ~/.ssh/authorized_keys of the target machine.
 
+Ansible Playbook
+
+Playbooks are used to execute many tasks in the target VM. Playbook are not always 
+required to execute ansible tasks. We can use ansible commands similar to shell and 
+python commands in the CLI. These commands are called Ansible adhoc commands. 
+For executing one or two simple tasks on the target servers we can use adhoc commands.
+
+cat inventory
+172.16.32.56
+
+ansible [host-pattern] -m [module] -a "[module options]"
+
+ansible -i inventory all -m "shell" -a "touch devopsclass"
+
+Here, a shell module is used to execute the task of creating a file in the target VM
+-m option for using shell module and -a option is for adding arguments to this module.
+
+Ansible modules
+
+modules are pre-buit ansible scripts for executing most command tasks.
+-m option in the above command instructs ansible to use shell module
+to execute the touch command in the target machine.
+
+ansible -i inventory all -m "shell" -a "df"
+ansible -i inventory all -m "shell" -a "nproc"
+
+How do you group severs in Ansible? How do you execute some commands 
+on a specifc servers.?
+
+Using groups:
+[webservers]
+[dbservers]
+
+# first-plyabook.yml
+---
+- name: Install and start nginx
+  hosts: all
+  become: true
+
+  tasks:
+  - name: Install nginx
+    apt:
+      name: nginx
+      state: present
+  - name: Start nginx
+    service:
+      name: nginx
+      state: started
+
+To execute the ansible script in first-plyabook.yml,
+
+ansible-playbook -vv -i inventory first-playbook.yml
+
+Realtime usage of IaC tools: Terraform and Ansible
+Configure kubernetes cluster using ansible
+create 3 ec2 instances in AWS      (Terraform)
+configure 1 node as master         (ansible)
+configure 2 nodes are worker nodes (ansible)
+
+Ansible roles
+efficient way of writing ansible playbooks
+
+mkdir ansgal && cd ansgal
+
+ansible-galaxy role init kubernetes
+- Role kuberebets was created successfully
+
+ls -ltr kubernetes

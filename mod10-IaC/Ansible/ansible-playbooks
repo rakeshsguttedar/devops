@@ -1,0 +1,69 @@
+Ansible playbooks are used to store simple configuration management data 
+that can be reused across multiple machines for deploying complex applications.
+
+Playbooks can:
+declare configurations
+orchestrate steps of any manual ordered process, on multiple sets of machines, in a defined order
+launch tasks synchronously or asynchronously
+
+Playbook syntax
+Anisble playbook uses YAML format.
+A playbook is composed of one or more ‘plays’ in an ordered list. 
+The terms ‘playbook’ and ‘play’ are sports analogies. Each play executes part of the overall 
+goal of the playbook, running one or more tasks. Each task calls an Ansible module
+
+Playbook execution
+A playbook runs in order from top to bottom. Within each play, tasks also run in order from top to bottom. Playbooks with multiple ‘plays’ can orchestrate multi-machine deployments, running one play on your webservers, then another play on your database servers, then a third play on your network infrastructure, and so on. At a minimum, each play defines two things:
+ - the managed nodes to target, using a pattern
+ - at least one task to execute
+
+In this example, the first play targets the web servers; the second play targets the database servers.
+
+---
+- name: Update web servers
+  hosts: webservers
+  remote_user: root
+
+  tasks:
+  - name: Ensure apache is at the latest version
+    ansible.builtin.yum:
+      name: httpd
+      state: latest
+
+  - name: Write the apache config file
+    ansible.builtin.template:
+      src: /srv/httpd.j2
+      dest: /etc/httpd.conf
+
+- name: Update db servers
+  hosts: databases
+  remote_user: root
+
+  tasks:
+  - name: Ensure postgresql is at the latest version
+    ansible.builtin.yum:
+      name: postgresql
+      state: latest
+
+  - name: Ensure that postgresql is started
+    ansible.builtin.service:
+      name: postgresql
+      state: started
+
+To run your playbook, use the ansible-playbook command.
+
+ansible-playbook playbook.yml -f 10
+
+-f 10 means create 10 forks
+
+Something that you might find useful at times, is to validate the syntax of a playbook with the flag -–syntax-check.
+
+Another handy option is to use the -C flag to perform a dry run of the playbook’s execution. 
+This option doesn’t actually make any changes but it just reports the changes that will 
+happen during a real run.
+
+To run a playbook in check mode, you can pass the -C or --check flag to the ansible-playbook command:
+ansible-playbook --check playbook.yaml
+
+https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html
+https://www.devopsmadness.com/ansible_intro/
