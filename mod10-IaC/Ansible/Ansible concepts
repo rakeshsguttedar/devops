@@ -1,0 +1,97 @@
+Ansible
+Ansible is an IaC tool for managing configuration changes of VMs or Nodes
+in the infrastructure.
+
+Agentless
+Ansible is agentless, which means it doesn't require any software or 
+agents to be installed on the managed nodes (servers you want to manage). 
+It uses SSH (Secure Shell) to connect to the nodes and perform tasks.
+
+Control Node
+The control node is the machine where Ansible is installed. It's the 
+system from which you manage and execute Ansible commands and playbooks.
+
+Managed Node
+A managed node is a remote server or device that Ansible manages. 
+These are the servers you want to automate tasks on. Ansible connects 
+to managed nodes via SSH.
+
+SSH Connection
+Ansible uses SSH for secure communication between the control node 
+(the machine where Ansible is installed and from which you run Ansible 
+commands) and the managed nodes.
+
+Inventory
+An inventory file (often named inventory or hosts) lists the managed 
+nodes you want to automate. It can be a simple text file or a dynamic 
+script that generates the list. The inventory file also allows you to 
+group nodes for easier management.
+
+Modules:
+Ansible modules are small programs that Ansible uses to perform tasks 
+on managed nodes. Each module is responsible for a specific type of task, 
+such as installing a package, copying files, or starting a service. 
+Modules are executed on the managed nodes and report back to the control 
+node.
+
+adhoc commands
+Ad-hoc commands are the ansible commands that are run directly from the 
+command line.They are used mainly for quick, one-off tasks or commands 
+that you want to execute on one or more remote systems without writing
+a playbook.
+
+Playbook
+A playbook is a YAML file that defines a set of tasks to be executed on 
+the managed nodes. Playbooks are used for automation and orchestration. 
+They can include multiple tasks, variables, and even conditionals.
+
+Tasks
+A task is a single action to be performed on a managed node. It can be as 
+simple as copying a file, or more complex like installing software or 
+configuring services.
+
+Roles
+Roles provide a way to organize playbooks and share them across different 
+projects. A role includes tasks, variables, and templates in a defined 
+structure. Roles make it easier to manage and reuse configurations.
+
+Handlers
+Handlers are special tasks that are only executed if a task notifies them. 
+They are typically used to restart services or perform other actions that 
+should only happen if a change has been made.
+
+Modules and Facts
+Modules provide the functionality to carry out tasks, while facts are 
+information about the managed nodes. Ansible gathers facts about the managed 
+nodes before executing tasks. Facts can be used in playbooks to make them 
+dynamic and adaptable.
+
+Idempotence
+Ansible is designed to be idempotent, meaning if a task is executed multiple 
+times, it will have the same effect as if it were executed once. This ensures 
+that running playbooks multiple times won't cause unintended side effects.
+
+Difference between Ansible Adhoc Commands and Ansible modules:
+
+Ansible adhoc commands
+1. Ad-hoc commands are used for quick, one-off tasks or commands that you want to 
+   execute on one or more remote systems without writing a playbook.
+2. They are run directly from the command line using the ansible command.
+3. Ad-hoc commands are particularly useful for tasks such as rebooting servers, 
+   checking system information, or installing packages.
+4. Ad-hoc commands provide direct control and flexibility but are not as reusable 
+   or maintainable as playbooks.
+
+Ansible modules
+1. Modules are small programs that Ansible runs on the target system to perform 
+   specific tasks.
+2. Modules are the building blocks of playbooks in Ansible.
+3. Each module is designed to perform a specific function, such as managing 
+   packages, files, users, services, etc.
+4. Modules are written in Python and can be executed independently of playbooks 
+   using the ansible command or included within playbooks.
+5. Ansible provides a large number of built-in modules, and you can also write 
+   custom modules to extend Ansible's functionality.
+6. Modules provide a structured and reusable way to automate tasks and manage 
+   system configurations.
+
