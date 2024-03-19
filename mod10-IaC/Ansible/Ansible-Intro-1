@@ -47,6 +47,122 @@ Hands-on: steps for setting up ssh connection
    between Ansible node and managed nodes is working.
 8. Run Ansible commands in Control Node to configure the Managed nodes.
 
+More detailed steps for Installing and configuring Ansible
+
+A. Setup Ansible in Control Node
+   To install Ansible on Ubuntu, you can use the following steps
+
+1. Update Package Lists: Open a terminal window and run the following 
+   command to update the package lists:
+
+sudo apt-get update
+
+2. Install Ansible: Once the package lists are updated, you can install 
+   Ansible by running the following command:
+
+sudo apt-get install ansible
+
+You'll be prompted to confirm the installation. Press Y to proceed.
+
+3. Verify Installation: After the installation is complete, you can verify
+   if Ansible was installed correctly by checking its version:
+
+ansible --version
+
+B. Setup SSH connection between Control Nodes & Managed Nodes
+
+4. Generate SSH Key Pair (On Control Node)
+
+ssh-keygen
+
+5. Copy Public Key (On Control Node)
+
+Navigate to /root/.ssh
+cd /root/.ssh
+
+View the public key with:
+cat id_rsa.pub
+
+Copy the displayed public key.
+
+6. Paste Public Key (On Managed Nodes)
+
+Go to each managed node (e.g., node1, node2)
+Navigate to /root/.ssh
+Open or create the authorized_keys file and paste the public key.
+
+7. Set Permissions (On Managed Nodes)
+
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+
+You have now installed Ansible on your control node and set up SSH key-based 
+authentication between the control node and managed nodes. This allows Ansible 
+to communicate securely without the need for passwords.
+
+8. Add IP in /etc/hosts file  (On Control Node)
+
+vi /etc/ansible/hosts
+
+[webservers]
+IP1 ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_user=root
+IP2 ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_user=root
+
+[dbservers]
+IP3 ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_user=root
+IP4 ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_user=root
+
 Running Ansible adhoc commands
 
-ansible 
+Ping all hosts:
+
+ansible all -m ping
+This checks if all hosts in your inventory file are reachable.
+
+Get system information:
+
+ansible all -m setup
+This command gathers facts about remote hosts. It provides detailed 
+information about the system.
+
+Update package cache:
+
+ansible all -m apt -a "update_cache=yes"
+This updates the package cache on Debian-based systems.
+
+Install a package:
+
+ansible all -m apt -a "name=package_name state=present"
+This installs a package on Debian-based systems. Replace package_name with the actual package name.
+Example Install Maven with
+ansible all -m apt -a "name=maven state=present"
+
+Restart a service:
+
+ansible all -m service -a "name=service_name state=restarted"
+This restarts a service. Replace service_name with the actual service name.
+
+Create a directory:
+
+ansible all -m file -a "path=/path/to/directory state=directory"
+This creates a directory on remote hosts.
+
+Copy a file to remote hosts:
+
+ansible all -m copy -a "src=/local/path/to/file dest=/remote/path/"
+This copies a file from the control node to remote hosts.
+
+Execute a shell command:
+
+ansible all -m shell -a "command"
+Replace command with the actual shell command you want to execute.
+ansible all -m shell -a "mvn -v"
+
+Set up a cron job:
+
+ansible all -m cron -a "name=job_name minute=30 hour=2 job='/path/to/script.sh'"
+This sets up a cron job on the remote hosts.
+
+Check free disk space:
+
+ansible all -m command -a "df -kh"

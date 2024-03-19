@@ -47,8 +47,8 @@ A concept known as Configuration Management was discovered to solve this problem
 Configuration Managament solves the problem of configuring multiple servers
 using tools like Ansible, Puppet, Chef, Salt.
 
-Puppet and Chef were among first few tools for CM. Later Ansible
-Ansible was acquired by RedHat. Later Ansible and Puppet became more popular.
+Puppet and Chef were among first few tools for CM. Later Ansible and Puppet 
+became more popular. Ansible was later acquired by RedHat. 
 Ansible became the eventual winner or it is used by most number of devops engineer.
 
 Start with Ansible. Because Ansible is the most popular or 90% of people use
@@ -112,4 +112,5 @@ yaml
 7. Does ansible support all the cloud providers?
 Ansible is cloud agnostic, it does not matter which Cloud env we use,
 Ansible only needs ssh or winRM enabled in the machine and the public IP 
-addresses of machines to access other machines.
+or private IP addresses (if there are in the same network) of machines 
+to access other machines.

@@ -60,11 +60,16 @@ Handlers are special tasks that are only executed if a task notifies them.
 They are typically used to restart services or perform other actions that 
 should only happen if a change has been made.
 
-Modules and Facts
+Modules and Facts. Whats the diiference?
 Modules provide the functionality to carry out tasks, while facts are 
-information about the managed nodes. Ansible gathers facts about the managed 
-nodes before executing tasks. Facts can be used in playbooks to make them 
-dynamic and adaptable.
+information about the managed nodes. 
+
+Ansible gathers facts about the managed nodes before executing tasks. 
+Facts can be used in playbooks to make them dynamic and adaptable.
+
+Facts in Ansible: Ansible gathers comprehensive host information during 
+playbook execution. This data includes IP addresses, CPU types, disk space, 
+OS details, and network interface information, crucial for configuration tasks.
 
 Idempotence
 Ansible is designed to be idempotent, meaning if a task is executed multiple 

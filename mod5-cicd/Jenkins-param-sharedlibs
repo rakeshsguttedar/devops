@@ -39,32 +39,30 @@ for example: string type parameter
 
 example usage of parameters directive in Jenkins declarative pipeline script:
 
-  pipeline {
-    agent any
-    
-    parameters {
-      // String type parameter added for specifying the github branch
-      // string ( name: 'Github_Branch', defaultValue: 'main', description: 'giuhub branch to build')
-      choice ( name: 'Cbranch', choices: ['main','develop','feature'], description: 'branch choice'
+pipeline {
+  agent any
+  
+  parameters {
+    // String type parameter added for specifying the github branch
+    // string ( name: 'Github_Branch', defaultValue: 'main', description: 'giuhub branch to build')
+    choice ( name: 'Cbranch', choices: ['main','develop','feature'], description: 'branch choice')
+  }
+  stages {
+  
+    stage('Git checkout') {
+      steps {
+        // Do remember that the "${params.Github_Branch}" has to within double quotes, not single quotes.
+        // git branch: "${params.Github_Branch}", credentialsId: 'github', url: 'https://github.com/yourgitusername/reponame.git'
+        git branch: "${params.Cbranch}", credentialsId: 'github', url: 'https://github.com/yourusername/reponame.git'
+      }
     }
-
-    stages {
-    
-      stage('Git checkout") {
-        steps {
-          // Do remember that the "${params.Github_Branch}" has to within double quotes, not single quotes.
-          // git branch: "${params.Github_Branch}", credentialsId: 'github', url: 'https://github.com/yourgitusername/reponame.git'
-          git branch: "${params.Cbranch}", credentialsId: 'github', url: 'https://github.com/yourusername/reponame.git'
+    stage('Package') {
+        step {
+            sh "mvn clean package"
         }
-      }
-
-      stage('Package') {
-          step {
-              sh "mvn clean package"
-          }
-      }
     }
   }
+}
 
 A similar kind of parameters directive can also be used to specify the
 environment (dev,qa,ppd,prod) to deploy the artifacts after the build step is completed.
