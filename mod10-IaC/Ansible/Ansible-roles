@@ -1,15 +1,91 @@
 Anisble Roles
 
-To manage the complexity of writing the ansible playbooks 
-there was a need felt to organise ansible playbook.
-Therefore Ansible Roles came into being.
+What problems does Anisble roles solve? or why Roles?
+
+With more and more plays and tasks added to an Ansible playbook,
+the size and complexity of the playbook increases. It will become
+hard to maintain the playbook. Therefore in order to manage the 
+complexity of writing ansible playbooks there was a need felt
+to organise ansible playbook and make it more resusable. Ansible 
+Roles came into being to solve this problem.
 
 Ansible roles provide a higher level of organization and modularity compared 
 to plays alone. While plays define a set of tasks to be executed on hosts, 
 roles encapsulate a collection of plays, tasks, variables, and handlers into 
 a reusable and self-contained unit.
 
+What are some benefits of using Ansible roles?
 
+Ansible roles provides us a template for creating other roles. Hence they are
+reusable and thus can be shared with collaborators of a project.
 
+What are handlers?
+Handlers are special tasks that are only executed if a task notifies them. 
+They are typically used to restart services or perform other actions that 
+should only happen if a change has been made.
 
+# handlers handson
+---
+- name: Install apache
+  hosts: webserver
+  become: yes
+  tasks:
+    - name: Install apache
+      apt:
+        name: apache2
+        state: present
+      notify:
+        - Restart Apache
+    # other tasks follow from here..
+
+handlers:
+  - name: Restart Apache
+    service:
+      name: apache2
+      state: restarted
+
+Roles:
+
+File Hierarchy in a role
+
+my_role
+|
+|---defaults/
+| |---main.yml
+|---files/
+|---handlers/
+| |---main.yml
+|---meta/
+| |---main.yml
+|---tasks/
+| |---main.yml
+|---templates/
+|---tests/
+| |---inventory
+| |---test.yml
+|---vars/
+|---main.yml
+
+# yaml file using this role
+---
+- name: Using a role
+  hosts: all
+  roles:
+    - my_role
+
+Creating a role
+
+Ansible Galaxy
+
+ansible-galaxy init nginx
+ls
+folder named nginx is created
+cd nginx
+
+The directory structure of ansible role for nginx.
+tree
+
+The github repo for the structure of Anisble role for installing nginx
+
+https://github.com/rakeshsguttedar/Ansible-Roles-Script
 
