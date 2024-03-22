@@ -1,0 +1,150 @@
+Ansible-Intro-2
+
+Ansible Playbook
+
+Asnible playbooks are ansible scripts which are akin to shell scripts.
+Instead of running Ansible adhoc commands, we collate ansible commands
+as tasks in yaml file and execute them from the control node to make 
+configuration changes on the managed nodes. 
+
+Ansible adhoc command has a single ansible module and is suitable for 
+running short commands. But to install many software packages and make 
+major configuration changes in the managed nodes, we need to use anisble
+playbooks. Ansible playbook uses multiple ansible modules to accomplish 
+the changes.
+
+Ansible Plays and Playbook
+Ansible plays are written in a yaml file. This yaml file is called
+ansible playbook. A playbook is simply a list of plays. Each play has one
+or more tasks. Play specifies interaction beween Control node and managed 
+node whereas tasks inside a play define the actions that need to be taken 
+on the managed nodes defined inside hosts key of the play.
+
+The play is the element that ties tasks to the servers where they'll run. 
+The key element here is the mandatory keyword hosts. This is the part of 
+Ansible that tells which hosts are being affected and how.
+
+Hands-on
+
+1. Create 3 AWS EC2 instances 
+Instance 1: Control Node - CN - Instance type is t2.micro
+Instance 2 and 3: Managed Nodes - MN1 and MN2 - Instance type is t3.medium
+
+2. Install Ansible in CN and configure Ansible.
+Configure ansible in CN to automatically ssh to MN1 and MN2 using private IP addresses
+of the Managed nodes.
+
+3. Create the below playbook in CN
+
+# playbook file:  install_apache_server.yml
+---
+- name: Install Apache
+  hosts: web_servers
+  become: yes
+
+  tasks:
+    - name: Update package cache
+      apt:
+        update_cache: yes
+    
+    - name: Install Apache
+      apt:
+        name: apache2
+        state: present
+
+Validate this playbook using yamllint before running it with 
+ansible-playbook command. https://www.yamllint.com/
+You can also use -–syntax-check option to validate the syntax of a playbook
+
+# to validate the yaml playbook
+ansible-playbook --syntax-check -i inventory install-apache-server.yml
+
+# to dry run the playbook -C for check
+ansible-playbook -C -i inventory install-apache-server.yml
+
+4. Run the Ansible playbook to install apache server
+
+# to actually run the ansible playbook and make conf changes in the managed node
+ansible-playbook  -i inventory install-apache-server.yml
+
+# to confirm whether apache2 server is installed in MN1
+sudo systemctl status apache2
+
+# playbook file:  install_maven_web_db_servers.yml
+---
+- name: webserver configuration # 1st play
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: update package cache
+      apt:
+        update_cache: yes
+
+    - name: Install Apache
+      apt:
+        name: apache2
+        state: present
+
+    - name: Install Maven
+      apt:
+        name: maven
+        state: present
+
+- name: Database server configuration # 2nd play
+  hosts: dbservers
+  become: yes
+  tasks:
+    - name: install postgressql
+      apt:
+        name: postgresql
+        state: present
+
+A playbook consists of one or more plays, and each play consists of one or more tasks. 
+Plays provide the structure for organizing tasks and define the scope of execution,
+while tasks specify the actual actions to be performed on the target hosts.
+By organizing tasks into plays, Ansible provides a flexible and modular approach to
+automation, allowing you to orchestrate complex workflows across your infrastructure.
+
+Gathering Facts is the default task run by ansible when executing any playbook
+pg_dump
+
+III Build and Deploying a basic Java based application
+
+Step 1- Configure the server/VM
+Step 2- Push the Appliaction to managed node
+Step 3- Build the application
+Step 4- Run the application
+
+# build and deploy a java application
+---
+- name: webserver configuration
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: update package cache
+      apt:
+        update_cache: yes
+# Step 1- Configure the server/VM - install maven, java
+    - name: Install Maven
+      apt:
+        name: maven
+        state: present
+# Step 2- Copy the Appliaction to managed node
+    - name: Copy the Application to webserve r
+      synchronize: # to copy the full folder
+        src: /home/ubuntu/BoardgameListingWebApp
+        dest: /home/ubuntu/
+# Step 3- Build the application
+- name: Build & Deploy 
+  hosts: webservers
+  become: yes
+  tasks:
+    - name: Build the Application
+      shell: |
+        cd /home/ubuntu/BoardgameListingWebApp
+        mvn package
+# Step 4- Deploy and Run the application
+    - name: Deploy The Application
+      shell: |
+        cd /home/ubuntu/BoardgameListingWebApp/target
+        nohup java -jar *.jar &

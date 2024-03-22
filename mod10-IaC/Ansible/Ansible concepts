@@ -58,7 +58,7 @@ structure. Roles make it easier to manage and reuse configurations.
 Handlers
 Handlers are special tasks that are only executed if a task notifies them. 
 They are typically used to restart services or perform other actions that 
-should only happen if a change has been made.
+should only happen if a change has been made. Refer Ansible-roles for example.
 
 Modules and Facts. Whats the diiference?
 Modules provide the functionality to carry out tasks, while facts are 

@@ -1,0 +1,34 @@
+Ansible Collections
+
+Ansible Collection is a collection of modules.
+
+Why Ansible came up with the Collections?
+When the number of modules increased, managing them became difficult.
+Hence, from Ansible version >2.9, ansible categorized related modules 
+into a collection and came up with Ansible Collections.
+
+For a list of Ansible collections:
+http://docs.ansible.com/ansible/latest/collections/index.html
+
+How do you use or refer a module from the collection?
+
+A module in a collection is referred in the ansible playbook
+using Fully Qualified Collection Name (FQCN)
+
+Example:
+For using/referring apt module from the Ansible.Builtin collection
+FQCN: ansible.builtin.apt
+
+# Example playbook file for using apt module inside Ansible.Builtin collection
+- name: Install Apache
+  hosts: webserver
+  become: yes
+  tasks:
+    - name: Install apache2 # (state=present is optional) 
+      ansible.builtin.apt:
+        name: apache2
+        state: present
+
+Ansible playbook for installing Nexus Repository Server
+(Using modules through collections)
+Refer file: setup-nexus-playbook.yml for the playbook to install Nexus server

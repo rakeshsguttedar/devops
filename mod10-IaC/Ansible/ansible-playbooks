@@ -56,7 +56,8 @@ ansible-playbook playbook.yml -f 10
 
 -f 10 means create 10 forks
 
-Something that you might find useful at times, is to validate the syntax of a playbook with the flag -–syntax-check.
+Something that you might find useful at times, is to validate the syntax of a playbook with the flag 
+-–syntax-check.
 
 Another handy option is to use the -C flag to perform a dry run of the playbook’s execution. 
 This option doesn’t actually make any changes but it just reports the changes that will 

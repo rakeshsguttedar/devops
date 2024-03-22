@@ -1,0 +1,15 @@
+Anisble Roles
+
+To manage the complexity of writing the ansible playbooks 
+there was a need felt to organise ansible playbook.
+Therefore Ansible Roles came into being.
+
+Ansible roles provide a higher level of organization and modularity compared 
+to plays alone. While plays define a set of tasks to be executed on hosts, 
+roles encapsulate a collection of plays, tasks, variables, and handlers into 
+a reusable and self-contained unit.
+
+
+
+
+

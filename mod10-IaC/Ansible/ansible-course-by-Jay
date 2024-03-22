@@ -355,7 +355,7 @@ changed=0 as nothing has changed and ok will be in the result for apache2 play.
 
 check whether apache2 is installed by using the ip address of the host 
 runnig apache2 by checking it in the browser of the machine that is running Ansible CLI.
-(control node macine from where ansible commands are run)
+(control node machine from where ansible commands are run)
 
 Note: You need to add inboud rules in aws EC2 instance to allow port 80/tcp. Otherwise
 the browser will not be able to access the apache server.
