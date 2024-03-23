@@ -1,6 +1,6 @@
 Anisble Roles
 
-What problems does Anisble roles solve? or why Roles?
+What problems does Ansible roles solve? or why Roles?
 
 With more and more plays and tasks added to an Ansible playbook,
 the size and complexity of the playbook increases. It will become
@@ -24,7 +24,7 @@ Handlers are special tasks that are only executed if a task notifies them.
 They are typically used to restart services or perform other actions that 
 should only happen if a change has been made.
 
-# handlers handson
+# handler.yml 
 ---
 - name: Install apache
   hosts: webserver
@@ -38,11 +38,11 @@ should only happen if a change has been made.
         - Restart Apache
     # other tasks follow from here..
 
-handlers:
-  - name: Restart Apache
-    service:
-      name: apache2
-      state: restarted
+  handlers:
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted
 
 Roles:
 
@@ -85,7 +85,10 @@ cd nginx
 The directory structure of ansible role for nginx.
 tree
 
-The github repo for the structure of Anisble role for installing nginx
-
+Refer github repo for the structure of Anisble role for installing nginx
 https://github.com/rakeshsguttedar/Ansible-Roles-Script
 
+cd Ansible-Roles-Script
+Edit main-playbook.yml and replace /home/ubuntu/role_name with /home/ubuntu/Ansible-Roles-Script
+Run the playbook
+ansible-playbook -i inventory main-playbook.yml

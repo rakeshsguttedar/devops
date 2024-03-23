@@ -1,0 +1,29 @@
+Jenkins-Ansible
+
+Integrating an Ansible playbook into a Jenkins pipeline job.
+
+There are two ways we can configure Jenkins and Ansible to install
+a package in the managed node.
+
+1. Control Node has both Ansible and Jenkins installed and we are going to
+   install Nexus in the managed node by running Jenkins job in the control node
+   which will run Ansible to install Nexus in the Managed node.
+
+2. Jenkins is installed in the master node and it will use Jenkins slave node
+   to run jenkins job. The jenkins job in slave node will run ansible as a 
+   control node and install Nexus in the manaed node. 
+
+We are going to setup Jenkins-Ansible using configuration 1.
+
+Steps:
+1. Start t2.medium EC2 instance for running control Node and Jenkins 
+2. In control Node, run ssh-keygen to create a key-pair
+3. Copy the content of public key ~/.ssh/id_rsa.pub and append to
+   ~/.ssh/authrorized_keys file of the managed node.
+4. Install Jenkins in the Control Node.
+4. Copy the content of private key ~/.ssh/id_rsa to
+   credential store in Jenkins -> Manage Jenkins with 
+   username as root (instead of copying the file path in the inventory file)
+5. Copy the content of the Jenkinsfile to the jenkins pipeline job in Jenkins
+6. Build the Jenkins Pipeline job to install and start Neuxs Server in the 
+   managed node using Ansible.

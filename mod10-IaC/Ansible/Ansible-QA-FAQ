@@ -1,0 +1,56 @@
+Ansible FAQs, Q and As and best practices
+
+Whats the diiference between shell module and command module in Ansible?
+Shell module is used to execute commands that require shell features such 
+as pipes(|), redirection(>), wildcards(*) and environment variables
+But the commands executed using shell module is not predicatble and is less
+secure.
+The command executed using command module does not involve shell interpretation.
+Hence it is more secure, predicatble and perform better compared to the shell
+module.
+
+How can we instruct ansible to use localhost in the ansible play?
+
+---
+- name: Playbook to run tasks on localhost
+  hosts: localhost
+  connection: local
+  gather_facts: false  # Disable gathering facts for localhost, as it's unnecessary
+
+  tasks:
+    - name: Example task on localhost
+      debug:
+        msg: "This task is running on localhost"
+
+
+By specifying localhost as the target host and using connection: local, you can ensure that Ansible executes tasks on the local machine rather than attempting to connect to remote hosts. This is useful for scenarios where you need to perform tasks that only affect the local system, such as setting up configurations or installing software.
+
+
+Is Python required to be installed in the managed nodes?
+
+The managed node (the machine that Ansible is managing) requires Python to run Ansible-generated Python code.
+
+No, Python is not required to be installed on managed nodes for basic Ansible functionality. However,
+Ansible uses Python to execute modules on managed nodes, so managed nodes must have Python available for
+Ansible to work properly.
+
+By default, Ansible relies on Python 2.x on managed nodes to execute modules. However, since Ansible 2.5,
+Python 3.x support has been added, allowing Ansible to execute modules using either Python 2.x or Python 3.
+x on managed nodes.
+
+If Python is not available or not installed on the managed nodes, you may encounter errors when running
+Ansible tasks. Therefore, it's recommended to ensure that Python is available on managed nodes and
+accessible via the PATH environment variable.
+
+In cases where Python is not installed or available on managed nodes, you can use Ansible's raw module to
+execute commands directly without Python dependencies. However, the raw module has limited functionality
+compared to other Ansible modules and should be used as a last resort.
+
+Overall, while Python is not strictly required to be installed on managed nodes, having Python available
+is essential for Ansible to function correctly and execute tasks effectively.
+
+
+
+
+
+

@@ -4,32 +4,28 @@ Ansible Course
 Ansible 01 - Introduction
 #############################
 
-Learn Ansible by Jay LaCroix - Learn Linux TV
-
 Link to the video
 https://www.youtube.com/watch?v=3RiVKs8GHYQ&list=PLT98CRl2KxKEUHie1m24-wkyHpEsa4Y70
 
 Outline of this Ansible Course
 
 Why Ansible is needed.?
-~~~~~~~~~~~~~~~~~~~~~~~
-
-It is used to Provision and manage servers like installation, upgradation, 
-apply security patches, etc
+It is used to Provision and manage servers like installation, upgradation,
+apply security patches, etc.
 It is a configuration management tool and it uses procedural approach to manage
 infrastructure.
 
 Ansible Control node configure Server1 server2 server3
 Ansible can be setup in multiple ways
-Best practices - 
+Best practices -
 Ansible control host is not required - only a workstation/laptop is needed to configure hosts.
-The workstation will have scripts like ansible playbook to be used to run ansible against 
+The workstation will have scripts like ansible playbook to be used to run ansible against
 the servers using ssh protocol.
 
-But we need to protect and version control the scripts so that even if the workstation goes down 
-or its harddisk get corrupted, we still be able to get the files from the VCS.
-we will use git for version control and storing of these ansible scripts or playbooks.
-Also we can colloborate with other team memebers when we are working with the servers
+But we need to protect and version control the scripts so that even if the workstation
+goes down or its harddisk get corrupted, we must be able to get the files from the VCS.
+We will use git for version control and storing of these ansible scripts or playbooks.
+Also we can colloborate with other team memebers when we are working with the servers.
 
 git
 
@@ -47,7 +43,7 @@ Ansible 02 - SSH overview and setup
 ssh - ? secure shell
 ssh username@ipaddress -i /path/to/ssh/key
 
-example: 
+example:
 ssh -i /home/ubuntu/keypair ubuntu@172.16.250.133
 
 secure the connection using sshkey
@@ -56,7 +52,7 @@ secure the connection using sshkey
    # run below command to install openssh server on linux machines if not already installed
      sudo apt install openssh-server
 
-2. After installation, connect to ssh server using ssh client and answer yes to 
+2. After installation, connect to ssh server using ssh client and answer yes to
    initial connection prompt.
 3. create an ssh keypair (with a passphrase) using ssh-keygen for normal user account
 4. copy that key to each of the server
@@ -66,10 +62,10 @@ secure the connection using sshkey
 Above steps in more details:
 ---------------------------
 cd # go to home directory
-ls -la .ssh # check for the presence of an already existing key in .ssh directory 
+ls -la .ssh # check for the presence of an already existing key in .ssh directory
 
 ssh-keygen -t ed25519 -C "devuser default"
-where 
+where
 -t type rsa, ed25519(most secure)
 -C comment - describing more details about the key
 
@@ -80,23 +76,23 @@ a passphrase: - enter passphrase
 a key is generated and stored in the ~/.ssh directory
 
 ls -la ~/.ssh to check the key generated
-Look for 2 files: 
+Look for 2 files:
 id25519     : It is a private key and it should not be shared with anyoone
-id25519.pub : It is public key and this is copied to the managed noded 
+id25519.pub : It is public key and this is copied to the managed noded
               using ssh-copy-id command ( in the authorized_keys file )
 
-cat ~/.ssh/ed25519.pub # to see the key generated 
+cat ~/.ssh/ed25519.pub # to see the key generated
 
 create key value pair in aws instance by selected ed25519 encryption and openssh pem file format
 create 3 ec2 instances in aws
-Successfully initiated launch of instances 
+Successfully initiated launch of instances
 Instance Ids: (i-0caed49589b5bbf7b, i-00c4ddcb32533a62f, i-0a67e5183837cb0a5)
 
-public IPs of EC2 instances 
+public IPs of EC2 instances
 [will change if the EC2 instances is stopped and/or (re)started]
 
-52.55.129.20 
-54.145.44.88 
+52.55.129.20
+54.145.44.88
 54.89.44.152
 
 ssh-copy-id -i ~/.ssh/id_ed25519.pub ubuntu@52.55.129.20 237 # will not work for aws EC2 instance
@@ -105,7 +101,7 @@ ssh-copy-id -i ~/.ssh/id_ed25519.pub ubuntu@54.89.44.152 222 # will not work for
 
 copy the content of the public key file id_ed25519.pub to file of ~/.ssh/authorized_keys of the managed nodes
 
-Login from your ansible control node / laptop / desktop  
+Login from your ansible control node / laptop / desktop
 
 ssh ubuntu@52.55.129.20
 ssh ubuntu@54.145.44.88
@@ -115,7 +111,7 @@ IF we are able to login, it shows us that the public key is successfully install
 
 Generating ansible key
 
-In the similar fashion, we need anisble to login to the managed nodes but we dont want 
+In the similar fashion, we need anisble to login to the managed nodes but we dont want
 it to prompt for the passphrase. Therefore, repeat the above steps of generating the public key,
 but make sure not to enter the passphrase when prompted for the passphrase.Just press enter twice.
 
@@ -138,7 +134,7 @@ Agent pid 3573
 Enter passphrase for /home/devuser/.ssh/id_ed25519:
 Identity added: /home/devuser/.ssh/id_ed25519 (devuser default)
 
-Add the below line to ~/.bashrc file so that we can use this alias as short command 
+Add the below line to ~/.bashrc file so that we can use this alias as short command
 instead of using two seperate commands
 vim ~/.bashrc
 alias ssha='eval $(ssh-agent) && ssh-add'
@@ -148,24 +144,24 @@ alias ssha='eval $(ssh-agent) && ssh-add'
 Ansible 03 - Setting up the Git repository
 ##########################################
 
-Now we need to setup a remote git repository so that the work files are stored 
+Now we need to setup a remote git repository so that the work files are stored
 onto the repository so that they are tracked and will used later.
 
 1. Create a git repository in github.com with the name ansible_tutorial and create a README file.
-2. Add the public key of the master node or control node (~/.ssh/id_ed25519.pub) to the 
+2. Add the public key of the master node or control node (~/.ssh/id_ed25519.pub) to the
    SSH and GPG keys located in the settings page of your github page.
 3. Add key name as:  devuser default
 4. Add key value as: copy paste the public key ~/.ssh/id_ed25519.pub in the keys box
 5. copy the ssh url under the Code button of your remote repository
 6. Run git clone git@github.com:username/ansible_tutorial.git in your home directory.
-7. A folder named ansible_tutorial will be created in the home directory 
+7. A folder named ansible_tutorial will be created in the home directory
 8. Configure your local git repository by running the following commands:
    git config --global user.name "devuser"
    git config --global user.email "devuser@mail.com"
 
 
 ################################################
-Ansible 04 - Running Ansible with adhoc commands 
+Ansible 04 - Running Ansible with adhoc commands
 ################################################
 
 1. Install ansible
@@ -173,17 +169,17 @@ Ansible 04 - Running Ansible with adhoc commands
    sudo apt install ansible
 2. Run ansible command to check version and to confirm ansible is installed
    ansible --version
-3. create an inventory file and IP addresses of the managed nodes 
+3. create an inventory file and IP addresses of the managed nodes
    vim inventory
-   18.206.181.9 
-   54.165.1.73 
+   18.206.181.9
+   54.165.1.73
    54.157.45.234
-   
+
 4. Run the ansible adhoc command to check ansible is able to connect to the nodes
    make sure you add username with -u option
     ansible -u ubuntu all --key-file ~/.ssh/ansible -i inventory -m ping
 
-output: 
+output:
 
 18.206.181.9 | SUCCESS => {
     "ansible_facts": {
@@ -221,12 +217,12 @@ output:
 
 
 #############################################
-Ansible 05 - Running elevated adhoc commands 
+Ansible 05 - Running elevated adhoc commands
 #############################################
 
-Till now, we have been able to query remote hosts and gather information 
+Till now, we have been able to query remote hosts and gather information
 about their configuration. Going forward, in this class, we are going to
-see the commands that will make changes to the remote host configurations. 
+see the commands that will make changes to the remote host configurations.
 
 To make changes to the remote hosts, we need to make sure ansible
 is given required permission.
@@ -235,28 +231,28 @@ Ansible command to make configuration changes to the remote machines
 ---------------------------------------------------------------------
 
 ansible all -m apt -a update_cache=true
- 
+
 # same thing as ubuntu linux command: apt update
 
 The above command will fail because it is run without root privelages
-So if we need to run a command in linux using root privilages such as 
+So if we need to run a command in linux using root privilages such as
 installing or updating the configuration of the remote hosts, we need
-to make sure we run those commands with elevated privilages such as 
+to make sure we run those commands with elevated privilages such as
 becoming a superuser or affixing a 'sudo' before the name of the command.
 
-In ansible we can do this using options --become --ask-become-pass 
+In ansible we can do this using options --become --ask-become-pass
 
 ansible all -m apt -a update_cache=true  --become --ask-become-pass
 
 # same thig as: sudo apt update
 
 Please refer following link for all options of the apt module
-in ansible 
+in ansible
 
 https://docs.ansible.com/ansible/2.9/modules/apt_module.html
 
-In the above document, we can see that update_cache argument to apt 
-module is no or false by default. Therefore it is set to true 
+In the above document, we can see that update_cache argument to apt
+module is no or false by default. Therefore it is set to true
 which is equivalent to the 'apt update' command
 
 
@@ -268,7 +264,7 @@ ansible all -m apt -a name=vim-nox --become --ask-become-pass
 BECOME password: type password here
 
 we can check the remote host machines whether vim-nox is installed
-using: 
+using:
 apt search vim-nox
 
 we can use another example.
@@ -282,13 +278,13 @@ If "changed":false, then the package tmux is not installed
 
 we can also login to the remote machine and check the file
 /var/log/apt/history.log file of the apt package whether the
-package is actually installed or not. 
-If vim-nox is installed,we can see the logs for vim-nox installation 
+package is actually installed or not.
+If vim-nox is installed,we can see the logs for vim-nox installation
 in this log file.
 
 vim /var/log/apt/history.log
 
-After we run  sudo apt update  command, the last line of the command output 
+After we run  sudo apt update  command, the last line of the command output
 states that there are some packages that can be upgraded.
 Therefore we can run
 
@@ -309,13 +305,13 @@ ansible all -m apt -a "upgrade=dist" --become --ask-become-pass
 
 
 ########################################
-Ansible 06 - Writing our first playbook 
+Ansible 06 - Writing our first playbook
 ########################################
 
-Install Apache2 package 
+Install Apache2 package
 -----------------------
 
-Ansible uses yaml file to read the plays.We are going to install apache2 
+Ansible uses yaml file to read the plays.We are going to install apache2
 and php support packages in the hosts using install_apache.yml file.
 
 vim install_apache.yml
@@ -341,19 +337,19 @@ This command targets all hosts with this playbook.
 
 When we run anisble-playbook command, Ansible is going to use gather_facts
 module (running as a first task in the ansible play)
-This is because ansible needs to know which OS the host is running and what 
-distribution of linux it is going to manage. 
+This is because ansible needs to know which OS the host is running and what
+distribution of linux it is going to manage.
 
 changed flag with host IP tells us that the configuration of the host has changed.
-changed=1 unreachable =1  means network issue , 
-skip=1 means skipped the change. skip only if some requirment is met. 
-       Otherwise dont skip it with skip=0 
+changed=1 unreachable =1  means network issue ,
+skip=1 means skipped the change. skip only if some requirment is met.
+       Otherwise dont skip it with skip=0
 rescued=0 way to make a task run if previous task fails
 
 IF we run the command once again after installing apache2
 changed=0 as nothing has changed and ok will be in the result for apache2 play.
 
-check whether apache2 is installed by using the ip address of the host 
+check whether apache2 is installed by using the ip address of the host
 runnig apache2 by checking it in the browser of the machine that is running Ansible CLI.
 (control node machine from where ansible commands are run)
 
@@ -364,7 +360,7 @@ and running.
 
 Installing invalid package
 -------------------------
-if we change the package name in playbook to some package which is not present, then the 
+if we change the package name in playbook to some package which is not present, then the
 ansible-playbook command will fail ( command output: failed=1 in red color )
 
 Further, we can add one more play to the ansible playbook by adding one more task.
@@ -372,34 +368,34 @@ What if the pachage repository index is stale. That is, if apache2 is not in the
 Therfore we should always update index cache before installing a package.
 
 Please check install_apache.yml and remove_apache.yml files to see how ansible playbook is
-structured and how simple it is to understand. 
+structured and how simple it is to understand.
 
-We can use them in the ansible-playbook command to install and remove apache and php packages. 
+We can use them in the ansible-playbook command to install and remove apache and php packages.
 
 ansible-playbook --become install_apache.yml
 ansible-playbook --become remove_apache.yml
 
-Do always refer apt module documentation in ansible to learn about various options. 
+Do always refer apt module documentation in ansible to learn about various options.
 
 
 ##############################
-Ansible 07 - When conditional 
+Ansible 07 - When conditional
 ##############################
 
-digress: 
-git pull is required if multiple collaborators are working on a git repository so that 
-the local and remote repositories are always in sync before we push our changes to the 
+digress:
+git pull is required if multiple collaborators are working on a git repository so that
+the local and remote repositories are always in sync before we push our changes to the
 remote repository..
 
 coming back:
-If we have hosts running more than one Linux distribution, we can fine tune the 
+If we have hosts running more than one Linux distribution, we can fine tune the
 ansible playbook to include tasks specific to a particular distribution.
 
 we should basically check gather_facts module output for each host using grep command
 to find which Linux distribution the host is running. This helps us to target a specific
 distribution using 'when' conditional in the playbook yaml file.
 
-Below is an ansible adhoc command that uses gather_facts module to find the Linux 
+Below is an ansible adhoc command that uses gather_facts module to find the Linux
 distribution the host is running.
 
 ansible all -m gather_facts --limit ipaddress | grep ansible_distribution
@@ -409,7 +405,7 @@ see below how we can use the when conditional in the ansible playbook yaml file.
 
   - name: Install apache and php packages for ubuntu servers
     apt:
-      name: 
+      name:
         - apache2
         - libapache2-mod-php
       state: latest
@@ -423,7 +419,7 @@ see below how we can use the when conditional in the ansible playbook yaml file.
         - php
       state: latest
       update_cache: true
-    when: ansible_distribution == "CentOS" 
+    when: ansible_distribution == "CentOS"
 
 ################################
 Ansible 08 - Improving playbook
@@ -436,14 +432,14 @@ package module instead of apt module as apt module is tied to debian distributio
   - name: Install apache and php package
     package:
       name:
-        - "{{ apache-package }}" 
+        - "{{ apache-package }}"
         - "{{ php-package }}"
       state: latest
       update_cache: true
 
 Save above play in a seperate playbook yaml file: install_apache_generic.yml.
 Add varibles apache-package and php-package in an inventory file: inventory_with_variables
-  
+
 Now run the ansible-playbook command as below:
 
 ansible-playbook --become -i inventory_with_variables install_apache_generic.yml
@@ -454,12 +450,12 @@ note: --ask-become-password flag is not needed for aws EC2 instance
 Ansible 09 - Targeting specific nodes
 #####################################
 
-Ansible can be used to manage the configuration of specific nodes based 
-on certain criteria. The criteria can be "what these nodes do" or 
+Ansible can be used to manage the configuration of specific nodes based
+on certain criteria. The criteria can be "what these nodes do" or
 "where these nodes are physically located" or "when they are going to be used.
 
-Accordingly, we can form a group of nodes and assign a name to the group in the inventory 
-file based on the criteria such as webservers, dbservers,firstfloor, prod, dev etc. Make 
+Accordingly, we can form a group of nodes and assign a name to the group in the inventory
+file based on the criteria such as webservers, dbservers,firstfloor, prod, dev etc. Make
 sure you enclose the name within the brackets.
 
 [webservers]
@@ -483,33 +479,33 @@ in the hosts sections of the site.yml playbook file as shown below.
 
 
 Please open site.yml file and see that we are going to install:
- samba server for the hosts in the group: [fileservers], 
+ samba server for the hosts in the group: [fileservers],
  mariadb server for hosts in the the group: [dbservers]
  and apache server and php for the hosts in the group: [webservers].
 
 Below is the ansible-playbook command:
-ansible-playbook --become -i inventory_with_groups
+ansible-playbook --become -i inventory_with_groups site.yml
 
 
-Issues faced: 
+Issues faced:
 -------------
 
-1. Package issue: we should use yum package manage rather than dnf 
-   package manager because the CentOS 7 (aws EC2 instance) uses yum 
-   package manager and not dnf. 
-   
+1. Package issue: we should use yum package manage rather than dnf
+   package manager because the CentOS 7 (aws EC2 instance) uses yum
+   package manager and not dnf.
+
 ansible all --become -m yum -a update_cache=true -i inventory_one_host
 
-2. Connection issue: In inventory file: inventory_with_groups, 
+2. Connection issue: In inventory file: inventory_with_groups,
    use host variable ansible_user for each target host.
 
-In inventory_with_groups file, 
-  
+In inventory_with_groups file,
+
 [webservers]
 54.81.161.33 ansible_user=ubuntu
 
 [dbservers]
-54.175.125.10 ansible_user=centos  
+54.175.125.10 ansible_user=centos
 
 [fileservers]
 3.82.59.94 ansible_user=ubuntu
@@ -521,10 +517,10 @@ ansible  all -u centos  -i inventory_with_groups  -m gather_facts
 ansible  all  --become -m yum -a update_cache=true -i inventory_one_host
 
 ########################
-Ansible 10 - Adding tags 
+Ansible 10 - Adding tags
 ########################
 
-The group based targeting specific nodes can be further extended using tags. 
+The group based targeting specific nodes can be further extended using tags.
 We specify tags using tags: key for a particular task in the playbook yaml file.
 
 In the site.yml file:
@@ -542,9 +538,529 @@ In the site.yml file:
       state: latest
     when: ansible_distribution == "Ubuntu"
 
-To target hosts having specific tags, we run anisble-playbook command as 
+To target hosts having specific tags, we run anisble-playbook command as
 shown below.
 
 ansible-playbook --list-tags site.yml
 ansible-playbook --become --tags="apache, db" site.yml -i inventory_with_groups
 ansible-playbook --become --tags centos  -i inventory_with_groups site.yml
+
+###########################
+Ansible 11 - Managing files
+###########################
+
+Ansible can not only configure the managed nodes, but can also manage the configuration of
+the node on which the Ansible CLI is run. That is, Ansible can manage the node on which
+it is run. Thats the reason, Ansible is also called as agentless.
+
+For example:
+
+ansible all -m ping -u devuser --ask-become-pass --key-file=~/.ssh/ansible -i "127.0.0.1,"
+
+The above ansible command can be run to ping the host on which ansible itself is runnig.
+But before that, make sure you add the public key, i.e. public key in ~/.ssh/ansible.pub to
+~/.ssh/authorized_hosts.
+
+Some more examples:
+
+ansible all -m apt -a update_cache=true --become  --ask-become-pass  -i inventory_localhost
+ansible all -m apt -a upgrade=dist --become  --ask-become-pass  -i inventory_localhost
+
+Contents of inventory_localhost file:
+
+ubuntuserver ansible_user=devuser
+
+here ubuntuserver can be replaced by 127.0.0.1 or 198.168.0.100 (the ip addr)
+ansible command to install htop command
+ansible all -m apt -a "name=htop"  --become  --ask-become-pass  -i inventory_localhost
+
+Using Copy module in Ansible
+----------------------------
+
+We can use copy module in ansible to copy files to hosts. For example,
+we can copy the website files of a webserver.
+Below is the site.yml play for copying the default_site.html to
+/var/www/http/index.html using copy module
+
+- hosts: webservers
+  become: true
+  tasks:
+
+  - name: Install apache and php packages for ubuntu servers
+    tags: apache, apache2, ubuntu
+    apt:
+      name:
+        - apache2
+        - libapache2-mod-php
+      state: latest
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Install apache and php packages for Centos servers
+    tags: apache, httpd, centos
+    yum:
+      name:
+        - php
+      state: latest
+    when: ansible_distribution == "CentOS"
+
+  - name: copy default hrml file for site
+    tags: apache, apche2,httpd
+    copy:
+      src: default_site.html
+      dest: /var/www/html/index.html
+      owner: root
+      group: root
+      mode: 0644
+
+Working on workstations: Installing unzip and terraform
+-------------------------------------------------------
+
+We can a create a separate group in the inventory file (inventory_with_groups)
+for configuring workstations as:
+
+[workstations]
+localhost ansible_user=devuser
+
+This way we can install packages on the host on which the ansible is being run.
+
+We need to add two plays by creating a seperate hosts section in site.yml file
+for installing unzip and terraform.
+
+- hosts: workstations
+  become: true
+  tasks:
+
+    - name: install unzip
+      package:
+        name: unzip
+
+    - name: install terraform
+      unarchive:
+        src: https://releases.hashicorp.com/terraform/1.6.3/terraform_1.6.3_linux_amd64.zip
+        dest: /usr/local/bin
+        remote_src: yes
+        mode: 0755
+        owner: root
+        group: root
+
+
+#############################
+Ansible 12: Managing services
+#############################
+
+service module and lineinfile module of ansible
+-----------------------------------------------
+
+We need not start or stop a service manuallly.
+We can use ansible to do this.
+For example starting or stopping a webserver.
+
+For this, ansible uses service module to start, enable and restart a service.
+WE can also change the configuration of any service using lineinfile module
+of ansible. For example, chaning the email address of the http webserver
+config file.
+
+Below are the site.yml sections for service and lineinfile modules
+
+ - name: start httpd (CentOS)
+    tags: apache,centos,httpd
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+    when: ansible_distribution == "CentOS"
+
+  - name: change e-mail address for admin
+    tags: apache,centos,httpd
+    lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      regexp: '^ServerAdmin'
+      line: ServerAdmin somebody@somewhere.net
+    when: ansible_distribution == "CentOS"
+    register: httpd
+
+  - name: restart httpd (CentOS)
+    tags: apache,centos,httpd
+    service:
+      name: httpd
+      state: restarted
+    when: httpd.changed
+
+##########################################
+Ansible 13: Adding users and Bootstrapping
+##########################################
+
+In this section, wE are going to see how ansible can be used for
+user management and how the newly added user can be used to initially
+setup the nodes.
+
+We want ansible to be fully automated. For that we need a user
+specific to ansible.
+
+we are going to add a new user named simone. simone is basically a
+system service user that will run in the background, accept ansible
+commands and run them without asking for the password.
+
+In site.yml file, We need to add a new play after update cache plays.
+
+- hosts: all
+  become: true
+  tasks:
+
+  - name: create simone user
+    tags: always
+    user:
+      name: simone
+      groups: root
+
+  - name: add ssh key for simone
+    tags: always
+    authorized_key:
+      user: simone
+      key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDDFKXMIafzQFacLs0RyQoeTvjFrtR4R2FIlOsvQXOfg ansible"
+
+  - name: add sudoers file for simone
+    tags: always
+    copy:
+      src: sudoer_simone
+      dest: /etc/sudoers.d/simone
+      owner: root
+      group: root
+      mode: 0440
+
+There are three tasks:
+Task 1: we create a user named simone and the user is added to root group.
+Task 2: We add ssh key for user simone. This is a public key we created for
+        anisble using ssh-keygen command. This is needed for authentiicating
+        the user simone to the host servers.
+Task 3: We need to add the user to the sudoers group. This is needed become
+        the user simnone will be used for installing with root privilages
+        in the same way we do sudo apt update or sudo apt install package.
+
+we can further simplify the site.yml file and copy the update and user related
+cofiguration to a seperate yaml file. Lets call it bootstrap.yml file.
+
+bootstrap.yml file is used to add the initial configuration to the server
+after it is freshly installed.
+
+In site.yml file we can remove the user related tasks except for
+the authorized key module which is needed to authenticate the user
+simnone whe we run ansible using site.yml file.
+
+We have also added changed_when: false in the Install updates tasks and
+renamed these update tasks to updtae repo cache.
+
+changed_when is used to inform ansible that it should not consider changes
+done for this task as a change.
+
+we can now run the ansible commands without --ask-become-pass option as we
+have now put the authorized key in the playbook yaml files.
+
+
+#################
+Ansible 14: Roles
+#################
+
+We can use ansible roles to move the configurations from the playbook yaml file
+to seperate files based on the grouping of servers that have been done earlier.
+For example, webservers related plays and tasks can be copied to main.yml file
+located at ./roles/webservers/tasks/main.yml. In the similar manner
+we move the configurations of dbservers, fileservers, workstations to their
+respective folders and move the initial setup configurations to
+roles/base/tasks/main.yml file.
+
+Run following commands inside ansible_tutorials
+
+Create a roles directory
+ mkdir roles
+
+Create a directory for each role you wish to add:
+ cd roles
+ mkdir base
+ mkdir dbservers
+ mkdir fileservers
+ mkdir webservers
+ mkdir workstations
+
+Inside each role directory, create a tasks directory
+ cd <role_name>
+ mkdir tasks
+
+cd roles/base; mkdir tasks; cd ../..
+cd roles/dbservers; mkdir tasks; cd ../..
+cd roles/fileservers; mkdir tasks; cd ../..
+cd roles/webservers; mkdir tasks; cd ../..
+cd roles/workstations; mkdir tasks; cd ../..
+
+cd roles/base/tasks;
+vim main.yml
+
+# Note: Use your actual key below on the last line, in place of the one you see here.
+
+main.yml (base role)
+ - name: add ssh key for simone
+   authorized_key:
+     user: simone
+     key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII1o0uHzBK3+xgsYWGyDGgE4qNtUPXbbjRWbGM/6FVM7 ansible"
+
+Set up required files/folders for dbservers role
+ cd ../../dbservers/tasks;
+ vim main.yml
+
+main.yml (dbservers role)
+ - name: install mariadb server package (CentOS)
+   tags: centos,db,mariadb
+   dnf:
+     name: mariadb
+     state: latest
+   when: ansible_distribution == "CentOS"
+
+ - name: install mariadb server
+   tags: db,mariadb,ubuntu
+   apt:
+     name: mariadb-server
+     state: latest
+   when: ansible_distribution == "Ubuntu"
+
+main.yml (fileservers role)
+ - name: install samba package
+   tags: samba
+   package:
+     name: samba
+     state: latest
+
+main.yml (workstations role)
+ - name: install unzip
+   package:
+     name: unzip
+
+ - name: install terraform
+   unarchive:
+     src: https://releases.hashicorp.com/terraform/0.12.28/terraform_0.12.28_linux_amd64.zip
+     dest: /usr/local/bin
+     remote_src: yes
+     mode: 0755
+     owner: root
+     group: root
+
+main.yml (webservers role)
+ - name: install httpd package (CentOS)
+   tags: apache,centos,httpd
+   dnf:
+     name:
+       - httpd
+       - php
+     state: latest
+   when: ansible_distribution == "CentOS"
+
+ - name: start and enable httpd (CentOS)
+   tags: apache,centos,httpd
+   service:
+     name: httpd
+     state: started
+     enabled: yes
+   when: ansible_distribution == "CentOS"
+
+ - name: install apache2 package (Ubuntu)
+   tags: apache,apache2,ubuntu
+   apt:
+     name:
+       - apache2
+       - libapache2-mod-php
+     state: latest
+   when: ansible_distribution == "Ubuntu"
+
+ - name: change e-mail address for admin
+   tags: apache,centos,httpd
+   lineinfile:
+     path: /etc/httpd/conf/httpd.conf
+     regexp: '^ServerAdmin'
+     line: ServerAdmin somebody@somewhere.net
+   when: ansible_distribution == "CentOS"
+   register: httpd
+
+ - name: restart httpd (CentOS)
+   tags: apache,centos,httpd
+   service:
+     name: httpd
+     state: restarted
+   when: httpd.changed
+
+ - name: copy html file for site
+   tags: apache,apache,apache2,httpd
+   copy:
+     src: default_site.html
+     dest: /var/www/html/index.html
+     owner: root
+     group: root
+     mode: 0644
+
+Get the public IP addresses of the AWS EC2 instances using aws cli.
+(Make sure to configure aws using 'aws configure' before you run
+the below command.)
+
+aws ec2 describe-instances | jq '.Reservations[].Instances[].PublicIpAddress'
+
+Update the inventory_with_groups file with the IP addresses that got returned
+from the aws cli command.
+
+Run the new playbook
+
+ansible-playbook -i inventory_with_groups  site.yml
+
+
+#######################################
+Ansible 15: Host Variables and Handlers
+#######################################
+
+Ansible host variables can be moved to seperate files host_vars folder inside
+the working director of the ansible. The name of the file will be the hostname
+and it will contain the following variables:
+
+Sample host variables file for ubuntu: host_vars/54.91.51.55.yml
+
+apache_package_name: apache2
+apache_service: apache2
+php_package_name: libapache2-mod-php
+ssh_users: "ubuntu simone"
+ssh_template_file: sshd_config_ubuntu.j2
+
+for centos host the host file will be: host_vars/52.91.85.39.yml
+
+apache_package_name: httpd
+apache_service: httpd
+php_package_name: php
+ssh_users: "centos simone"
+ssh_template_file: sshd_config_centos.j2
+
+for localhost : host_vars/localhost.yml
+
+apache_package_name: apache2
+apache_service: apache2
+php_package_name: libapache2-mod-php
+ssh_users: "ubuntu simone"
+ssh_template_file: sshd_config_ubuntu.j2
+
+We can also add handlers in the main.yml file inside handlers folder as shown below.
+file: ./roles/webservers/handlers/main.yml
+
+- name: restart_apache
+  service:
+    name: "{{ apache_service }}"
+    state: restarted
+
+Handlers are notifiers that are called when the registered
+change is done.
+For example, apache server can be restarted when the email address is changed in
+its configuration. The handler is called using the registered name.
+Whenever the configuration is changed, the task that has done the change will
+notify the handler using the name as registered in the handler task in the
+./roles/webservers/handlers/main.yml file as shown above.
+
+#####################
+Ansible 16: Templates
+#####################
+
+ssh is the number one way by which hackers can access the webservers.
+So in order to secure the webservers we need to add ssh users that are
+allowed per host to the ssh configuration files. Then we need to copy
+the updated ssh file of the to the hosts configuration directory.
+
+For this we make use of templates. we copy the ssh configuration file
+from /etc/ssh/sshd_config of both ubuntu and centos hosts and then
+update the user using host variable as shown below.
+
+sshd_config_centos.j2   centos specific ssh config file
+sshd_config_ubuntu.j2   ubuntu specific ssh config file
+
+
+The below line is added to each of the above ssh config file.
+
+AllowUsers {{ ssh_users }}
+
+We also need to update the ./roles/base/tasks/main.yml file
+to create a task that copies the ssh_template_file.
+
+- name: generate sshd_config file from template
+  tags: ssh
+  template:
+    src: "{{ ssh_template_file }}"
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: 0644
+
+
+This ssh_template_file is a host variable which contains the file name
+of the ssh config file. Please see the variables in the yaml files of
+host_vars folder.
+
+Please see below.
+
+# Ubuntu host specific host variables
+
+apache_package_name: apache2
+apache_service: apache2
+php_package_name: libapache2-mod-php
+ssh_users: "ubuntu simone"
+ssh_template_file: sshd_config_ubuntu.j2
+
+
+#CentOS host specific host variables
+
+apache_service: httpd
+php_package_name: php
+ssh_users: "centos simone"
+ssh_template_file: sshd_config_centos.j2
+
+
+Finally we can replace the inventory file in the
+ansible.cfg file with the inventory_with_groups
+inventory file
+
+inventory = inventory_with_groups
+private_key_file =  ~/.ssh/ansible
+remote_user = simone
+
+
+Now run ansible ommand as below.
+
+ansible-playbook site.yml --become --ask-become-pass
+
+############################
+Ansible 17: Dynamic Inventory
+############################
+Prerequisites: boto3 and botocore modules
+
+sudo apt update
+sudo apt install python3-boto3
+sudo apt install python3-botocore
+
+We need following these steps to configure dynamic inventory in ansible
+
+Set bash environment variable for AWS access key and secret access key
+as show below
+
+export AWS_ACCESS_KEY_ID="abc1234"
+export AWS_SECRET_ACCESS_KEY="ABC123"
+
+check if the variable is set.
+env
+
+create the inventory configuration file and the add the following.
+vim demo.aws_ec2.yml
+
+
+# File: demo.aws_ec2.yml
+plugin: amazon.aws.aws_ec2
+# This sets the region. If empty (the default) default this will include
+# all regions, except possibly restricted ones like us-gov-west-1
+# and cn-north-1.
+regions:
+- us-east-1
+
+Now run the ansible-inventory command to check whether AWS is returning the
+private IPs if EC2 instances are stopped or public IPs if EC2 instances are
+running.
+
+ansible-inventory -i demo.aws_ec2.yml --graph

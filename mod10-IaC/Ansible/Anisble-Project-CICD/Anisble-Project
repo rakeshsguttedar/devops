@@ -1,0 +1,139 @@
+Ansible Project
+
+This is an Ansible project to run a CICD playbook that will build and
+deploy Secret Santa Generator java application on target servers.
+
+Why Ansible for CICD?
+Why are we using Ansible for CICD when we already have CI servers
+such as Jenkins.?
+There are two advantages with Ansible:
+1. Ansible does not consume more resources such as memory and CPU as
+   it is a simple tool compared to Jenkins and easy to setup and run.
+   Hence Ansible does not need a dedicated machine to setup.
+2. Ansible can be used to deploy the application on multiple servers.
+
+Overview of the steps we are going to perform in this project:
+
+1. Create VMs - create 3 EC2 instances of type t2.medium
+   - Master node VM    - for installing ansible and running the CICD 
+   - Target Server VM  - TS1 and TS2 for building and deploying the application
+2. SSH connection setup in VMs
+3. Install Ansible on Master Server
+4. Create Ansible yaml playbook to install Tools: openJDK17, Maven,
+   docker(configure also), trivy, sonarqube - has 2 components
+   1. Sonarqube Server - for uploading the scan result
+   2. Sonar Scanner for scanning and analysis of source code
+5. CICD - Clone repo on target server, run git clone and git pull
+   to update the repo everytime we run the CICD.
+6. Compile
+7. Testing
+8. Sonarqube analysis - sonar server url, sonar token, ansible vault
+   will be used to store the sensitive data such as sonar token,etc..
+   sonarqube scanner tool will be run to perform the analysis
+9. Build the application and create the artifact(jar file)
+10. Build docker image and Tag the image
+11. Scan the docker image using trivy
+12. docker login - username and password will be stored in ansible vault
+13. push docker image to docker hub repo
+14. Deploy the application to a docker container - This docker container will
+    be updated everytime we run the CICD. But docker docker container will be 
+    stopped and the image will be deleted after step 5. Docker volume can be 
+    used for data persistance. But in this project docker volume is not used 
+    to keep the project simple.
+
+Detailed Steps of implementation:
+
+1. Create 3 EC2 instances in AWS of type t2.medium - tag them as Master Server,
+   targets servers TS1 and TS2. ssh to these VMs using mobaxterm. 
+   
+2. Run ssh-keygen in Master server to create a public-private keypair. Copy the
+   public key from ~/.ssh/id_rsa.pub and append it to ~/.ssh/authorized_keys file
+   in TS1 and TS2. In organisations, it is usually a best practice to append the 
+   public key to the authorized_keys file during provisioning of these target servers.
+   This provisioning can be done using Terraform.
+
+   a. Copy the public key from the Master server.
+      In Master Server - copy public key
+        cat ~/.ssh/id_rsa.pub
+   b. Append the public key to the authorized_keys file on the target servers.
+      In Target Servers - append the public key and change the file permissions
+        cd /home/ubuntu/.ssh
+        vi authorized_keys
+        chmod 700 /home/ubuntu/.ssh
+        chmod 600 /home/ubuntu/.ssh/authorized_keys
+   c. Disable Host key checking 
+      In Master Server - Add Target Servers to Known Hosts using ssh-keyscan.
+      This prevents SSH from prompting for confirmation when connecting to the 
+      target servers for the first time.
+        ssh-keyscan -H targetserver1-ip >> ~/.ssh/known_hosts
+        ssh-keyscan -H targetserver2-ip >> ~/.ssh/known_hosts
+
+3. Install Ansible and setup Inventory on the Master Server:
+   sudo apt install ansible -y
+   mkdir ansible-cicd-project
+   cd ansible-cicd-project
+   vi inventory
+   [web]
+   TS1-private-ip-address
+   TS2-private-ip-address
+
+4. Create Ansible yaml playbook to install Tools
+   cd ~
+   git clone https://github.com/rakeshsguttedar/Ansible-Project-2.git
+   cd Projects-Script
+   cp Install-tools.yml ~/ansible-cicd-project/install-tools.yml
+
+   cd ~/ansible-cicd-project
+   ansible-playbook -i inventory install-tools.yml
+ 
+5. Setup ansible playbook for CICD
+   Copy the shell script that deletes docker image
+   cp ~/Ansible-Project-2/Projects-Script/docker-condition.sh ~/ansible-cicd-project
+   Copy the ansible playbook for CICD
+   cp ~/Ansible-Project-2/Projects-Script/CICD.yaml ~/ansible-cicd-project/
+
+6. Create Credentials file using ansible-vault
+   
+   ansible-vault create credentials.yml
+   
+   Enter password for this file.
+   Edit it and store the gitusername and git token, docker login username, password
+   sonarqube url and token
+   
+   gituser: yourgitusername
+   gittoken: git_asdfghjklopuytrerw1234567
+   docker_username: your_docker_username
+   docker_password: your_docker_password
+   SONARQUBE_URL: http://target-server-ip:9000
+   SONARQUBE_TOKEN: squ_qwertyasdfg1234567890
+
+   To edit the credentials in ansible-vault,
+   ansible-vault edit credentials.yml
+   Enter password for this file.
+
+   cat credentials.yml 
+   
+   will display the data as random data. Hence the credentials
+   stored inside the ansible vault file is not exposed as ansible-vault
+   encrypts the credentials data at rest.
+
+7. Edit the CICD.yml playbook file to update the following
+   a. vars_files key with the value credentials.yml
+   b. repository_url: https://github.com/yourusername/secretsanta-generator.git
+   c. Docker repository name: yourdockerrepo/santa:latest
+
+8. Run the Ansible playbook to build and deploy the application
+   Make sure to add the option --ask-vault-pass in the
+   ansible-playbook command as shown below. This instructs
+   ansible to use the vault file and fetch the credentials.
+   
+   ansible-playbook -i inventory CICD.yml --ask-vault-pass
+
+9. Aceess the application from the browser using the public ip
+   of the target servers
+    http://target-server-1-public-ip:8080
+    http://target-server-2-public-ip:8080
+
+10. Edit your github repo and re-run the ansible playbook to confirm
+   1. The github repo in the target server is updated
+   2. The docker container is stopped and the docker image is deleted
