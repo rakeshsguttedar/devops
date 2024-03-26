@@ -131,7 +131,6 @@ done using tags or other identifiers associated with the nodes.
 Once configured, Cluster Autoscaler will automatically adjust the size of the Kubernetes cluster based 
 on workload demands, ensuring efficient resource utilization and optimal performance.
 
-
 How is Cluster Autoscaler different from AWS Auto scaling group?
 
 Cluster Autoscaler and AWS Auto Scaling groups are related but serve different purposes within the 

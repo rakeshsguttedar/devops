@@ -1,25 +1,27 @@
-2 applications
-
-1. Jenkins on a server
-2. basic website
-
-Example: Information on plugins in jenkins, no. of pipelines, when was the last pipeline job
-triggered, etc.
-
 Grafana
-Grafana is an open source monitoring and analytics tool which helps us to visualize the analysis 
-of the servers in a human readabale form like charts, bar graphs,etc. Grafana does not directly 
-fetch the data from the source. It receives data from Data Sources tools. Hence it is not a 
-monitoring tool as such but an analysis and visualisation tool to make data human readable.
 
-https://grafana.com/tutorials/grafana-fundamentals/
+Grafana is an open source monitoring and analytics tool which helps us to visualize the analysis 
+of data from the servers in a human readabale form like charts, graphs,etc. Grafana does not
+directly fetch the data from the source. It receives data from Data Sources tools. Hence it is 
+not a monitoring tool as such but an analysis and visualisation tool that makes data human readable.
+
+Components in a Monitoring System
+
+Application/website/ <------- Exporter -------> Data Source ------> analytics/visual report
+ Jenkins/Git <--------- Blackbox Exporter ----> Prometheus ------->     Grafana
+                        Node Exporter
 
 Data source
+In monitoring, a data source refers to any system, component, or entity that generates data or
+metrics relevant to monitoring the health, performance, or behavior of a system, application, 
+or infrastructure. Data sources provide the raw information that is collected, aggregated, and 
+analyzed by monitoring tools to gain insights into the monitored environment.
 
 Data Sources tools -
 Prometheus,
-Loki,
+Victoria Metrics
 Influxdb
+Loki,
 
 Prometheus - time series data source - if time interval is 5 mins, it fetches the data every 5 min
 - has its own Blackbox exporter
@@ -34,14 +36,38 @@ influxDb
 
 Loki - log aggregation tool - fetches the Logs
 
-P   L   I
-|
-G
+Exporters
 
-Application/website/ <------- Exporter -------> Data Source ------> analytics/visual report
- Jenkins/Git <--------- Blackbox Exporter ----> Prometheus ------->     Grafana
+Exporters in monitoring tools are software components or agents that collect metrics and
+data from specific sources (e.g., systems, applications, services) and expose them in a 
+format that can be scraped and consumed by monitoring systems like Prometheus.
+Examples of Exporters are Blackbox Exporter, Node Exporter, JMX Exporter, SNMP Exporter, etc.
 
+Exporters collect metrics data from the system or application and expose it via HTTP 
+endpoints in a standardized format (e.g., Prometheus exposition format).
 
-Exporters in monitoring tools such as Blackbox Exporter and Node Exporter are components that
-collect metrics and data from specific sources (e.g., systems, applications, services) and expose
-them in a format that can be scraped and consumed by monitoring systems like Prometheus.
+In summary, while both data sources and exporters provide metrics and data for monitoring 
+purposes, data sources represent the origin or generator of the data, whereas exporters are
+specialized components responsible for collecting and exposing metrics data in a consumable 
+format for monitoring tools. Exporters act as intermediaries that facilitate the integration 
+of diverse data sources into a centralized monitoring system.
+
+For most monitoring scenarios, exporters are still the preferred method for collecting metrics 
+from diverse data sources, as they provide a standardized and scalable approach for integrating 
+with Prometheus. Exporters allow Prometheus to collect metrics from a wide range of systems, 
+applications, and services, enabling comprehensive monitoring and observability.
+
+Handson with 2 applications
+
+1. Jenkins on a server
+2. Basic website
+
+Example: Information on plugins in jenkins, no. of pipelines, when was the last pipeline job
+triggered, etc.
+
+https://grafana.com/tutorials/grafana-fundamentals/
+
+Grafana Explore is a workflow for troubleshooting and data exploration. In this step, you’ll be using Explore to create ad-hoc queries to understand the metrics exposed by the sample application.
+
+Ad-hoc queries are queries that are made interactively, with the purpose of exploring data. An ad-hoc query is commonly followed by another, more specific query.
+
