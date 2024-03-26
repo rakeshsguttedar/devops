@@ -1,0 +1,47 @@
+2 applications
+
+1. Jenkins on a server
+2. basic website
+
+Example: Information on plugins in jenkins, no. of pipelines, when was the last pipeline job
+triggered, etc.
+
+Grafana
+Grafana is an open source monitoring and analytics tool which helps us to visualize the analysis 
+of the servers in a human readabale form like charts, bar graphs,etc. Grafana does not directly 
+fetch the data from the source. It receives data from Data Sources tools. Hence it is not a 
+monitoring tool as such but an analysis and visualisation tool to make data human readable.
+
+https://grafana.com/tutorials/grafana-fundamentals/
+
+Data source
+
+Data Sources tools -
+Prometheus,
+Loki,
+Influxdb
+
+Prometheus - time series data source - if time interval is 5 mins, it fetches the data every 5 min
+- has its own Blackbox exporter
+- uses pull approach to fetch/scrape the data
+- suitable for small or medium applications/infratr
+
+Victoria metrics - high volume data source
+
+influxDb
+- uses Push approach
+- It is better version of Prometheus
+
+Loki - log aggregation tool - fetches the Logs
+
+P   L   I
+|
+G
+
+Application/website/ <------- Exporter -------> Data Source ------> analytics/visual report
+ Jenkins/Git <--------- Blackbox Exporter ----> Prometheus ------->     Grafana
+
+
+Exporters in monitoring tools such as Blackbox Exporter and Node Exporter are components that
+collect metrics and data from specific sources (e.g., systems, applications, services) and expose
+them in a format that can be scraped and consumed by monitoring systems like Prometheus.

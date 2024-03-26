@@ -1,0 +1,36 @@
+Devops
+
+Development + operations = Devops
+  ____   ____
+ /    \ /    \
+|      |      |
+ \____/ \____/
+
+Introduction
+
+Devops is a Culture and a set of processes that improves organisations ability to deliver the
+application or services by ensuring that there is a proper automation in place, quality is 
+maintained, continuos monitoring and testing is in place. 
+
+With Devops, the application is integrated, tested, security and quality is improved and 
+finally it is delivered to customer at a much faster pace than with the traditional approach.
+
+DevOps, short for Development and Operations, is a set of practices and cultural philosophies 
+aimed at improving collaboration and communication between software development (Dev) and IT 
+operations (Ops) teams. The goal is to enhance the efficiency and effectiveness of the software
+development and delivery process. DevOps emphasizes automation, continuous integration, 
+continuous delivery, and close collaboration between different teams involved in the software 
+development lifecycle.
+
+Important aspects in Devops
+
+Automation
+Collaboration
+Continuous Integration (CI)
+Continuous Delivery (CD)
+Infrastructure as Code (IaC)
+Monitoring and Feedback
+Microservices
+Version Control
+Agile Practices
+
