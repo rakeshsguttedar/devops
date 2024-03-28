@@ -1,0 +1,158 @@
+Docker Compose
+
+Docker vs Docker Compose
+
+Docker
+
+Docker is a containerisation platform that is used to manage the lifecycle of 
+a container or containerized applications.
+
+Lifecycle means using docker cli or docker desktop and execute commands like start,
+stop, run a conatainer. 
+
+Exmaple, when we are containerizing the Python Flask aaplication using a dockefile,
+a docker image is built using docker build command and the application image is run
+as a container using docker run command. So the steps are
+
+1. create a Dockerfile which has FROM, BUILD, RUN, CMD and ENTRYPOINT commands.
+2. Create docker image using docker build command.
+2. Then run the container using docker run command.
+3. To check if the container is running we can use docker ps command.
+
+Next comes the question that when docker CLI is capable of managing the entire lifecycle
+of containerized application, why should one go for Docker compose?
+
+First, let us know, what is docker-compose?
+
+Docker Compose
+docker-compose is a tool developed by Docker inc that is used to manage the multi-container 
+applications.
+
+Why docker-compose?
+
+Consider an example of an ecommerce application that has 4 microservices such as payments 
+application, login, database, caching services, python application, etc.. How do we manage 
+the lifecycle of all of these applications?
+
+We can use docker cli to manage the lifecycle of all these microservices. But what if there 
+are dependencies between microservices?. Example a payment or catalgue application depend on
+database application to be up and running. We need to ensure that we execute these services 
+in the right order. In some cases we might have to mount a volume for the application data 
+before the application is up and running. We might store some configuration and this need to
+be made available even before the application is started. So we have to run the docker cli 
+command taking into consideration the dependencies between the microservices.
+
+So the problems with the traditional approach of using docker CLI commands in managing the 
+lifecycle of the containerized applications are
+
+1. We need to take into consideration the dependencies between microservices.
+2. We need to run many docker CLI commands for each microservices like docker build, 
+   docker run, etc..
+3. Not a Declarative approach: We can write a shell script for creating docker containers
+   and then we can share the script with other team members for testing it in their local
+   laptop env. After a while if there are changes to the docker commands, we need to edit 
+   this script and share it again with all team members. This is not a declarative approach.
+
+In order to solve all these problems, we can use a yaml file as a standard practice and run
+docker compose for building and deploying a multi-container application.
+
+Example application using docker compose:
+
+Three tier architecture 12 microservices application
+
+https://github.com/rakeshsguttedar/three-tier-architecture-demo
+three-tier-architecture-demo to buy robots.
+
+See docker-compose.yaml file in this reository.
+You can clone this repository and run the docker-compose command to deploy the application.
+git clone https://github.com/rakeshsguttedar/three-tier-architecture-demo.git
+
+cd three-tier-architecture-demo
+
+Another example is a a NodeJS application in awesome-compose respository hosted by Docker. 
+https://github.com/docker/awesome-compose.git
+
+This NodeJS application has 2 instances of application and nginx is serving as a loadbalancer
+which will forward the request to node instance 1 and node instance 2. Redis will cache the 
+request as it will keep track of number of requests to the application.
+
+Our nodeJS application in github is at
+https://github.com/docker/awesome-compose/tree/master/nginx-nodejs-redis
+
+The Awesome-compose repository contains more than 30 docker compose examples. 
+It is maintained by Docker. It has examples from every possible programming language and 
+databases.
+
+Our nodeJS application is at 
+https://github.com/docker/awesome-compose/tree/master/nginx-nodejs-redis
+
+git clone https://github.com/docker/awesome-compose.git
+
+cd nginx-nodejs-redis
+
+docker-compose up -d
+docker-compose down
+
+Writing a docker-compose.yml file
+
+Understand the architecture of the project before writing a docker-compose.yml file.
+No need to understand all the source code of the application.
+
+Here is the content of the docker-compose.yml file of this nodeJS application:
+
+services:
+  redis:
+    image: 'redislabs/redismod'
+    ports:
+      - '6379:6379'
+  web1:
+    restart: on-failure
+    build: ./web
+    hostname: web1
+    ports:
+      - '81:5000'
+  web2:
+    restart: on-failure
+    build: ./web
+    hostname: web2
+    ports:
+      - '82:5000'
+  nginx:
+    build: ./nginx
+    ports:
+    - '80:80'
+    depends_on:
+    - web1
+    - web2
+
+So docker compose files starts with services keyword and in services section,
+we will list all the microservices that needs to be built and run. In the above
+yaml file, we have seperate services for nginx, web2, web1 and redis. nginx needs
+web1 and web2 to be ready and hence the depends_on key is used for nginx.
+
+Yuo can also see the docker-compose.yml file of three tier
+microservices application mentioned above.
+
+To learn each and every command that are used in docker-compose.yml
+file refer to detailed docker documentation for docker-compose at
+
+https://docs.docker.com/compose/
+
+Finally, we can refer both above mentioned documentation and examples at
+awesome-compose repository to write a docker-compose file for your application.
+
+When is docker-compose used?
+How is it different from k8s?
+
+1. Most popular and common use case of docker-compose is in local development
+   because docker-compose up and down is easier than running docker CLI.
+   No need to setup a k8s cluster for testing the local development.
+2. Testing - to quickly verify the changes.
+
+Docker compose versus K8s
+
+Docker swarm is equivalent to k8s. But docker-compose is different from k8s.
+K8s is an orchestration platform which is having more features and a powerful
+environment whereas docker-compose is a completely different service to build 
+and manage multi-container applications.
+
