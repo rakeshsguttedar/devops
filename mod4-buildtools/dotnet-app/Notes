@@ -8,8 +8,8 @@ has three projects: Frontend, CatalogService and StartTimer.
 
 In root folder, there will be a .sln file which will contain application wide
 configuration for projects inside the application.
-nuget.config will contain the repository  for storing artifcats inside
-jfrog or nexus like artifact repositories.
+nuget.config will contain the repository for storing artifacts inside jfrog or nexus 
+like artifact repositories.
 
 Installing a dotnet based application
 

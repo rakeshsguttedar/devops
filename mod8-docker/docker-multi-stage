@@ -47,7 +47,7 @@ RUN mvn install -DskipTests
 
 # Stage-2 Deploy
 FROM tomcat
-WORKDIR webapps 
+WORKDIR webapps
 COPY --from=maven /usr/src/mymaven/target/java-tomcat-maven-example.war .
 RUN rm -rf ROOT && mv java-tomcat-maven-example.war ROOT.war
 
@@ -56,10 +56,10 @@ Working of the docker stages:
 stage-1:
 
 In the stage-1 we take a rich base image having jdk and maven already installed,
-and then build our application in this image. We name the base image as maven for 
+and then build our application in this image. We name the base image as maven for
 next or later stage usage. In RUN mkdir step we will create a working directory
 inside the maven image and in the COPY step, we will copy all the project files from
-the root directory to the WORKDIR inside the image. Finally in step: 
+the root directory to the WORKDIR inside the image. Finally in step:
 "RUN mvn install -DskipTests", we build our application.
 
 stage-2:

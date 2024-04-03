@@ -37,7 +37,7 @@ scripting languages.
 distributions. 
 
 As organisations started moving to cloud, the number of servers increased by 10x
-i.e. by Leaps and bounds and the emergence of microservcices aggrevated this situation
+i.e. by Leaps and bounds and the emergence of micro services aggrevated this situation
 further. The above mentioned two problems increased further.
 
 Hence there was a need felt to solve this problem. 
@@ -49,7 +49,7 @@ using tools like Ansible, Puppet, Chef, Salt.
 
 Puppet and Chef were among first few tools for CM. Later Ansible and Puppet 
 became more popular. Ansible was later acquired by RedHat. 
-Ansible became the eventual winner or it is used by most number of devops engineer.
+Ansible became the eventual winner as it is used by most number of devops engineer.
 
 Start with Ansible. Because Ansible is the most popular or 90% of people use
 this tool for Configuration Management.
