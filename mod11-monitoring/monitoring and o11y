@@ -1,5 +1,142 @@
 Monitoring and Observability (o11y)
 
+Why monitoring?
+
+Scenario 1
+When traffic on a website increases due to various reasons, the traffic would overwhelm
+the system resources (such as CPU and memory) of the server. As a result, the website 
+would get overloaded and gets crashed. We cannot sit for 24 hours and observe the website 
+traffic. 
+
+Scenario 2
+Secondly, on a k8s cluster, the resource usage of nodes might increase or decrease based
+on the traffic. We need to have a mechanism to observe the traffic and resource usage of 
+nodes in a k8s cluster.
+
+Though we can use some simple tools like meminfo and top to check the CPU and 
+memory usage of the server, it needs to be done manually. Observing the resource usage 
+and web traffic manually is not always feasible and this itself is a problem statement 
+for us to have an automation system for monitoring of resources and applications.
+
+So how do we do the monitoring?
+We use application specific metrics pods inside k8s cluster or Victoria metrics or 
+Prometheus. These act as data source pod. Grafana is a visualisation tool for the data
+collected by these metrics pods.
+
+Using Grafana and metrics pods, we can monitor the traffic on the website.
+
+A Project inside a k8s cluster has
+
+Jenkins     Gitlab          Sonarqube
+
+Jekins      Gitlab          Sonar 
+Metrics Pod Metrics Pod     Metrics pod
+
+Victoria Metrics Pod           Grafana  Pod
+time series (collects data
+at regular intervals)
+
+The data collected by metrics pods is not readable and cannot be easily analysed.
+Therefore we use grafana as a visualisation tool which presents the metrics data 
+of these metrics pods in a human friendly format. Therefore it becomes much easier
+to  monitor the website traffic and its resource usage.
+
+website -----> metrics pod
+   |            /
+   |           /
+  \|/        |/
+Victoria metrics pod
+(collects data from both metrics pod and from the website)
+        |
+        |
+        |
+       \|/
+      Grafana 
+
+Jenkins - how many jobs were run, when was the last pipeline run, who ran it?
+sonarqube - how many projects, when was the last analysis done?
+Gitlab - number of repos, when was the last commit done and by whom
+
+Realtime use case project - cost optimisation
+We had around 25 platforms P1 P2 P3... that were sold to clients. To manage all these 
+platforms, we used grafana and monitored all pods in these platfroms. There were around 
+600 clients in total and 25 clients were inactive i,e, they were not using any resources,
+around 100 clients were not using sonarqube and around 200 were not using gitlab. 
+As we had allocated a fixed amount of resources for each client, through grafana, we 
+identified that these resources of the clients was getting wasted.
+
+Projects for cost optimisation
+Task1 -  find how many projects were not used in the last 90 days
+Task2 -  which component of the project were not used in the last 90 days.
+
+The main purpose of these projects was to identify the unused resources and scale down
+those resources. This would significantly save cost for the organisation.
+
+Using Grafana and Victoria metrics, we were able to identify the unused resources
+and scale down the pods. In future if requirements come, we can scale up.
+
+Note: we can add this in the resume.
+
+Q and A -
+1. Greylog for colecting logs from the microservices.
+2. fluentd? 
+3. ELK and splunk logs  - most widely used for collecting logs
+4. Jenkins for CI and Argo CD for CD is the best combination of CICD
+   
+   Why ArgoCD is used for deployment when we already have Jenkins which can do 
+   both CI abd CD?
+   
+   Jenkins is an old CICD tool mainly used because of large community support and it has
+   huge collection of plugins available. But when using Jenkins for deployment we need to
+   do a lot of configurations like add k8s plugin in jenkins, add credentials to connect 
+   to k8s, use kubectl in jenkins for kubectl commands as k8s is running elsewehere. 
+
+   But by using ArgoCD, we have a seperate github repo for deployment purpose and we only 
+   need to update this github repo for triggering the deployment of the application to the
+   k8s cluster. This triggerring happens because ArgoCD is running as a pod inside the k8s
+   cluster and ArgoCD will watch for changes in the github repo and it will deploy the 
+   application if the application state in the github repo changes as compared to its state 
+   inside k8s cluster. We only to update the manifest files in the github repo with the new
+   version when the application state is changed. ArgoCD will watch the manifest in the github
+   repo and it will deploy the application as per the updated manifest files.
+
+5. What is the Git branching strategy for deploying the application using argoCD.?
+   git Repo 1 - Master branch  for CI only.
+   git repo 2 - master for CD.
+
+   But changes in Git Repo 2 is NOT done to the master branch but to its feature branch.
+   The changes in Git Repo 2 feature branch is notified through a pul request to architect
+   for review and approval. Once the changes are approved the changes in the feature branch
+   is merged to the master branch and then Argo CD will deploy the new application.
+
+for Access control purpose.
+
+6. How do we set up ArgoCD in a k8s cluster?
+    two ways: 
+    1. using Operator Lifecycle and 
+    2. using yaml files for ArgoCD: kubectl apply -f argocd.yml uses statefulset
+    Main reason for using ArgoCD, it automates most of the deployment setup.
+    We can configure multiple k8s cluster using 2 models:
+    1. Hub and spoke model - one ArgoCD in hub cluster and deploy on spokes cluster
+    2. standalone model where for each cluster has an argoCD
+
+7. Azure Devops
+
+8. Terraform in the organisation setup - used Terraform and ansible to create basic 
+   infrastructure setups like creating EC2 instances and configuring them. 
+
+9. ArgoCD setup - Argo is a gitops and a CD tool used for automating the deployment of
+   application in a k8s cluster. To Do - Watch ArgoCD Video
+
+10. Migrating a monolithic application to micro services.
+
+11. k8s cluster monitoring.
+
+12. Practice
+
+13. Ansible - We can use terraform to provision the servers with        
+Basic Definitions
+
 Monitoring
 Monitoring is the process to collect and analyse the data generated by various 
 systems, resources, applications and infrastructure components in order to assess 
@@ -27,13 +164,4 @@ Monitoring focuses on tracking predefined metrics to assess system health and pe
 wheras observability goes beyond monitoring by providing insights into the internal state
 and behavior of systems based on their external outputs and telemetry data.
 
-Why monitoring?
-
-When traffic on a website increases due to various reasons, the traffic would overwhelm
-the system resources (such as CPU and memory) of the server. As a result, the website 
-would get overloaded and gets crashed. We cannot always sit and observe the website 
-traffic. Though we can use some simple tools like meminfo and top to check the CPU and 
-memory usage of the server, it needs to be done manually. Observing the resource usage 
-manually is not always feasible and this itself is a problem statement for us to have 
-an automation system for monitoring of server resources.
 

@@ -1,0 +1,70 @@
+docker init
+
+The new docker init command is shipped with Docker Desktop and is not available
+as a standalone install. It was first released in 4.18 with support for Go and 
+the 4.19 release added Python and Node support. It’s still a beta feature.
+
+Docker init is a docker Utility or tool to create initial docker files
+that are needed to containerize the applications. These files are
+
+.dockerignore
+Dockerfile
+compose.yaml
+Readme.Docker.md
+
+docker init creates the basic configurations with best security
+practices for containerising the application.
+
+We need to run 'docker init' inside the application root folder.
+It does all the basic work for us and creates a Dockerfile.
+
+$ docker init 
+
+docker init
+
+Welcome to the Docker Init CLI!
+
+This utility will walk you through creating the following files with sensible defaults for your project:
+  - .dockerignore
+  - Dockerfile
+  - compose.yaml
+  - README.Docker.md
+
+Let's get started!
+
+? What application platform does your project use?  [Use arrows to move, type to filter]
+ PHP with Apache - (detected) suitable for a PHP web application
+  Go - suitable for a Go server application
+  Java - suitable for a Java application that uses Maven and packages as an uber jar
+  Python - suitable for a Python server application
+  Node - suitable for a Node server application
+  Rust - suitable for a Rust server application
+  ASP.NET Core - suitable for an ASP.NET Core application
+  Other - general purpose starting point for containerizing your application
+  Don't see something you need? Let us know!
+  Quit
+
+
+From official Docker documentation:
+https://docs.docker.com/reference/cli/docker/init/
+
+Docker Desktop provides the docker init CLI command. Run docker init in your project directory
+to be walked through the creation of the following files with sensible defaults for your project:
+
+.dockerignore
+Dockerfile
+compose.yaml
+README.Docker.md
+
+If any of the files already exist, a prompt appears and provides a warning as well as giving you
+the option to overwrite all the files. If docker-compose.yaml already exists instead of compose.yaml,
+docker init can overwrite it, using docker-compose.yaml as the name for the Compose file.
+
+docker init vs docker-init
+
+A potential source of confusion for docker init users is the command’s obvious similarity to docker-init, a standalone binary that’s used as the default init process for new containers.
+
+docker init and docker-init are entirely separate tools. You can use docker init to scaffold your configuration in new Docker projects, while docker-init is a Docker-internal utility that you shouldn’t ever need to manually invoke.
+
+Docker Init should not be confused with the internally -used docker-init executable, which is invoked by Docker when utilizing the –init flag with the docker run command.
+

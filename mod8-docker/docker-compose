@@ -89,7 +89,7 @@ docker-compose config
 
 # To start all the services in docker compose:
 docker-compose up -d
-# here -d is for background running of the service
+# here -d is for running the service in background
 
 # To stop all the services in docker compose:
 docker-compose down
