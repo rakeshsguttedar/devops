@@ -67,9 +67,26 @@ Grafana ---------------- Prometheus ------------ jenkins
 To know how many plugins are there in Jenkins, we need to use Queries.
 Using Queries, Grafana will fetch the data from Data Source.
 
+Overview of demo and hands-on practice 
 
+We will have Grafana handson with 2 applications
 
-Demo and Handson using Grafana
+1. Jenkins on a server
+2. Basic website
+
+Example: Information on plugins in jenkins, no. of pipelines, when was the 
+last pipeline job triggered, etc.
+
+This demo is from the grafana website at
+https://grafana.com/tutorials/grafana-fundamentals/
+
+Grafana Explore is a workflow for troubleshooting and data exploration. In this step, you’ll be 
+using Explore to create ad-hoc queries to understand the metrics exposed by the sample application.
+
+Ad-hoc queries are queries that are made interactively, with the purpose of exploring data. 
+An ad-hoc query is commonly followed by another, more specific query.
+
+Hands-on - steps
 
 1. Create an EC2 instance with 8GB RAM - t2.large
    Open these ports in inbound rules of the Security group:
@@ -77,6 +94,8 @@ Demo and Handson using Grafana
    8081
    3100
    9090
+
+Otherwise, you can use killercoda practice playground for this demo
 
 2. Clone https://github.com/grafana/tutorial-environment
 

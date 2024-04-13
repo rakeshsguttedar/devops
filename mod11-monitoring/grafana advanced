@@ -1,42 +1,71 @@
+Monitoring using Grafana, Prometheus and Blackbox Exporter 
+
+Website - Monitoring of the application
+Most imp task - make sure that application is up and running all the time.
+Examples of monitoring
+In gitlab application, we want to know when was the last commit done and who did it.
+In Jenkins application, how many plugins are installed, no of jenkins jobs, how many 
+jobs that have failed, etc
+
 Grafana
+
+What is Grafana?
 
 Grafana is an open source monitoring and analytics tool which helps us to visualize the analysis 
 of data from the servers in a human readabale form like charts, graphs,etc. Grafana does not
 directly fetch the data from the source. It receives data from Data Sources tools. Hence it is 
 not a monitoring tool as such but an analysis and visualisation tool that makes data human readable.
 
-Components in a Monitoring System
+In summary. Grafana does not do the monitoring. Monitoring is done by data source server.
+Data Source - Its a server that gets the complete information of the application that we want to monitor.
+
+What are the types of information that Data Source fetches?
+Examples: 
+1. How many Jenkins jobs are there, etc.. 
+2. metrics to check website access time,
+3. when was the last jenkins job done.. etc
+Example Data Source Server is Prometheus.
+
+Prometheus is a time series data source. But the information obtained from the Data source is 
+not user friendly. Hence this information is shared with Grafana for analysis and visualisation 
+of the data so that it is presented to us in the user friendly format.
+
+But Data Sources do not directly obtain the data from the application. It is fetched with the help of 
+Exporters. Exporters will probe the data from the server/application and is shared with the data source.
+Data source shares this data with Grafana for presenting it to the user in a friendly format.
+Friendly format means that the data is much easier to make a proper inference from it.
+
+What is a Data Source?
+In monitoring, a Data Source refers to any system, component, or entity that generates data or
+metrics relevant to monitoring the health, performance, or behavior of a system, application, 
+or infrastructure. Data sources provide the raw information that is collected, aggregated, and 
+analyzed by monitoring tools to gain insights into the monitored environment.
+
+Data Sources tools - Prometheus, Victoria Metrics, Influxdb, Loki
+
+Prometheus - time series data source - if time interval is 5 mins, it fetches the data every 5 min
+- has its own Blackbox exporter
+- uses pull approach to fetch/scrape the metrics from the application or site
+- suitable for small or medium application/infrastructure component
+
+Victoria metrics - 
+Victoria metrics works similar to Prometheus but it is a high volume data source.
+That means it interacts with lot of clients or applications and collect huge amount of data.
+
+InfluxDb
+- uses Push approach to get the data from the application
+- It is better version of Prometheus
+
+Loki - log aggregation tool - fetches the Logs
+
+To summarise, various components in a Monitoring System are
 
 Application/website/ <------- Exporter -------> Data Source ------> analytics/visual report
  Jenkins/Git <--------- Blackbox Exporter ----> Prometheus ------->     Grafana
                         Node Exporter
 
-Data source
-In monitoring, a data source refers to any system, component, or entity that generates data or
-metrics relevant to monitoring the health, performance, or behavior of a system, application, 
-or infrastructure. Data sources provide the raw information that is collected, aggregated, and 
-analyzed by monitoring tools to gain insights into the monitored environment.
-
-Data Sources tools -
-Prometheus,
-Victoria Metrics
-Influxdb
-Loki,
-
-Prometheus - time series data source - if time interval is 5 mins, it fetches the data every 5 min
-- has its own Blackbox exporter
-- uses pull approach to fetch/scrape the data
-- suitable for small or medium applications/infratr
-
-Victoria metrics - high volume data source
-
-influxDb
-- uses Push approach
-- It is better version of Prometheus
-
-Loki - log aggregation tool - fetches the Logs
-
-Exporters
+What are Exporters?
+Exporters vs Data Sources
 
 Exporters in monitoring tools are software components or agents that collect metrics and
 data from specific sources (e.g., systems, applications, services) and expose them in a 
@@ -57,17 +86,237 @@ from diverse data sources, as they provide a standardized and scalable approach 
 with Prometheus. Exporters allow Prometheus to collect metrics from a wide range of systems, 
 applications, and services, enabling comprehensive monitoring and observability.
 
-Handson with 2 applications
+What are Node Exporter and Black Box Exporter?
 
-1. Jenkins on a server
-2. Basic website
+Node Exporter:
+Purpose: Node Exporter is designed to gather system-level metrics from a target machine. 
+These metrics include CPU usage, memory usage, disk usage, network statistics, and more.
 
-Example: Information on plugins in jenkins, no. of pipelines, when was the last pipeline job
-triggered, etc.
+How it works: Node Exporter runs as a service on each machine to be monitored. It collects 
+metrics by interacting with the system's kernel and various system-level interfaces.
 
-https://grafana.com/tutorials/grafana-fundamentals/
+Use case: Node Exporter is useful for monitoring the health and performance of individual 
+servers or nodes in a system.
 
-Grafana Explore is a workflow for troubleshooting and data exploration. In this step, you’ll be using Explore to create ad-hoc queries to understand the metrics exposed by the sample application.
+Blackbox Exporter:
+Purpose: Blackbox Exporter is used for probing network endpoints and collecting metrics about 
+their availability and responsiveness.
 
-Ad-hoc queries are queries that are made interactively, with the purpose of exploring data. An ad-hoc query is commonly followed by another, more specific query.
+How it works: Blackbox Exporter sends probes to specified endpoints, such as HTTP endpoints, 
+TCP ports, or ICMP endpoints, and collects metrics based on the responses received. These 
+metrics may include latency, response codes, SSL certificate expiration, etc.
 
+Use case: Blackbox Exporter is particularly useful for monitoring external services, 
+such as APIs, websites, or any network endpoint accessible over HTTP, TCP, or ICMP.
+
+The Blackbox Exporter treats the endpoints it monitors as "black boxes" in the sense that it 
+interacts with them externally, sending requests and receiving responses, but without needing 
+detailed knowledge or access to the internal workings of those endpoints. It focuses solely on 
+observing the external behavior of the endpoints, such as their availability, responsiveness, 
+and other metrics that can be gathered without knowledge of their internal structure or processes.
+
+So, the term "black box" in the name "Blackbox Exporter" reflects the approach of treating monitored 
+endpoints as opaque entities whose internal workings are not directly examined or understood by the 
+exporter itself.
+
+So the difference between Node Exporter and Blackbox Exporter can be summarized below.
+
+Data Source:
+Node Exporter gathers metrics directly from the system where it is running.
+Blackbox Exporter probes external endpoints to gather metrics related to their availability 
+and responsiveness.
+
+Metrics:
+Node Exporter collects system-level metrics such as CPU usage, memory usage, disk I/O, etc.
+Blackbox Exporter collects metrics related to the availability and responsiveness of network 
+endpoints, such as latency, response codes, SSL certificate expiration, etc.
+
+Use Case:
+Node Exporter is used for monitoring the health and performance of individual servers or 
+nodes in a system. Blackbox Exporter is used for monitoring the availability and responsiveness 
+of external services or network endpoints.
+
+In summary, while both Node Exporter and Blackbox Exporter are used for monitoring purposes, 
+they serve different purposes and collect different types of metrics from different sources.
+
+
+
+Practical Hands-on demo
+
+Demo files in the github repo at
+https://github.com/rakeshsguttedar/Monitoring.git
+
+blackbox exporter folder - yaml files for setting up blackbox exporter
+dashboard.json - configuration file to be used in grafana for setting up grafana dashboard
+docker-compose.yml  - to setup Prometheus and Grafana
+grafana.ini -  grafana configuration file - email details for alerting are configured in this file
+prometheus.yml - yaml configuration to be used by prometheus to get the data from Blackbox exporter
+clean.sh to uninstall everything after the demo
+
+0. Creata a VM - EC2 instance of type t2.medium
+
+sudo apt update
+install docker 
+install docker-compose
+
+Refer installation steps at:
+https://docs.docker.com/engine/install/ubuntu
+
+1. Get Demo files
+Clone the github repository containing files for demo
+
+cd ~
+mkdir grafana-demo 
+cd grafana-demo 
+git clone https://github.com/rakeshsguttedar/Monitoring.git
+
+Give execute permission to the blackbox exporter executable.
+chmod +x -R blackbox_exporter-0.18.0.linux-amd64
+
+2. BlackBox Exporter - Navigate, Install and Execute blackbox-exporter
+
+cd blackbox_exporter-0.18.0.linux-amd64
+./blackbox_exporter --config.file=blackbox.yml &> output.log &
+It will start the Blackbox exporter after few seonds, send output of the executable or any error
+to output.log and the Blackbox exporter will run in the background.
+
+sudo apt install net-tools -y
+netstat -tulnp # to find about the active networks
+We can see that the blackbox exporter is listening on port 9115
+
+Access blackbox exporter application UI 
+http://<public-ip>:9115
+
+Note: Refer Grafana lab and Prometheus official documentations as it is really good for learning 
+more about these tools and use cases.
+
+3. Configure Targets and Blackbox exporter IP address in prometheus.yml file.
+
+Targets are the target endpoints that Blackbox exporter will probe to get the metrics data.
+
+In this configuration, the Blackbox Exporter is set to probe three URLs 
+(https://github.com, https://google.com, https://hackerrank.com). 
+The results of these probes will be collected by Prometheus for monitoring purposes. 
+The Blackbox Exporter IP is specified in __address__ to esnure that the metrics are collected from the 
+Blackbox Exporter instance running at that address.
+
+4. Install Grafana and Prometheus
+
+docker-compose up -d  
+
+Grafana Port: 3000
+Prometheus Port: 9090
+
+5. Confirm both are up and very Prometheus has the targets configured
+
+Access Prometheus 
+http://<public-ip>:9090 
+http://3.208.86.172:9090/targets
+
+Access Grafana
+http://<public-ip>:3000 admin/admin
+
+6. Grafana - Adding Prometheus as Data Source
+Connecting Grafana with Prometheus
+
+In Grafana, Home -> Connection -> Data Sources -> Add Data Source
+This will allow us to select Prometheus as Data source
+Prometheus Server URL : http://<public-ip>:9090
+HTTP Method: GET (because we are fetching the data from the Prometheus server)
+Save and Test
+
+6. Monitoring in Grafana using Dashboard
+
+Import our template Dashboard file, i.e. dashboard.json file instead of creating a new one.
+
+Dashboards -> Import -> Upload -> file: dashboard.json
+
+Select 
+Data during: Last 15 minutes 
+Refresh data: Every 10 secs
+
+7. Explaining the Dashboard Graph components 
+
+HTTP Duration - connect, processing, resolve, tls, transfer
+Probe Duration - 
+
+8. Alerts - Notifications on email
+
+Configuring Alerts in Grafana: 
+We can configure an Alert in Grafana to send an email when a website is down.
+
+grafana.ini is a conf file we need to edit to configure the email in the SMTP section
+[smtp]
+user = testmail@gmail.com
+from = testmail@gmail.com
+password - setup app password in your gmail account
+Gmail Account - Manage Account ->  Security -> 2-Step Verification 
+Generate App password
+paste the password in the password section
+save the file
+
+Restart Grafana
+docker restart grafana # restarts grafana docker container
+
+Adding Email ID
+http://<public-ip>:3000 admin/admin
+Go to Alerting Section in Grafana UI
+In the Contact Points, we will add the email address
+Click on Test to test the email has been sent
+
+Adding Alert: condition for sending the alert
+
+In Grafana UI, Dashboards -> Prometheus Blackbox Exporter -> Add -> Add Visualisation 
+In the Query Section, Add Prometheus Data Source
+and in Section A, Select metric: probe_success
+Instance -> select google.com or github.com or hackerrank.com
+Legend -> {{instance}}
+select github.com
+Run Queries
+Save
+Title: Alert_github
+
+Adding Condition-> Expressions -> Add Expression -> Classic Condition
+Conditions WHEN: last() of A select IS BELOW 0  
+
+Set Alert Evaluation Behaviour
+Select a folder - New Folder: git_alert
+Evaluation Group name: git_alert
+Evaluation Interbal: 5m
+
+Messages to be sent in email
+Add Annotations: 
+summary: site is down
+
+Save rule
+
+9. Configuring Email Notification Alert in Grafana for the website TLS/SSL certificate expiry
+
+Select Add Visualisation
+Set Alert Rule Name: git_ssl_expiry_days
+In the Define Query and Alert Condition Section, select mode as Code mode
+In the Metrics Browser:
+(probe_ssl_earliest_cert_expiry{instance="https:github.com"} - time())/86400
+
+time() function will return the current time and subtracting it will return the duration in seconds
+dividing it by 86400 will return the no of days of cert expiry.
+
+Run Queries
+Graph will display the number of days after which the Cerificate will expire.
+Legend: {{instance}}
+Panel Title: git_ssl_expiry
+Save
+
+Configuring the Alert
+Expressions: Add Expressions -> Classic Condition -> last() of A IS BELOW 30
+That is, when the certificate expiry days is less than 30 days, we will receive the alert.
+
+Messages to be sent in email
+Add Annotations: 
+summary: Cerificate will expire soon
+Set Alert Evaluation Behaviour
+Select a folder - New Folder: git_alert
+Evaluation Group name: git_alert
+Evaluation Interbal: 5m
+
+Save rule and Exit

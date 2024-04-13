@@ -1,0 +1,72 @@
+Monitoring using Node Exporter
+
+Monitoring data diagram
+
+Jenkins <----- Node Exporter <--------- Prometheus 
+                                            |
+                                            |
+                                            |
+                                           \|/
+                                         Grafana
+
+Monitoring Setup in brief
+We will use 2 AWS EC2 instances of type t2.medium
+1. In Server 1 VM - Install Jenkins and deploy an application
+2. In Server 2 VM - Install Prometheus, Node Exporter and Grafana
+3. Monitor Server 2 VM Node - configure prometheus.yml file
+   for monitoring the VM and use Grafana Dashboord ID 1860
+4. Monitor Jenkins using Prometheus (configuring in prometheus.yml file)
+   and use Grafana Dashboord ID 9960 
+
+I. Server 1 VM setup
+
+1. Installing Jenkins
+
+sudo apt update
+sudo apt install openjdk-17-jre-headless -y
+
+Installing Jenkins from official website
+
+https://www.jenkins.io/doc/book/installing/linux/
+
+copy and paste the commands in install-jenkins.sh 
+script file and chmod +x install-jenkins.sh and run
+./install-jenkins.sh 
+
+2. Install docker
+
+Install docker by running commands from the offcial
+docker documentation page at
+https://docs.docker.com/engine/install/ubuntu
+
+copy and paste the commands in in docker.sh file
+vi docker.sh
+chmod +x docker.sh
+./docker.sh
+
+Install docker packages
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+
+sudo chmod 666 /var/run/docker.sock
+docker pull hello-world
+
+3. Configuring Jenkins
+   http://public-ip:8080/
+   Install Jenkins plugins
+   Note: Sonarqube and other tools are not installed - focus on deployment
+   Manage Jenkins ->  Plugins -> Available Plugins 
+   Install: Eclipse Temurin installer, Docker and Docker Pipeline
+   Manage Plugins -> Tools -> Install jdk17, Maven 3.9.6 and docker
+
+   Create Jenkins Pipeline job, run the pipeline to deploy BoardGame application,
+   access the application http://public-ip:8081       
+
+II. Server 2 VM setup - 
+    Launch t2.medium EC2 instance
+    open ports: Grafana 3000 Prometheus 9090 Node Exporter 9115
+    in the Security Group  configured for the EC2 instance.
+
+Steps for installing Prometheus, Grafana and Node Exporter are at github page
+https://github.com/jaiswaladi2468/Batch-3-DEVSECOPS/tree/main/16.%20Monitoring
+Monitoring/Monitoring Using Node Exporter Setup.md file
+

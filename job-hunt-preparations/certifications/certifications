@@ -1,0 +1,51 @@
+AWS certifications
+
+1. AWS Cloud Practitioner
+Basic certification
+
+2. AWS Solutions Architect Associate
+    Practical Hands-on
+    connectivity between services
+
+Practice Tests
+https://www.knowledgehut.com/practice-tests/aws-solutions-architect-associate
+https://tutorialsdojo.com/courses/aws-certified-solutions-architect-associate-saa-c03-practice-exams/
+skillbuilder
+
+costs: 150 USD 
+Exam duration: 2.5 hours
+No of Questions: 65
+Take: 9 to 10 practice tests
+List all services
+Cover basic services
+Why services exist wnd its purpose
+Integration with large systems
+
+Azure certifications
+
+AZ900 - Basic certification
+
+AZ014 - Azure Administrator
+ managing Azure accounts, Azure services, cost opt etc
+
+AZ400 - Azure Devops Expert
+ 2-3 months preparation
+ Theory + practicals + must be able to design the arxhitecture    
+
+Kubernetes certifications
+
+CKA - Ceritified K8s Administrator
+  Practicals during certification, k8s cheat sheat, shortcuts, 
+  must be very quick with kubectl commands
+ 
+CKAD - Ceritified K8s Application Developer
+    Advanced CKA, do CKA before CKAD
+
+CKSS - Ceritified Kubernetes Security Specialist
+CKSS - toughest among CK
+Most complicated among CK* 
+CKA is mandtory for taking CKSS
+
+Terraform certification
+
+Terraform Associate (003)
